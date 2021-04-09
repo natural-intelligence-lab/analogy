@@ -1,0 +1,19 @@
+"""Get stimuli directory."""
+
+import os
+
+
+def stimuli_dir():
+
+    if not 'MWorks' in os.getcwd():
+        # Running the python demo, so give relative path
+        return '../stimuli'
+    else:
+        # Psychophysics rig
+        return '/Users/jazlab/Documents/nwatters/maze_pong/task/stimuli'
+
+        # Laptop nwatters
+        # return (
+        #     '/Users/nicholaswatters/Desktop/grad_school/research/mehrdad/'
+        #     'maze_pong/task/stimuli'
+        # )

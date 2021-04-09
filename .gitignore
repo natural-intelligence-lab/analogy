@@ -1,0 +1,10 @@
+# Ignore these files when committing to git
+
+**/__pycache__
+**/.ipynb_checkpoints
+**.DS_Store
+**.pyc
+**logs**
+behavior_analysis**
+behavior_analysis/data**
+task/stimulus_plotting/plots**
