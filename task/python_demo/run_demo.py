@@ -22,7 +22,7 @@ from utils import logger_env_wrapper
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('level',
-                    'random.random_4.random_4',
+                    'test.test_v0.test_v0',
                     'Level.')
 flags.DEFINE_integer('render_size', 512,
                      'Height and width of the output image.')
@@ -32,7 +32,7 @@ flags.DEFINE_integer('reward_history', 30,
                      'Number of historical reward timesteps to plot.')
 
 # Flags for gif writing
-flags.DEFINE_boolean('write_gif', True, 'Whether to write a gif.')
+flags.DEFINE_boolean('write_gif', False, 'Whether to write a gif.')
 flags.DEFINE_string('gif_file',
                     os.path.join(os.getcwd(), 'logs/gifs/test_0.gif'),
                     'File path to write the gif to.')

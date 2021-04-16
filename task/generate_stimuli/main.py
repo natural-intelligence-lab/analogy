@@ -11,12 +11,12 @@ sys.path.append('..')
 import conditions
 import generator
 
-_CONDITION = 'random.Random4'
+_CONDITION = 'test.TestV0'
 
 # Log directory
 _LOGDIR = os.path.join(os.getcwd(), '../stimuli')
 # Can be used to distinguish multiple datasets of the same condition
-_LOGDIR_SUFFIX = '_0'
+_LOGDIR_SUFFIX = ''
 # How often to print a progress report
 _LOG_EVERY = 10
 

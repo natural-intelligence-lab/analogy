@@ -17,18 +17,18 @@ import maze_lib
 
 _FIXATION_THRESHOLD = 0.4
 _FIXATION_STEPS = 25
+_AGENT_POSITION = [0.5, 0.1]
 
 
 class TrialInitialization():
 
-    def __init__(self, stimulus_generator, maze_scale=0.03):
+    def __init__(self, stimulus_generator):
         self._stimulus_generator = stimulus_generator
-        self._maze_scale = maze_scale
 
         self._agent_factors = dict(
-            x=0.5, y=0.5, shape='square', scale=0.05, c0=0., c1=1., c2=0.66)
+            shape='square', scale=0.05, c0=0., c1=1., c2=0.66)
         self._prey_factors = dict(
-            x=0.5, y=0.5, shape='circle', scale=0.015, c0=0.333, c1=1., c2=1.)
+            shape='circle', scale=0.015, c0=0.333, c1=1., c2=1.)
         
         self._fixation_shape = 0.2 * np.array([
             [-5, 1], [-1, 1], [-1, 5], [1, 5], [1, 1], [5, 1], [5, -1], [1, -1],
@@ -41,11 +41,9 @@ class TrialInitialization():
         if stimulus is None:
             return None
 
+        # Each element of maze_arms is a dictionary that may contain keys
+        # ['end', 'directions', 'lengths']
         maze_arms = stimulus['maze_arms']
-        maze_arms = [
-            [(np.array(d), self._maze_scale * l) for d, l in arm]
-            for arm in stimulus['maze_arms']
-        ]
         maze = maze_lib.Maze(maze_arms)
         tunnels = maze.to_sprites(arm_width=0.01, c0=0., c1=0., c2=0.5)
 
@@ -107,6 +105,8 @@ class Config():
                 * prey_arm
                 * features
             fixation_phase: Bool. Whether to have a fixation phase.
+            ms_per_unit: Scalar. Speed of prey. Units are milliseconds per frame
+                width.
         """
         self._stimulus_generator = stimulus_generator
         self._fixation_phase = fixation_phase
@@ -144,11 +144,11 @@ class Config():
             layers_1='prey',
             reset_steps_after_contact=10,
         )
-        reset_task = tasks.Reset(
+        timeout_task = tasks.Reset(
             condition=lambda _, meta_state: meta_state['phase'] == 'response',
             steps_after_condition=150,
         )
-        self._task = tasks.CompositeTask(prey_task, reset_task)
+        self._task = tasks.CompositeTask(prey_task, timeout_task)
 
     def _construct_action_space(self):
         """Construct action space."""
@@ -177,7 +177,7 @@ class Config():
         def _reset_physics(meta_state):
             self._maze_walk.set_maze(
                 meta_state['maze_arms'], meta_state['prey_arm'])
-            self._maze_walk._speed = 0
+            self._maze_walk.speed = 0
         reset_physics = gr.ModifyMetaState(_reset_physics)
 
         def _should_increase_fixation_dur(state, meta_state):
@@ -186,7 +186,7 @@ class Config():
             eye_fixating = dist < _FIXATION_THRESHOLD
             agent = state['agent'][0]
             joystick_deflected = sum(agent.velocity != 0.)
-            agent.position = [0.5, 0.5]
+            agent.position = _AGENT_POSITION
             return eye_fixating and not joystick_deflected
         def _increase_fixation_dur(meta_state):
             meta_state['fixation_duration'] += 1
@@ -241,7 +241,7 @@ class Config():
         # Response phase
 
         def _unglue(meta_state):
-            self._maze_walk._speed = self._prey_speed
+            self._maze_walk.speed = self._prey_speed
         unglue = gr.ModifyMetaState(_unglue)
 
         def _update_motion_steps(meta_state):

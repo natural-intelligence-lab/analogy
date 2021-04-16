@@ -17,17 +17,14 @@ class Sampler():
                  stimuli_dir,
                  filter_fn=None,
                  length=np.inf,
-                 num_passes=1,
-                 condition_depth=0):
+                 num_passes=1):
         """Constructor.
         
         Args:
-            condition_depth: How many uncertainty points to control for in
-                uniform sampling.
+            TODO(nwatters): Add documentation.
         """
         self._length = length
         self._num_passes = num_passes
-        self._condition_depth = condition_depth
 
         if filter_fn is None:
             self._filter_fn = lambda _: True

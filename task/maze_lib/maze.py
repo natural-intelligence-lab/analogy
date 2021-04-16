@@ -1,135 +1,133 @@
 """Maze."""
 
+import copy
 from maze_lib import constants
 from moog import sprite
 import numpy as np
 
 _EPSILON = 1e-4
 _MAX_ITERS = int(1e4)
+_DEFAULT_END = (0.5, 0.1)
+
+
+def _opposite_direction(d):
+    if d == 'u':
+        return 'd'
+    elif d == 'd':
+        return 'u'
+    elif d == 'l':
+        return 'r'
+    elif d == 'r':
+        return 'l'
+    else:
+        raise ValueError(f'Direction {d} not recognized')
+
+
+class MazeArm():
+    """Maze arm object."""
+
+    def __init__(self, directions, lengths, end=_DEFAULT_END):
+        """
+        TODO(nwatters): Add documentation.
+        """
+        # Convert directions to list
+        directions = list(directions)
+
+        # Sanity check to make sure directions and lengths have same number
+        if len(directions) != len(lengths):
+            raise ValueError(
+                f'directions {directions} must have the same length as lengths '
+                f'{lengths}'
+            )
+
+        # Sanity check to make sure directions never reverse
+        for d_0, d_1 in zip(directions[:-1], directions[1:]):
+            if d_1 == d_0 or d_1 == _opposite_direction(d_0):
+                raise ValueError(
+                    f'Have invalid consecutive directions {d_0} and {d_1} in '
+                    f'directions {directions}'
+                )
+
+        self._end = end
+
+        self.lengths = lengths
+        self.direction_strings = directions
+        self.direction_arrays = [
+            getattr(constants.Directions, d) for d in directions]
+
+        self._segments = self._get_segments(self.direction_arrays, lengths, end)
+
+    def _get_segments(self, direction_arrays, lengths, end):
+        """TODO(nwatters): Add documentation."""
+        segments = []
+        v_end = np.array(end)
+        for (d, l) in zip(direction_arrays, lengths):
+            v_start = v_end + d * l
+            new_segment = (v_start, v_end)
+            segments.append(new_segment)
+            v_end = copy.copy(v_start)
+        
+        return segments
+
+    def to_sprites(self, arm_width, **sprite_factors):
+        """Convert arm to list of sprites.
+
+        Args:
+            arm_width: Scalar. How wide the arm segments should be.
+            sprite_factors: Dict. Other attributes of the sprites (e.g. color,
+                opacity, ...).
+        """
+        arm_width_box = np.array([
+            [-0.5 * arm_width, -0.5 * arm_width],
+            [-0.5 * arm_width, 0.5 * arm_width],
+            [0.5 * arm_width, 0.5 * arm_width],
+            [0.5 * arm_width, -0.5 * arm_width],
+        ])
+        sprites = []
+        for (v_start, v_end) in self._segments:
+            start_box = arm_width_box + np.array([v_start])
+            end_box = arm_width_box + np.array([v_end])
+            bounds = np.concatenate((start_box, end_box), axis=0)
+            x_min, y_min = np.min(bounds, axis=0)
+            x_max, y_max = np.max(bounds, axis=0)
+            sprite_shape = np.array([
+                [x_min, y_min],
+                [x_min, y_max],
+                [x_max, y_max],
+                [x_max, y_min],
+            ])
+            new_sprite = sprite.Sprite(
+                x=0., y=0., shape=sprite_shape, **sprite_factors)
+            sprites.append(new_sprite)
+        
+        return sprites
+
+    @property
+    def segments(self):
+        return self._segments
 
 
 class Maze():
 
-    def __init__(self, arms=(), separation_threshold=0):
+    def __init__(self, arms=()):
         """Constructor.
 
         Args:
-            arms: Iterable of arms. Each arm is an iterable of
-                (direction, length) pairs.
-            separation_threshold: Scalar. Threshold for minimum distance between
-                arms.
+            arms: Iterable of arms. Each arm is a dictionary which may have keys
+                ['end', 'directions', 'lengths']. Here 'end' is a (x, y)
+                pair for the end of the arm, 'directions' is a string with
+                ['u', 'd', 'l', 'r'] characters specifying the direction of each
+                segment, and 'lengths' is an iterable of scalars specifying the
+                length of each segment. The segments are listed end-to-start.
         """
-        self._separation_threshold = separation_threshold
-
-        self._arms = []
-        self._arm_segments = []
-        self._segments = []
-
-        for arm in arms:
-            valid_arm = self.add_arm(arm)
-            if not valid_arm:
-                raise ValueError(
-                    f'Arm {arm} does not respect separation_threshold '
-                    f'{separation_threshold}')
-
-    def add_arm(self, arm):
-        """Add an arm."""
-        segments = []
-        vertex = np.zeros(2)
-        for (d, l) in arm:
-            new_v = vertex + d * l
-            if not all(self._valid_vertex(s, new_v) for s in self._segments):
-                return False
-            new_segment = (vertex, new_v)
-            if not all(self._valid_vertex(new_segment, s[1])
-                       for s in self._segments):
-                return False
-
-            vertex = new_v
-            segments.append(new_segment)
-        
-        self._arms.append(arm)
-        self._arm_segments.append(segments)
-        self._segments.extend(segments)
-        return True
-
-    def _valid_vertex(self, segment, vertex):
-        """Check if a vertex is valid with respect to a segment."""
-        start, end = segment
-        end_tilde = end - start
-        norm = np.linalg.norm(end_tilde)
-        v_tilde = (vertex - start) / norm
-        dot = np.dot(v_tilde, end_tilde) / norm
-        dot = np.clip(dot, 0, 1)
-        nearest_point = norm * v_tilde - dot * end_tilde
-        nearest_dist = np.linalg.norm(nearest_point)
-        if nearest_dist < self._separation_threshold:
-            return False
-        else:
-            return True
-
-    def _sample_arm(self, direction, num_segments, allow_continuation=True):
-        """Sample random arm."""
-        arm = []
-        for i in range(num_segments):
-            if i > 0:
-                if allow_continuation:
-                    available_directions = [
-                        d for d in constants.Directions
-                        if np.dot(d, direction) > -1 * _EPSILON
-                    ]
-                else:
-                    available_directions = [
-                        d for d in constants.Directions
-                        if _EPSILON > np.dot(d, direction) > -1 * _EPSILON
-                    ]
-                direction = available_directions[
-                    np.random.randint(len(available_directions))]
-            
-            length = constants.ArmLengths.sample()
-            arm.append((direction, length))
-        
-        return arm
-
-    def sample_arm(self, direction, num_segments, allow_continuation=True):
-        for _ in range(_MAX_ITERS):
-            arm = self._sample_arm(
-                direction, num_segments, allow_continuation=allow_continuation)
-            if self.add_arm(arm):
-                return arm
-        return False
+        self._arms = [MazeArm(**x) for x in arms]
 
     def to_sprites(self, arm_width, **sprite_factors):
-        arm_width_box = np.array([
-            [-1 * arm_width, -1 * arm_width],
-            [-1 * arm_width, arm_width],
-            [arm_width, arm_width],
-            [arm_width, -1 * arm_width],
-        ])
         sprites = []
-        for arm_segments in self._arm_segments:
-            for start, end in arm_segments:
-                start_box = arm_width_box + np.array([start])
-                end_box = arm_width_box + np.array([end])
-                bounds = np.concatenate((start_box, end_box), axis=0)
-                x_min, y_min = np.min(bounds, axis=0)
-                x_max, y_max = np.max(bounds, axis=0)
-                sprite_shape = 0.5 + np.array([
-                    [x_min, y_min],
-                    [x_min, y_max],
-                    [x_max, y_max],
-                    [x_max, y_min],
-                ])
-                new_sprite = sprite.Sprite(
-                    x=0., y=0., shape=sprite_shape, **sprite_factors)
-                sprites.append(new_sprite)
-        
+        for arm in self._arms:
+            sprites.extend(arm.to_sprites(arm_width, **sprite_factors))
         return sprites
 
     @property
     def arms(self):
         return self._arms
-
-    @property
-    def arm_segments(self):
-        return self._arm_segments

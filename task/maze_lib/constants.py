@@ -30,11 +30,11 @@ class ArmLengthsClass():
 ArmLengths = ArmLengthsClass(arm_lengths=(3, 4, 5, 6))
 
 
-DirectionsClass = collections.namedtuple('Directions',['N', 'E', 'S', 'W'])
+DirectionsClass = collections.namedtuple('Directions',['u', 'd', 'l', 'r'])
 
 Directions = DirectionsClass(
-    N=np.array([0., 1.]),
-    E=np.array([1., 0.]),
-    S=np.array([0., -1.]),
-    W=np.array([-1., 0.]),
+    u=np.array([0., 1.]),
+    d=np.array([0., -1.]),
+    r=np.array([1., 0.]),
+    l=np.array([-1., 0.]),
 )
