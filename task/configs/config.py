@@ -61,6 +61,7 @@ class TrialInitialization():
         eye = sprite.Sprite(c0=0., c1=0., c2=0., opacity=0)
 
         state = collections.OrderedDict([
+            ('maze_background', []),
             ('prey', [prey]),
             ('maze', tunnels),
             ('agent', [agent]),
@@ -142,11 +143,10 @@ class Config():
             reward_fn=lambda s_agent, s_prey: 1,
             layers_0='agent',
             layers_1='prey',
-            reset_steps_after_contact=10,
         )
         timeout_task = tasks.Reset(
-            condition=lambda _, meta_state: meta_state['phase'] == 'response',
-            steps_after_condition=150,
+            condition=lambda _, meta_state: meta_state['phase'] == 'reward',
+            steps_after_condition=15,
         )
         self._task = tasks.CompositeTask(prey_task, timeout_task)
 
@@ -238,7 +238,7 @@ class Config():
             name='planning',
         )
 
-        # Response phase
+        # Motion phase
 
         def _unglue(meta_state):
             self._maze_walk.speed = self._prey_speed
@@ -249,11 +249,25 @@ class Config():
         update_motion_steps = gr.ModifyMetaState(_update_motion_steps)
 
         def _end_motion_phase(state):
-            return len(state['prey']) == 0
-        phase_response = gr.Phase(
+            agent = state['agent'][0]
+            return np.any(agent.velocity != 0)
+
+        phase_motion = gr.Phase(
             one_time_rules=unglue,
             continual_rules=update_motion_steps,
-            name='response',
+            end_condition=_end_motion_phase,
+            name='motion',
+        )
+
+        # Reward Phase
+
+        reveal_prey = gr.ChangeLayer(
+            old_layer='maze', new_layer='maze_background'
+        )
+
+        phase_reward = gr.Phase(
+            one_time_rules=reveal_prey,
+            name='reward',
         )
 
         # Final rules
@@ -262,7 +276,8 @@ class Config():
             phase_fixation,
             phase_delay,
             phase_planning,
-            phase_response,
+            phase_motion,
+            phase_reward,
             meta_state_phase_name_key='phase',
         )
         self._game_rules = (phase_sequence,)

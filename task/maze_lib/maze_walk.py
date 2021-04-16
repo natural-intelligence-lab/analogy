@@ -59,20 +59,17 @@ class MazeWalk(physics_lib.AbstractPhysics):
         if self.speed == 0.:
             return
 
-        # Check if reached center of screen and should stop
-        if np.linalg.norm(pos - _STOP_POINT) < _STOP_PROXIMITY:
-            return
-
         # Increment sprite position
         vel = d * self.speed
         new_pos = pos + vel
 
-        # Check if should enter next segment
-        try:
-            end_vertex = self._vertices[self._current_segment + 1]
-        except:
-            import pdb; pdb.set_trace()
+        # If on the last segment, keep drifting
+        if self._current_segment == len(self._vertices) - 2:
+            sprite.position = new_pos
+            return
 
+        # Check if should enter next segment
+        end_vertex = self._vertices[self._current_segment + 1]
         vertex_diff = new_pos - end_vertex
         dot = np.dot(vertex_diff, d)
         if dot > 0:
