@@ -15,6 +15,7 @@ from moog import tasks
 
 import maze_lib
 
+from configs.utils import action_spaces as action_spaces_custom
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
@@ -178,7 +179,7 @@ class Config():
     def _construct_action_space(self):
         """Construct action space."""
 
-        controller_action_space = action_spaces.GridRotate(
+        controller_action_space = action_spaces_custom.GridRotate(
             action_layers='agent',
         )
 

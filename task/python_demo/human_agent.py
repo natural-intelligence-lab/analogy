@@ -30,6 +30,7 @@ from matplotlib.backends import backend_tkagg
 
 from . import gui_frames
 from moog import action_spaces
+from configs.utils import action_spaces as action_spaces_custom
 
 _WINDOW_ASPECT_RATIO = 2.7  # height/width for the gui window
 
@@ -127,7 +128,7 @@ class HumanAgent():
             a_spaces = action_space.action_spaces.values()
             if (num_agents == 2 and
                     (any(isinstance(a, action_spaces.Grid) for a in a_spaces) or
-                     any(isinstance(a, action_spaces.GridRotate) for a in a_spaces)) and
+                     any(isinstance(a, action_spaces_custom.GridRotate) for a in a_spaces)) and
                     any(isinstance(a, action_spaces.SetPosition)
                         for a in a_spaces)):
                 logging.info(
@@ -136,7 +137,7 @@ class HumanAgent():
                     'the screen for setting position.')
                 keys = list(action_space.action_spaces.keys())
                 if isinstance(action_space.action_spaces[keys[0]], action_spaces.Grid) or \
-                        isinstance(action_space.action_spaces[keys[0]], action_spaces.GridRotate):
+                        isinstance(action_space.action_spaces[keys[0]], action_spaces_custom.GridRotate):
                     grid_key = keys[0]
                     set_position_key = keys[1]
                 else:
@@ -160,7 +161,7 @@ class HumanAgent():
                 self.root,
                 canvas_half_width=canvas_half_width,
             )
-        elif isinstance(action_space, action_spaces.GridRotate):
+        elif isinstance(action_space, action_spaces_custom.GridRotate):
             logging.info('Grid rotation action space, use arrow keys.')
             self.gui_frame = gui_frames.GridActions(
                 self.root,
