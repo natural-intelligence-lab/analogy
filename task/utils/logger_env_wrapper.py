@@ -126,7 +126,7 @@ class MazePongLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
             'the form of a boolean array.'
             '\n\n'
             'The subsequent elements represent steps in the episode. Each step '
-            'is a list of four elements, [[`time`, time], [`reward`, reward], '
+            'is a list of five elements, [[`time`, time], [`reward`, reward], '
             '[`step_type`, step_type], [`action`, action], [`meta_state`, '
             'meta_state], state].'
             '\n'

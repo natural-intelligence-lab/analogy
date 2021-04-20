@@ -106,6 +106,10 @@ class MazeArm():
     def segments(self):
         return self._segments
 
+    @property
+    def length(self):
+        return sum(self.lengths)
+
 
 class Maze():
 

@@ -1,0 +1,1 @@
+[[{"end": [0.5, 0.1], "directions": "ru", "lengths": [0.3974500941536225, 0.128034371387779]}, {"end": [0.5, 0.1], "directions": "lur", "lengths": [0.16097843707465814, 0.10733798885755985, 0.2576134773436965]}], 0, {"name": "Random3", "prey_arm_turns": 1, "prey_arm_length": 0.5254844655414015, "distractor_arm_turns": 2, "distractor_arm_length": 0.5259299032759145}]

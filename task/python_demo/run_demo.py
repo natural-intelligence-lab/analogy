@@ -22,9 +22,10 @@ from utils import logger_env_wrapper
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('level',
-                    'test.test_v0.test_v0',
+                    # 'test.test_v0.test_v0',
+                    'random.random_3.random_3',
                     'Level.')
-flags.DEFINE_integer('render_size', 512,
+flags.DEFINE_integer('render_size', 256,
                      'Height and width of the output image.')
 flags.DEFINE_integer('anti_aliasing', 1, 'Renderer anti-aliasing factor.')
 flags.DEFINE_integer('fps', 20, 'Frames per second.')

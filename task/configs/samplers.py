@@ -53,7 +53,7 @@ class Sampler():
             prey_arm=prey_arm,
             features=features,
         )
-        return stimulus
+        return [stimulus]
 
     def _load_stimuli(self, stimuli_dir):
     
@@ -66,7 +66,7 @@ class Sampler():
 
         self._stimuli = []
         for x in stimulus_strings:
-            self._stimuli.append(self._process_stimulus_string(x))
+            self._stimuli.extend(self._process_stimulus_string(x))
 
         if len(self._stimuli) == 0:
             raise ValueError(

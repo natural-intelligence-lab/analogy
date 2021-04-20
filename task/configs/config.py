@@ -16,6 +16,7 @@ from moog import tasks
 import maze_lib
 
 from configs.utils import action_spaces as action_spaces_custom
+from configs.utils import tasks as tasks_custom
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
@@ -25,9 +26,9 @@ _AGENT_POSITION = [0.5, 0.1]
 
 class TrialInitialization():
 
-    def __init__(self, stimulus_generator):
+    def __init__(self, stimulus_generator, prey_lead_in):
         self._stimulus_generator = stimulus_generator
-
+        self._prey_lead_in = prey_lead_in
 
         self._prey_factors = dict(
             shape='circle', scale=0.015, c0=0.333, c1=1., c2=1.)
@@ -82,6 +83,11 @@ class TrialInitialization():
             ('eye', [eye]),
         ])
 
+        # Prey distance remaining is how far prey has to go to reach agent
+        # It will be continually updated in the meta_state as the prey moves
+        prey_distance_remaining = (
+            maze.arms[stimulus['prey_arm']].length + self._prey_lead_in)
+
         self._meta_state = {
             'fixation_duration': 0,
             'motion_steps': 0,
@@ -90,6 +96,8 @@ class TrialInitialization():
             'stimulus_features': stimulus['features'],
             'maze_arms': maze_arms,
             'prey_arm': stimulus['prey_arm'],
+            'prey_distance_remaining': prey_distance_remaining,
+            'correct_direction': None,
         }
 
         return state
@@ -128,8 +136,10 @@ class Config():
         # Compute prey speed given ms_per_unit
         self._prey_speed = 1000. / (60. * ms_per_unit)
         self._agent_speed = 0.5 * self._prey_speed
+        self._prey_lead_in = 0.07
 
-        self._trial_init = TrialInitialization(stimulus_generator)
+        self._trial_init = TrialInitialization(
+            stimulus_generator, prey_lead_in=self._prey_lead_in)
 
         # Create renderer
         self._observer = observers.PILRenderer(
@@ -145,36 +155,23 @@ class Config():
 
     def _construct_physics(self):
         """Construct physics."""
-        self._maze_walk = maze_lib.MazeWalk(speed=0., avatar_layer='prey')
+        self._maze_walk = maze_lib.MazeWalk(
+            speed=0., avatar_layer='prey', start_lead_in=self._prey_lead_in)
         self._physics = physics_lib.Physics(
             corrective_physics=[self._maze_walk])
 
     def _construct_task(self):
         """Construct task."""
-        prey_task = tasks.ContactReward(
-            reward_fn=lambda s_agent, s_prey: 1,
-            layers_0='agent',
-            layers_1='prey',
+        prey_task = tasks_custom.TimeErrorReward(
+            half_width=10,
+            maximum=1,
+            prey_speed=self._prey_speed,
         )
         timeout_task = tasks.Reset(
             condition=lambda _, meta_state: meta_state['phase'] == 'reward',
             steps_after_condition=15,
         )
         self._task = tasks.CompositeTask(prey_task, timeout_task)
-
-        # """Construct task."""
-        # prey_task = tasks.TimeErrorReward(
-        #     condition=lambda _, meta_state: meta_state['phase'] == 'reward',
-        #     reward_fn=lambda ts, tp: \
-        #         bonus_reward + max_reward * np.maximum(0, 1 - (np.abs((tp - ts) / ts)) / reward_window),
-        #     layers_0='agent',
-        #     layers_1='prey',
-        # )
-        # timeout_task = tasks.Reset(
-        #     condition=lambda _, meta_state: meta_state['phase'] == 'ITI',
-        #     steps_after_condition=15,  # 250 ms
-        # )
-        # self._task = tasks.CompositeTask(prey_task, timeout_task)
 
     def _construct_action_space(self):
         """Construct action space."""
@@ -266,7 +263,6 @@ class Config():
             name='planning',
         )
 
-
         # 4. Online phase
 
         def _unglue(meta_state):
@@ -276,19 +272,19 @@ class Config():
 
         def _update_motion_steps(meta_state):
             meta_state['motion_steps'] += 1
+            meta_state['prey_distance_remaining'] -= self._prey_speed
 
         update_motion_steps = gr.ModifyMetaState(_update_motion_steps)
 
         def _end_motion_phase(state):
             agent = state['agent'][0]
-            return np.any(agent.velocity != 0)
+            return agent.angle != 0
 
         phase_motion = gr.Phase(
             one_time_rules=unglue,
             continual_rules=update_motion_steps,
             end_condition=_end_motion_phase,
             name='motion',
-
         )
 
         # 5. Reward Phase
@@ -299,6 +295,7 @@ class Config():
 
         phase_reward = gr.Phase(
             one_time_rules=reveal_prey,
+            continual_rules=update_motion_steps,
             name='reward',
         )
 

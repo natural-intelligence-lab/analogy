@@ -85,3 +85,7 @@ class MazeWalk(physics_lib.AbstractPhysics):
         del updates_per_env_step
         for sprite in state[self._avatar_layer]:
             self._update_sprite_in_maze(sprite)
+
+    @property
+    def start_lead_in(self):
+        return self._start_lead_in
