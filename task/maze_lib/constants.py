@@ -26,7 +26,6 @@ class ArmLengthsClass():
     def arm_lengths(self):
         return self._arm_lengths
 
-
 ArmLengths = ArmLengthsClass(arm_lengths=(3, 4, 5, 6))
 
 
@@ -38,3 +37,7 @@ Directions = DirectionsClass(
     r=np.array([1., 0.]),
     l=np.array([-1., 0.]),
 )
+
+max_reward = 100  # in unit of [ms]
+reward_window = 0.15  # in unit of [(tp-ts)/ts]
+bonus_reward = 0  # in unit of [ms]

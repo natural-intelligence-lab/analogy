@@ -7,13 +7,13 @@ class TestV0():
     _MAZE = [
         {
             'end': (0.5, 0.1),
-            'directions': 'luluru',
-            'lengths': [0.1, 0.1, 0.1, 0.2, 0.1, 0.1],
+            'directions': 'lururu',
+            'lengths': [0.1, 0.1, 0.3, 0.2, 0.1, 0.1],
         },
         {
             'end': (0.5, 0.1),
             'directions': 'ruluru',
-            'lengths': [0.3, 0.3, 0.1, 0.2, 0.1, 0.1],
+            'lengths': [0.1, 0.3, 0.4, 0.2, 0.1, 0.1],
         },
     ]
 
