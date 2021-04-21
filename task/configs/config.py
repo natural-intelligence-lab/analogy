@@ -61,7 +61,8 @@ class TrialInitialization():
         # pacman agent
         agent = sprite.Sprite(
             shape=self._agent_shape, scale=0.05,
-            c0=0., c1=1., c2=0.66)  # red
+            c0=0.1667, c1=1., c2=1)  # yellow in HSV
+            # c0=0., c1=1., c2=0.66)  # red
 
         # Fixation cross and screen
         fixation = sprite.Sprite(
@@ -88,6 +89,7 @@ class TrialInitialization():
         prey_distance_remaining = (
             maze.arms[stimulus['prey_arm']].length + self._prey_lead_in)
 
+        # TODO: add ts, tp here?
         self._meta_state = {
             'fixation_duration': 0,
             'motion_steps': 0,
@@ -134,7 +136,7 @@ class Config():
         self._delay_phase = delay_phase
 
         # Compute prey speed given ms_per_unit
-        self._prey_speed = 1000. / (60. * ms_per_unit)
+        self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / ms
         self._agent_speed = 0.5 * self._prey_speed
         self._prey_lead_in = 0.07
 
@@ -163,7 +165,7 @@ class Config():
     def _construct_task(self):
         """Construct task."""
         prey_task = tasks_custom.TimeErrorReward(
-            half_width=10,
+            half_width=100,
             maximum=1,
             prey_speed=self._prey_speed,
         )

@@ -29,7 +29,7 @@ class GridRotate(action_spaces.AbstractActionSpace):
         Args:
             scaling_factor: Scalar. Scaling factor multiplied to the action.
                 default 1
-            agent_layer: String or iterable of strings. Elements (or itself if
+            action_layers: String or iterable of strings. Elements (or itself if
                 string) must be keys in the environment state. All sprites in
                 these layers will be acted upon by this action space.
 

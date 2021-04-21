@@ -6,7 +6,6 @@ from maze_lib.maze import Maze
 
 _EPSILON = 1e-4
 
-# TODO: Change the reward and physics to make the task a timing task
 _STOP_POINT = np.array([0.5, 0.1])
 _STOP_PROXIMITY = 0.07
 
@@ -45,7 +44,8 @@ class MazeWalk(physics_lib.AbstractPhysics):
 
         pos = sprite.position
         d = self._direction_arrays[self._current_segment]
-        
+        sprite.angle = -np.pi/2*d[0]  # for reward; d[1]=1,-1 for (r,l); 12 o'clock = degree zero & CCW for +
+
         # Reset the sprite's position if first step
         if self._reset_sprite_position:
             self._reset_sprite_position = False

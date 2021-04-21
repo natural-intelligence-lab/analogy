@@ -21,7 +21,11 @@ class TimeErrorReward(tasks.AbstractTask):
         """Constructor.
 
         Args:
-            TODO: Document.
+            half_width: reward window (i.e., width of tooth function)
+            maximum: maximum reward at zero time error
+            prey_speed: time error is computed by dividing distance_remaining with prey_speed
+            agent_layer: sprite layer
+            prey_layer: sprite layer
         """
         self._half_width = half_width
         self._maximum = maximum
@@ -43,10 +47,20 @@ class TimeErrorReward(tasks.AbstractTask):
         return reward
 
     def reward(self, state, meta_state, step_count):
+        prey = state['prey'][0]
+        agent = state['agent'][0]
+        direction_correct = False
+
+        # pacman facing left and prey from left or
+        # pacman facing right and prey from right
+        # sprite.angle = -np.pi/2*d[1]  # for reward; d[1]=1,-1 for (r,l); 12 o'clock = degree zero & CCW for +
+        if (agent.angle==np.pi/2 and prey.angle==-np.pi/2) or (agent.angle == -np.pi / 2 and prey.angle==np.pi/2):
+            direction_correct = True
+
         del state
         del step_count
 
-        if meta_state['phase'] == 'reward' and not self._reward_given:
+        if direction_correct and meta_state['phase'] == 'reward' and not self._reward_given:
             # Update reward
             reward = self._tooth_function(
                 self._prey_speed, meta_state['prey_distance_remaining'])

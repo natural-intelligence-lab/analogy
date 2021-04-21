@@ -2,9 +2,17 @@
 
 import numpy as np
 
+_min_length_range = 0.5  # in unit of screen size
+_max_length_range = 0.8
+
+_min_num_turns_range = 1
+_max_num_turns_range = 3
 
 class Base():
-    """Single handcrafted maze."""
+    """Single handcrafted maze.
+        TODO: implement randfixedsum (identical distribution across individual segments)
+
+    """
 
     _NUM_SAMPLES_PER_NUM_TURNS = 10
     _END = (0.5, 0.1)
@@ -103,7 +111,7 @@ class Random3(Base):
     """Random with 1 to 3 prey turns."""
 
     def __init__(self):
-        length_range = [0.5, 0.8]
-        num_turns_range = [1, 4]
+        length_range = [_min_length_range, _max_length_range]
+        num_turns_range = [_min_num_turns_range, _min_num_turns_range+1]  # upper: exclusive
         super(Random3, self).__init__(
             length_range, num_turns_range, name='Random3')
