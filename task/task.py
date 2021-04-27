@@ -35,7 +35,7 @@ from utils import logger_env_wrapper
 from moog import environment
 from moog import observers
 
-from maze_pong_configs import config as config_lib
+from configs import config as config_lib
 
 
 class TaskManager:
@@ -49,12 +49,11 @@ class TaskManager:
                  **config_kwargs):
         """Constructor."""
         self.lock = threading.Lock()
-        self._discrete_controller = getvar('discrete_controller')
         
         # Get config
         level_split = level.split('.')
         config_module = __import__(
-            '.'.join(['maze_pong_configs', 'levels'] + level_split[:-1]),
+            '.'.join(['configs', 'levels'] + level_split[:-1]),
             globals(),
             locals(),
             [level_split[-2]],
@@ -65,7 +64,6 @@ class TaskManager:
         importlib.reload(config_lib)
 
         config_class = getattr(config_module, level_split[-1])(
-            discrete_controller=self._discrete_controller,
             **config_kwargs,
         )
         config = config_class()   
@@ -80,10 +78,8 @@ class TaskManager:
         config['observers'] = {'image': renderer}
 
         # Create environment
-        log_dir = os.path.join(
-            _PWD, 'logs')
-        # _PWD, 'logs/' + datetime.now().strftime('%Y_%m_%d'))
-        self.env = logger_env_wrapper.MazePongLoggingEnvironment(
+        log_dir = os.path.join(_PWD, 'logs')
+        self.env = logger_env_wrapper.MazeSetGoLoggingEnvironment(
             environment=environment.Environment(**config),
             log_dir=log_dir,
             metadata=[('level', level)]
@@ -116,15 +112,11 @@ class TaskManager:
         for varname in ('eye_x', 'eye_y'):
             self._register_event_callback(varname)
 
-        if self._discrete_controller:
-            self._keys_pressed = np.zeros(4, dtype=int)
-            for varname in ('up_pressed', 'down_pressed', 'left_pressed',
-                            'right_pressed'):
-                self._register_event_callback(varname)
-        else:
-            for varname in ('x_force', 'y_force'):
-                self._register_event_callback(varname)
-
+        self._keys_pressed = np.zeros(4, dtype=int)
+        for varname in ('up_pressed', 'down_pressed', 'left_pressed',
+                        'right_pressed'):
+            self._register_event_callback(varname)
+        
         self.complete = False
 
     def _register_event_callback(self, varname):
@@ -159,7 +151,7 @@ class TaskManager:
         
         return action
 
-    def _get_grid_action(self):
+    def _get_controller_action(self):
         """Get grid action."""
 
         if self.env.step_count==0:
@@ -195,26 +187,6 @@ class TaskManager:
             key_ind = 4
         
         return key_ind
-
-    def _get_joystick_action(self):
-        """Get joystick action."""
-        if self.env.step_count==0:
-            # Don't move on the first step
-            # We set x_force and y_force to zero because for some reason the
-            # joystick initially gives a non-zero action, which persists unless
-            # we explicitly terminate it.
-            setvar('x_force', 0.)
-            setvar('y_force', 0.)
-            return np.zeros(2)
-        else:
-            return np.array([getvar('x_force'), getvar('y_force')])
-
-    def _get_controller_action(self):
-        """Get controller action."""
-        if self._discrete_controller:
-            return self._get_grid_action()
-        else:
-            return self._get_joystick_action()
 
     def step(self):
         """Step environment."""

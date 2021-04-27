@@ -3,13 +3,13 @@
 import os
 
 # Rig
-# _PWD = '/Users/jazlab/Documents/nwatters/maze_pong/task'
+# _PWD = '/Users/jazlab/Documents/nwatters/maze_set_go/task'
 # _PYTHON_SITE_PACKAGES = (
 #     '/Users/jazlab/miniconda/envs/nwatters/lib/python3.8/site-packages'
 # )
 
 # Local nwatters
-# _PWD = '/Users/nicholaswatters/Desktop/grad_school/research/mehrdad/maze_pong/task'
+# _PWD = '/Users/nicholaswatters/Desktop/grad_school/research/mehrdad/maze_set_go/task'
 # _PYTHON_SITE_PACKAGES = (
 #     '/Users/nicholaswatters/miniconda3/envs/mworks_moog/lib/python3.8/'
 #     'site-packages'

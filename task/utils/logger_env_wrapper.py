@@ -49,7 +49,7 @@ def _serialize_action(action):
     return action
 
 
-class MazePongLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
+class MazeSetGoLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
     """Environment class for logging timesteps.
     
     This logger produces a description of the log in 'description.txt' of 
@@ -65,7 +65,7 @@ class MazePongLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
             log_dir: String. Log directory relative to working directory.
             metadata: Optional metadata to log.
         """
-        super(MazePongLoggingEnvironment, self).__init__(environment)
+        super(MazeSetGoLoggingEnvironment, self).__init__(environment)
 
         # Set the logging directory
         now_str = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
@@ -209,7 +209,12 @@ class MazePongLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
         self._episode_log = [serialized_state]
 
         # Add maze to log
-        self._episode_log.append(self.meta_state['maze_matrix'].tolist())
+        maze_log = {
+            'maze_arms': self.meta_state['maze_arms'],
+            'prey_arm': self.meta_state['prey_arm'],
+            'stimulus_features': self.meta_state['stimulus_features'],
+        }
+        self._episode_log.append(self._serialize(maze_log))
 
         return timestep
 

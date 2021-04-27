@@ -4,6 +4,7 @@
 **/.ipynb_checkpoints
 **.DS_Store
 **.pyc
+**.idea**
 **logs**
 behavior_analysis**
 behavior_analysis/data**

@@ -6,17 +6,15 @@
 
 // Include one of the following controller interfaces:
 
-// %include 'controller_interfaces/keyboard'
+%include 'controller_interfaces/keyboard'
 // %include 'controller_interfaces/gamepad_grid'
-// %include 'controller_interfaces/gamepad'
 // %include 'controller_interfaces/joystick_grid'
-%include 'controller_interfaces/joystick'
 
 
 // Include one of the following eye interfaces
 
-// %include 'eye_interfaces/mouse'
-%include 'eye_interfaces/eyelink'
+%include 'eye_interfaces/mouse'
+// %include 'eye_interfaces/eyelink'
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -245,109 +243,8 @@ protocol 'Eye Calibration' {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// Deterministic
-
-protocol 'p_occ_top.v0' {
+protocol 'random_3' {
     run_python_string (
-        't = TaskManager(level="p_occ_top.v0.v0", delay_phase=False, fixation_phase=False)')
+        't = TaskManager(level="random.random_3.random_3", delay_phase=False, fixation_phase=False, ms_per_unit=2000)')
     run_task ()
 }
-
-// Memorization
-
-protocol 'ps_occ_bottom.mem_v1' {
-    run_python_string (
-        't = TaskManager(level="ps_occ_bottom.mem_v1.mem_v1", delay_phase=False, fixation_phase=False)')
-    run_task ()
-}
-
-protocol 'ps_occ_bottom.mem_v0' {
-    run_python_string (
-        't = TaskManager(level="ps_occ_bottom.mem_v0.mem_v0", delay_phase=False, fixation_phase=False)')
-    run_task ()
-}
-
-protocol 'ps_occ_bottom.mem_v2' {
-    run_python_string (
-        't = TaskManager(level="ps_occ_bottom.mem_v2.mem_v2", delay_phase=False, fixation_phase=False)')
-    run_task ()
-}
-
-// Exclusion
-
-protocol 'ps_occ_top.exclusion_v1' {
-    run_python_string (
-        't = TaskManager(level="ps_occ_top.exclusion_v1.exclusion_v1", delay_phase=False, fixation_phase=False)')
-    run_task ()
-}
-
-// Multi-split
-
-protocol 'pss_occ_top.no_merge_v0' {
-    run_python_string (
-        't = TaskManager(level="pss_occ_top.no_merge_v0.no_merge_v0", delay_phase=False, fixation_phase=False)')
-    run_task ()
-}
-
-protocol 'pss_occ_top.merge_v0' {
-    run_python_string (
-        't = TaskManager(level="pss_occ_top.merge_v0.merge_v0", delay_phase=False, fixation_phase=False)')
-    run_task ()
-}
-
-protocol 'pss_occ_top.high_merge_v0' {
-    run_python_string (
-        't = TaskManager(level="pss_occ_top.high_merge_v0.high_merge_v0", delay_phase=False, fixation_phase=False)')
-    run_task ()
-}
-
-// Two prey split control
-
-protocol 'psps_occ_top.split_control_v0' {
-    run_python_string (
-        't = TaskManager(level="psps_occ_top.split_control_v0.split_control_v0", delay_phase=False, fixation_phase=False)')
-    run_task ()
-}
-
-
-
-
-// Experiments
-
-
-protocol 'experiments_p.exp_v0' {
-    run_python_string (
-        't = TaskManager(level="experiments_p.exp_v0.exp_v0", delay_phase=True, fixation_phase=False)')
-    run_task ()
-}
-
-protocol 'experiments_pp.exp_v0' {
-    run_python_string (
-        't = TaskManager(level="experiments_pp.exp_v0.exp_v0", delay_phase=True, fixation_phase=False)')
-    run_task ()
-}
-
-protocol 'random.exp_1_prey translucent' {
-    run_python_string (
-        't = TaskManager(level="random.exp_1_prey.exp_1_prey", delay_phase=True, translucent_occluder=True, fixation_phase=False)')
-    run_task ()
-}
-
-protocol 'random.exp_2_prey translucent' {
-    run_python_string (
-        't = TaskManager(level="random.exp_2_prey.exp_2_prey", delay_phase=True, translucent_occluder=True, fixation_phase=False)')
-    run_task ()
-}
-
-protocol 'random.exp_1_prey' {
-    run_python_string (
-        't = TaskManager(level="random.exp_1_prey.exp_1_prey", delay_phase=True, fixation_phase=False)')
-    run_task ()
-}
-
-protocol 'random.exp_2_prey' {
-    run_python_string (
-        't = TaskManager(level="random.exp_2_prey.exp_2_prey", delay_phase=True, fixation_phase=False)')
-    run_task ()
-}
-

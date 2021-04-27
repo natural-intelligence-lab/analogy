@@ -135,7 +135,7 @@ class Config():
         self._fixation_phase = fixation_phase
         self._delay_phase = delay_phase
 
-        # Compute prey speed given ms_per_unit
+        # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / ms
         self._agent_speed = 0.5 * self._prey_speed
         self._prey_lead_in = 0.07
@@ -186,8 +186,6 @@ class Config():
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
             controller=controller_action_space,
         )
-
-        self._action_space = controller_action_space
 
     def _construct_game_rules(self):
         """Construct game rules."""
