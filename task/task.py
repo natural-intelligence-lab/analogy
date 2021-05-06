@@ -62,6 +62,7 @@ class TaskManager:
         # will be propagated to MWorks without restarting the server.
         importlib.reload(config_module)
         importlib.reload(config_lib)
+        # importlib.reload(set_pwd)
 
         config_class = getattr(config_module, level_split[-1])(
             **config_kwargs,

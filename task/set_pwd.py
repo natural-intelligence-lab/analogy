@@ -15,10 +15,17 @@ import os
 #     'site-packages'
 # )
 
-# Local hansem
+# laptop hansem
+# _PWD = '/Users/hansem/Documents/MazeSetGo/task'
+# _PYTHON_SITE_PACKAGES = (
+#     '/opt/anaconda3/envs/mworks/lib/python3.8/'
+#     'site-packages'
+# )
+
+# desktop hansem
 _PWD = '/Users/hansem/Documents/MazeSetGo/task'
 _PYTHON_SITE_PACKAGES = (
-    '/opt/anaconda3/envs/mworks/lib/python3.8/'
+    '/Users/hansem/miniconda3/envs/mworks/lib/python3.8/'
     'site-packages'
 )
 

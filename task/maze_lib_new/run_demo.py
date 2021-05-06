@@ -17,14 +17,17 @@ _PREY_PATH = [
 
 
 def main(_):
-    """Run demo."""
+    """Run demo.
+    TODO: implement _PREY_PATH (# turns, path length) -> collect pilot for RT
+
+    """
 
     # Generate the maze
     maze = maze_lib.Maze(width=_WIDTH, height=_HEIGHT, prey_path=_PREY_PATH)
     maze.sample_distractors()
 
     # Render the maze
-    wall_sprite_factors = dict(c0=0., c1=1., c2=1.)
+    wall_sprite_factors = dict(c0=180, c1=0., c2=0.5) # gray
     wall_sprites = maze.to_sprites(wall_width=0.1, **wall_sprite_factors)
     state = collections.OrderedDict([
         ('walls', wall_sprites)
