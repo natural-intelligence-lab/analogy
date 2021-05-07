@@ -44,13 +44,13 @@ class Sampler():
 
     def _process_stimulus_string(self, x):
         """Convert stimulus string from logs into a stimulus for the config."""
-        maze_arms, prey_arm, features = x
+        maze_size, prey_path, features = x
         if not self._filter_fn(features):
             return []
 
         stimulus = dict(
-            maze_arms=maze_arms,
-            prey_arm=prey_arm,
+            maze_size=maze_size,
+            prey_path=prey_path,
             features=features,
         )
         return [stimulus]

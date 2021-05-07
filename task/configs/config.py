@@ -50,11 +50,11 @@ class TrialInitialization():
         if stimulus is None:
             return None
 
-        # Each element of maze_arms is a dictionary that may contain keys
-        # ['end', 'directions', 'lengths']
-        maze_arms = stimulus['maze_arms']
-        maze = maze_lib.Maze(maze_arms)
-        tunnels = maze.to_sprites(arm_width=0.01, c0=0., c1=0., c2=0.5)
+        maze_size = stimulus['maze_size']
+        prey_path = stimulus['prey_path']
+        maze = maze_lib.Maze(maze_size, maze_size, prey_path=prey_path)
+        maze.sample_distractors()
+        tunnels = maze.to_sprites(wall_width=0.05, c0=0., c1=0., c2=0.5)
 
         prey = sprite.Sprite(**self._prey_factors)
 
@@ -86,8 +86,9 @@ class TrialInitialization():
 
         # Prey distance remaining is how far prey has to go to reach agent
         # It will be continually updated in the meta_state as the prey moves
-        prey_distance_remaining = (
-            maze.arms[stimulus['prey_arm']].length + self._prey_lead_in)
+        # prey_distance_remaining = (
+        #     maze.arms[stimulus['prey_arm']].length + self._prey_lead_in)
+        prey_distance_remaining = 10
 
         # TODO: add ts, tp here?
         self._meta_state = {
@@ -96,8 +97,8 @@ class TrialInitialization():
             'phase': '',  # fixation -> offline -> motion -> online -> reward -> ITI
             'trial_name': '',
             'stimulus_features': stimulus['features'],
-            'maze_arms': maze_arms,
-            'prey_arm': stimulus['prey_arm'],
+            'maze_arms': 17,
+            'prey_arm': 17,
             'prey_distance_remaining': prey_distance_remaining,
             'correct_direction': None,
         }
@@ -160,7 +161,8 @@ class Config():
         self._maze_walk = maze_lib.MazeWalk(
             speed=0., avatar_layer='prey', start_lead_in=self._prey_lead_in)
         self._physics = physics_lib.Physics(
-            corrective_physics=[self._maze_walk])
+            # corrective_physics=[self._maze_walk],
+        )
 
     def _construct_task(self):
         """Construct task."""
@@ -196,8 +198,8 @@ class Config():
         # 1. Fixation phase
 
         def _reset_physics(meta_state):
-            self._maze_walk.set_maze(
-                meta_state['maze_arms'], meta_state['prey_arm'])
+            # self._maze_walk.set_maze(
+            #     meta_state['maze_arms'], meta_state['prey_arm'])
             self._maze_walk.speed = 0
 
         reset_physics = gr.ModifyMetaState(_reset_physics)

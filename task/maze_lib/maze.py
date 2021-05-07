@@ -1,92 +1,212 @@
 """Maze."""
 
 import copy
-from maze_lib import constants
 from moog import sprite
 import numpy as np
 
-_EPSILON = 1e-4
-_MAX_ITERS = int(1e4)
-_DEFAULT_END = (0.5, 0.1)
 
+class Maze():
+    """Maze class."""
 
-def _opposite_direction(d):
-    if d == 'u':
-        return 'd'
-    elif d == 'd':
-        return 'u'
-    elif d == 'l':
-        return 'r'
-    elif d == 'r':
-        return 'l'
-    else:
-        raise ValueError(f'Direction {d} not recognized')
-
-
-class MazeArm():
-    """Maze arm object."""
-
-    def __init__(self, directions, lengths, end=_DEFAULT_END):
-        """
-        TODO(nwatters): Add documentation.
-        """
-        # Convert directions to list
-        directions = list(directions)
-
-        # Sanity check to make sure directions and lengths have same number
-        if len(directions) != len(lengths):
-            raise ValueError(
-                f'directions {directions} must have the same length as lengths '
-                f'{lengths}'
-            )
-
-        # Sanity check to make sure directions never reverse
-        for d_0, d_1 in zip(directions[:-1], directions[1:]):
-            if d_1 == d_0 or d_1 == _opposite_direction(d_0):
-                raise ValueError(
-                    f'Have invalid consecutive directions {d_0} and {d_1} in '
-                    f'directions {directions}'
-                )
-
-        self._end = end
-
-        self.lengths = lengths
-        self.direction_strings = directions
-        self.direction_arrays = [
-            getattr(constants.Directions, d) for d in directions]
-
-        self._segments = self._get_segments(self.direction_arrays, lengths, end)
-
-    def _get_segments(self, direction_arrays, lengths, end):
-        """TODO(nwatters): Add documentation."""
-        segments = []
-        v_end = np.array(end)
-        for (d, l) in zip(direction_arrays, lengths):
-            v_start = v_end + d * l
-            new_segment = (v_start, v_end)
-            segments.append(new_segment)
-            v_end = copy.copy(v_start)
+    def __init__(self, width, height, prey_path=()):
+        """Constructor.
         
-        return segments
+        Maze is a grid with walls between some of the cells.
 
-    def to_sprites(self, arm_width, **sprite_factors):
-        """Convert arm to list of sprites.
+        Indexing scheme: Width is component 0 of cell indices, height is
+        component 1. Width is indexed left-to-right, height is indexed
+        bottom-to-top.
 
         Args:
-            arm_width: Scalar. How wide the arm segments should be.
+            width: Int. Width of the grid of maze cells.
+            height: Int. Height of the grid of maze cells.
+            prey_path: Iterable of int 2-tuples, which are indices of cells in
+                the prey path.
+        """
+        self._width = width
+        self._height = height
+        self._construct_walls()
+
+        self._construct_connected_components()
+        self._set_prey_path(prey_path)
+
+    def _construct_walls(self):
+        """Construct self._walls_frozen and self._walls_temporary."""
+        # Horizontal walls
+        h_walls_temp = []
+        h_walls_frozen = []
+        for i in range(self._width):
+            for j in range(self._height + 1):
+                left_vertex = (i, j)
+                right_vertex = (i + 1, j)
+                if 0 < j < self._height:
+                    h_walls_temp.append((left_vertex, right_vertex))
+                else:
+                    h_walls_frozen.append((left_vertex, right_vertex))
+
+        # Vertical walls
+        v_walls_temp = []
+        v_walls_frozen = []
+        for i in range(self._width + 1):
+            for j in range(self._height):
+                bottom_vertex = (i, j)
+                top_vertex = (i, j + 1)
+                if 0 < i < self._width:
+                    v_walls_temp.append((bottom_vertex, top_vertex))
+                else:
+                    v_walls_frozen.append((bottom_vertex, top_vertex))
+
+        self._walls_temporary = h_walls_temp + v_walls_temp
+        self._walls_frozen = h_walls_frozen + v_walls_frozen
+
+    def _construct_connected_components(self):
+        """Put each cell in it's own connected component."""
+        self._connected_components = {
+            (i, j): i + j * self._width
+            for i in range(self._width) for j in range(self._height)
+        }
+
+    def _wall_to_cells(self, wall):
+        """Find wall's neighboring cells."""
+        vertex_0, vertex_1 = wall
+        if vertex_0[0] < vertex_1[0]:  # Horizontal wall
+            cell_0 = (vertex_0[0], vertex_0[1] - 1)  # Bottom cell
+            cell_1 = (vertex_0[0], vertex_0[1])  # Top cell
+        else:  # Vertical wall
+            cell_0 = (vertex_0[0] - 1, vertex_0[1])  # Left cell
+            cell_1 = (vertex_0[0], vertex_0[1])  # Right cell
+
+        return cell_0, cell_1
+
+    def _cell_to_walls(self, cell):
+        """Find cell's boundary walls."""
+        i, j = cell
+        corner_bottom_left = (i, j)
+        corner_bottom_right = (i + 1, j)
+        corner_top_left = (i, j + 1)
+        corner_top_right = (i + 1, j + 1)
+
+        walls = [
+            (corner_bottom_left, corner_bottom_right),
+            (corner_top_left, corner_top_right),
+            (corner_bottom_left, corner_top_left),
+            (corner_bottom_right, corner_top_right),
+        ]
+
+        return walls
+
+    def _remove_wall(self, wall):
+        """Remove a wall, returning whether succesful."""
+        if wall in self._walls_frozen:
+            raise ValueError(f'Wall {wall} is frozen so cannot be removed.')
+
+        cell_0, cell_1 = self._wall_to_cells(wall)
+        component_0 = self._connected_components[cell_0]
+        component_1 = self._connected_components[cell_1]
+
+        self._walls_temporary.remove(wall)
+        if component_0 == component_1:
+            # Creating a loop, so we reject
+            self._walls_frozen.append(wall)
+            return False
+        else:
+            # Removing the wall doesn't create loop, so remove it
+            self._merge_components(component_0, component_1)
+            return True
+
+    def _merge_components(self, component_0, component_1):
+        """Merge two connected components.
+        
+        Arbitrarily keep the index of component_0, overwriting the component_1
+        cells.
+        """
+        for k, v in self._connected_components.items():
+            if v == component_1:
+                self._connected_components[k] = component_0
+
+    def sample_distractors(self):
+        """Sample the maze outside of the prey path.
+
+        Iteratively removes walls until no more temporary walls are left to
+        remove.
+        """
+        while len(self._walls_temporary) > 0:
+            # Sample a temporary wall
+            wall_index = np.random.randint(len(self._walls_temporary))
+            wall_to_remove = self._walls_temporary[wall_index]
+            self._remove_wall(wall_to_remove)
+
+    def _set_prey_path(self, prey_path):
+        """Set the prey path.
+        
+        Removes walls in between cells in the prey path, and adds walls on the
+        boundary of the prey path to self._walls_frozen.
+
+        Removes maze periphery walls touching the first and last prey_path
+        cells.
+
+        Args:
+            Prey_path: Iterable of int 2-tuples, indexes of cells comprising the
+                prey path. Should be ordered, so the first and last elements are
+                on the maze periphery.
+        """
+
+        walls_to_remove = []
+        walls_to_freeze = []
+        
+        # First, add all cell boundary walls to walls_to_freeze
+        for cell in prey_path:
+            walls_to_freeze.extend(self._cell_to_walls(cell))
+        walls_to_freeze = list(set(walls_to_freeze))
+
+        # Now, remove border walls between consecutive cells
+        for cell_0, cell_1 in zip(prey_path[:-1], prey_path[1:]):
+            if cell_0[0] == cell_1[0]:  # Cells are vertically adjacent
+                vertex_left = (cell_0[0], max(cell_0[1], cell_1[1]))
+                vertex_right = (vertex_left[0] + 1, vertex_left[1])
+                wall = (vertex_left, vertex_right)
+            else:  # Cells are horizontally adjacent
+                vertex_bottom = (max(cell_0[0], cell_1[0]), cell_0[1])
+                vertex_top = (max(cell_0[0], cell_1[0]), cell_0[1] + 1)
+                wall = (vertex_bottom, vertex_top)
+            
+            walls_to_freeze.remove(wall)
+            walls_to_remove.append(wall)
+
+        # Finally, remove the maze periphery walls touching the first and last
+        # cell
+        for cell in [prey_path[0], prey_path[-1]]:
+            for wall in self._cell_to_walls(cell):
+                if wall in self._walls_frozen:
+                    walls_to_remove.append(wall)
+                    walls_to_freeze.remove(wall)
+
+        for wall in walls_to_remove + walls_to_freeze:
+            if wall in self._walls_temporary:
+                self._walls_temporary.remove(wall)
+            if wall in self._walls_frozen:
+                self._walls_frozen.remove(wall)
+        
+        self._walls_frozen.extend(walls_to_freeze)
+
+    def to_sprites(self, wall_width, **sprite_factors):
+        """Convert maze to list of sprites.
+
+        Args:
+            wall_width: Scalar. How wide the wall sprites should be.
             sprite_factors: Dict. Other attributes of the sprites (e.g. color,
                 opacity, ...).
         """
-        arm_width_box = np.array([
-            [-0.5 * arm_width, -0.5 * arm_width],
-            [-0.5 * arm_width, 0.5 * arm_width],
-            [0.5 * arm_width, 0.5 * arm_width],
-            [0.5 * arm_width, -0.5 * arm_width],
+        wall_width_box = np.array([
+            [-0.5 * wall_width, -0.5 * wall_width],
+            [-0.5 * wall_width, 0.5 * wall_width],
+            [0.5 * wall_width, 0.5 * wall_width],
+            [0.5 * wall_width, -0.5 * wall_width],
         ])
         sprites = []
-        for (v_start, v_end) in self._segments:
-            start_box = arm_width_box + np.array([v_start])
-            end_box = arm_width_box + np.array([v_end])
+        for (v_start, v_end) in self._walls_temporary + self._walls_frozen:
+            start_box = wall_width_box + np.array([v_start])
+            end_box = wall_width_box + np.array([v_end])
             bounds = np.concatenate((start_box, end_box), axis=0)
             x_min, y_min = np.min(bounds, axis=0)
             x_max, y_max = np.max(bounds, axis=0)
@@ -96,42 +216,11 @@ class MazeArm():
                 [x_max, y_max],
                 [x_max, y_min],
             ])
+            maze_maze_span = max(self._width, self._height)
+            sprite_shape /= (maze_maze_span + 2)
+            sprite_shape += 1 / (maze_maze_span + 2)
             new_sprite = sprite.Sprite(
                 x=0., y=0., shape=sprite_shape, **sprite_factors)
             sprites.append(new_sprite)
         
         return sprites
-
-    @property
-    def segments(self):
-        return self._segments
-
-    @property
-    def length(self):
-        return sum(self.lengths)
-
-
-class Maze():
-
-    def __init__(self, arms=()):
-        """Constructor.
-
-        Args:
-            arms: Iterable of arms. Each arm is a dictionary which may have keys
-                ['end', 'directions', 'lengths']. Here 'end' is a (x, y)
-                pair for the end of the arm, 'directions' is a string with
-                ['u', 'd', 'l', 'r'] characters specifying the direction of each
-                segment, and 'lengths' is an iterable of scalars specifying the
-                length of each segment. The segments are listed end-to-start.
-        """
-        self._arms = [MazeArm(**x) for x in arms]
-
-    def to_sprites(self, arm_width, **sprite_factors):
-        sprites = []
-        for arm in self._arms:
-            sprites.extend(arm.to_sprites(arm_width, **sprite_factors))
-        return sprites
-
-    @property
-    def arms(self):
-        return self._arms
