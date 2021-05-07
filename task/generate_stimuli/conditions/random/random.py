@@ -26,7 +26,7 @@ class Base():
 
     """
 
-    _NUM_SAMPLES_PER_NUM_TURNS = 100
+    _NUM_SAMPLES_PER_NUM_TURNS = 50
 
     def __init__(self,
                  length_range,
@@ -36,6 +36,8 @@ class Base():
         self._num_turns_range = num_turns_range
         self._min_arm_length = _min_arm_length
         self._name = name
+        self._width = 10  # num of cells of grid; should match maze_lib_new/maze.Maze input
+        self._height = 10
 
     def _random_num_turns(self):
         return np.random.randint(
@@ -48,13 +50,14 @@ class Base():
         pairwise_distances = np.abs(
             vertices[:, np.newaxis] - vertices[np.newaxis, :])
         np.fill_diagonal(pairwise_distances, np.inf)
+        # check if path fit in grid (_w, _h),
         length_1 = np.sum(pairwise_distances[::2]) - (np.size(pairwise_distances[::2]) - 1)  # remove overlapped cell
         length_2 = np.sum(pairwise_distances[1::2]) - (np.size(pairwise_distances[1::2]) - 1)
         if np.sum(pairwise_distances < self._min_arm_length) > 0:  # rejection sampling
             return self._sample_vertices(num_turns, length)
-        elf length_1 < _width:  # path doesn't fit in grid (_w, _h),
+        elif length_1 > self._width:  # path doesn't fit in grid (_w, _h),
             return self._sample_vertices(num_turns, length)
-        elf length_2 > _height:
+        elif length_2 > self._height:
             return self._sample_vertices(num_turns, length)
         else:
             return vertices
@@ -72,7 +75,7 @@ class Base():
         if directions[-1] == 'u' or directions[-1] == 'd':
             length_x = [0]
             length_y = lengths[0]
-        for i in range(1, num_turns):
+        for i in range(1, num_turns+1):
             if directions[-1] == 'r' or directions[-1] == 'l':
                 directions.append(np.random.choice(['u', 'd']))
                 length_y += lengths[i]
