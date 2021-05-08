@@ -122,182 +122,38 @@ class SetPositionFrame():
         return np.array([self._mouse_coords[0], 1. - self._mouse_coords[1]])
 
 
-class GridSetPosition():
+class HandEye():
     """Tkinter frame for composite Grid and SetPosition action space."""
     
     def __init__(self,
                  root,
                  canvas,
                  canvas_half_width,
-                 grid_key,
-                 set_position_key):
+                 hand_key,
+                 eye_key):
         """Constructor.
 
         Args:
             root: Instance of tk.Frame. Root frame in which the gui frame lives.
             canvas: Canvas object to add position-setting functionality to.
             canvas_half_width: Int. Half-width of the canvas.
-            grid_key: String. Key of the Grid action space.
-            set_position_key: String. Key of the SetPosition action space.
+            hand_key: String. Key of the hand action space (arrow keys).
+            eye_key: String. Key of the eye action space (mouse).
         """
-        self._grid_key = grid_key
-        self._set_position_key = set_position_key
+        self._hand_key = hand_key
+        self._eye_key = eye_key
 
-        self._grid = GridActions(root=root, canvas_half_width=canvas_half_width)
-        self._set_position = SetPositionFrame(
+        self._hand = GridActions(root=root, canvas_half_width=canvas_half_width)
+        self._eye = SetPositionFrame(
             canvas=canvas, canvas_half_width=canvas_half_width)
 
-        self.canvas = self._grid.canvas
+        self.canvas = self._hand.canvas
         
     @property
     def action(self):
         """Return the composite action."""
         action = {
-            self._grid_key: self._grid.action,
-            self._set_position_key: self._set_position.action,
+            self._hand_key: self._hand.action,
+            self._eye_key: self._eye.action,
         }
         return action
-
-
-class JoystickFrame(tk.Frame):
-    """Joystick Tkinter frame.
-
-    This creates the frame for an interactive joystick. The joystick consists of
-    three objects:
-        (i) A large gray "motion zone" circle in the background. This is the
-            area in which the joystick can be moved.
-        (ii) A small black "center point" circle fixed in the middle ground.
-            This indicates the joystick position that give zero action.
-        (iii) A green "joystick" circle in the foreground that can be moved. The
-            center of this circle is the action readout.
-
-    If the mouse is not clicked, then position of the joystick centerpoint is 0
-    (in the center of the motion zone). If the mouse is currently pressed, then
-    the position of the joystick is the closest point in the motion zone to the
-    mouse position. Namely, if the mouse is in the motion zone then the joystick
-    is directly under the mouse, and if the mouse is not in the motion zone then
-    the joystick is at the edge of the motion zone closest to the mouse.
-
-    Thus the joystick can be moved by clicking the mouse anywhere (in which case
-    the joystick jumps to that position) and dragging the pressed mouse around
-    (in which case the joystick moves underneath the mouse).
-    """
-
-    def __init__(self, root, canvas_half_width=100, motion_zone_radius=90,
-                 joystick_radius=10, center_point_radius=3):
-        """Constructor.
-
-        Args:
-            root: Instance of tk.Frame. Root frame in which the joystick lives.
-            canvas_half_width: Int. Half of the width of the canvas on which the
-                joystick is rendered.
-            motion_zone_radius: Int. Radius of the motion zone.
-            joystick_radius: Int. Radius of the joystick.
-            center_point_radius: Int. Radius of the center point.
-        """
-        super(JoystickFrame, self).__init__(root)
-
-        self._joystick_radius = joystick_radius
-        self._canvas_half_width = canvas_half_width
-        self._motion_zone_radius = motion_zone_radius
-        self._center_point_radius = center_point_radius
-
-        # Create a canvas
-        self.canvas = tk.Canvas(
-            width=2 * canvas_half_width,
-            height=2 * canvas_half_width)
-
-        # Create motion zone, center point, and joystick
-        self._create_items()
-
-        # Add bindings for clicking, dragging and releasing the joystick
-        self.canvas.bind('<ButtonPress-1>', self._mouse_press)
-        self.canvas.bind('<ButtonRelease-1>', self._mouse_release)
-        self.canvas.bind('<B1-Motion>', self._mouse_move)
-
-        self._mouse_is_pressed = False
-
-    def _create_items(self):
-        # Create motion zone
-        self.canvas.create_oval(
-            self._canvas_half_width - self._motion_zone_radius,
-            self._canvas_half_width - self._motion_zone_radius,
-            self._canvas_half_width + self._motion_zone_radius,
-            self._canvas_half_width + self._motion_zone_radius,
-            fill='gray80',
-        )
-
-        # Create center point
-        self.canvas.create_oval(
-            self._canvas_half_width - self._center_point_radius,
-            self._canvas_half_width - self._center_point_radius,
-            self._canvas_half_width + self._center_point_radius,
-            self._canvas_half_width + self._center_point_radius,
-            fill='black',
-        )
-
-        # Create joystick
-        self.joystick = self.canvas.create_oval(
-            self._canvas_half_width - self._joystick_radius,
-            self._canvas_half_width - self._joystick_radius,
-            self._canvas_half_width + self._joystick_radius,
-            self._canvas_half_width + self._joystick_radius,
-            fill='green',
-        )
-
-    def _recenter_joystick(self):
-        """Move the joystick to the center."""
-        new_coords = [
-            self._canvas_half_width - self._joystick_radius,
-            self._canvas_half_width - self._joystick_radius,
-            self._canvas_half_width + self._joystick_radius,
-            self._canvas_half_width + self._joystick_radius,
-        ]
-        self.canvas.coords(self.joystick, new_coords)
-
-    def _place_joystick(self, event):
-        """Place the joystick near the (x, y) coordinates of a mouse event.
-
-        If the event (x, y) is inside the motion zone, the joystick is placed
-        directly at that position. If it is outside the motion zone, the
-        joystick is placed on the edge of the motion zone nearest to that point.
-        """
-        centered_event_coords = (
-            np.array([event.x, event.y], dtype=float) - self._canvas_half_width)
-        event_dist = np.linalg.norm(centered_event_coords)
-        rescale_factor = min(1, self._motion_zone_radius / event_dist)
-        centered_event_coords *= rescale_factor
-        event_coords = centered_event_coords + self._canvas_half_width
-        event_coords = event_coords.astype(int)
-
-        new_coords = [
-            event_coords[0] - self._joystick_radius,
-            event_coords[1] - self._joystick_radius,
-            event_coords[0] + self._joystick_radius,
-            event_coords[1] + self._joystick_radius,
-        ]
-        self.canvas.coords(self.joystick, new_coords)
-
-    def _mouse_press(self, event):
-        self._place_joystick(event)
-        self._mouse_is_pressed = True
-
-    def _mouse_release(self, event):
-        self._mouse_is_pressed = False
-        self._recenter_joystick()
-
-    def _mouse_move(self, event):
-        if self._mouse_is_pressed:
-            self._place_joystick(event)
-
-    @property
-    def action(self):
-        """Return the joystick's position as an action in [-1, 1] x [-1, 1]."""
-        joystick_coords = self.canvas.coords(self.joystick)
-        joystick_center = np.array([
-            joystick_coords[0] + self._joystick_radius,
-            joystick_coords[1] + self._joystick_radius
-        ])
-        joystick_center -= self._canvas_half_width
-        action = joystick_center.astype(float) / self._motion_zone_radius
-        return np.array([action[0], -1 * action[1]])

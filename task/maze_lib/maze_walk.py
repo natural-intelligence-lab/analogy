@@ -29,13 +29,12 @@ class MazeWalk(physics_lib.AbstractPhysics):
         self._avatar_layer = avatar_layer
         self._start_lead_in = start_lead_in
 
-    def set_maze(self, maze_arms, prey_arm):
-        maze = Maze(maze_arms)
-        # vertices are the endpoints of each segment of the prey's arm
-        self._vertices = [x[0] for x in maze.arms[prey_arm].segments[::-1]]
-        self._vertices.append(maze.arms[prey_arm].segments[0][1])
-        self._direction_arrays = [
-            -1 * x for x in maze.arms[prey_arm].direction_arrays[::-1]]
+    def set_prey_path(self, prey_path, maze_size, border_width):
+        prey_path = (0.5 + np.array(prey_path)) / maze_size
+        self._vertices = 0.5 + (1 - 2 * border_width) * (prey_path - 0.5)
+        directions = self._vertices[1:] - self._vertices[:-1]
+        directions /= np.linalg.norm(directions, axis=1, keepdims=True)
+        self._directions = directions
         self._current_segment = 0
         self._reset_sprite_position = True
 
@@ -43,8 +42,9 @@ class MazeWalk(physics_lib.AbstractPhysics):
         """Update a sprite velocity to abide by the maze."""
 
         pos = sprite.position
-        d = self._direction_arrays[self._current_segment]
-        sprite.angle = -np.pi/2*d[0]  # for reward; d[1]=1,-1 for (r,l); 12 o'clock = degree zero & CCW for +
+        d = self._directions[self._current_segment]
+        # for reward; d[1]=1,-1 for (r,l); 12 o'clock = degree zero & CCW for +
+        sprite.angle = -np.pi/2 * d[0]
 
         # Reset the sprite's position if first step
         if self._reset_sprite_position:
@@ -74,7 +74,7 @@ class MazeWalk(physics_lib.AbstractPhysics):
         dot = np.dot(vertex_diff, d)
         if dot > 0:
             overshoot = np.sum(np.abs(vertex_diff))
-            next_d = self._direction_arrays[self._current_segment + 1]
+            next_d = self._directions[self._current_segment + 1]
             new_pos = end_vertex + overshoot * next_d
             self._current_segment += 1
 

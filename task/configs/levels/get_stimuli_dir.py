@@ -10,15 +10,15 @@ def stimuli_dir():
         return '../stimuli'
     else:
         # Laptop hansem
-        return (
-            '/Users/hansem/Documents/MazeSetGo/task/stimuli'
-        )
+        # return (
+        #     '/Users/hansem/Documents/MazeSetGo/task/stimuli'
+        # )
 
         # Psychophysics rig
         # return '/Users/jazlab/Documents/nwatters/maze_pong/task/stimuli'
 
         # Laptop nwatters
-        # return (
-        #     '/Users/nicholaswatters/Desktop/grad_school/research/mehrdad/'
-        #     'maze_set_go/task/stimuli'
-        # )
+        return (
+            '/Users/nicholaswatters/Desktop/grad_school/research/mehrdad/'
+            'maze_set_go/task/stimuli'
+        )

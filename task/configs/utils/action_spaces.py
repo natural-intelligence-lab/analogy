@@ -5,42 +5,24 @@ from dm_env import specs
 import numpy as np
 
 
-class GridRotate(action_spaces.AbstractActionSpace):
-    """Discrete grid action space.
+class CardinalDirections(action_spaces.AbstractActionSpace):
+    """CardinalDirections action space.
 
-    This action space has 3 actions {left turn, right turn, do-nothing}. These
-    actions directly control the angle of the agent(s). And for now, only one action
-    is registered and afterward not updated (frozen). Put zero matrix
-    for consistency with Grid action spaces for move up/down. Modified from
-    moog/action_space/grid.
+    This action space has 5 actions {left, right, bottom, up, do-nothing}. These
+    actions make invisible sprites visible. Only one non-nothing action can be
+    taken per trial.
     """
 
-    _ACTIONS = (
-        np.array(np.pi/2),  # turn left
-        np.array(-np.pi/2),  # turn right
-        np.array(0),  # Do not move
-        np.array(0),  # Do not move
-        np.array(0),  # Do not move
-    )
-
-    def __init__(self, scaling_factor=1, action_layers='agent'):
+    def __init__(self, action_layer='agent'):
         """Constructor.
 
         Args:
-            scaling_factor: Scalar. Scaling factor multiplied to the action.
-                default 1
-            action_layers: String or iterable of strings. Elements (or itself if
-                string) must be keys in the environment state. All sprites in
-                these layers will be acted upon by this action space.
+            action_layer: String. Must be a key in the environment state. There
+                must be 4 sprites in that layer, for the 4 directions.
 
         """
-        self._scaling_factor = scaling_factor
-        if not isinstance(action_layers, (list, tuple)):
-            action_layers = (action_layers,)
-        self._action_layers = action_layers
-        self._id_done = False # one shot response
-
-        self._action_spec = specs.DiscreteArray(len(self._ACTIONS))
+        self._action_layer = action_layer
+        self._action_spec = specs.DiscreteArray(5)
 
     def step(self, state, action):
         """Apply action to environment state.
@@ -49,28 +31,24 @@ class GridRotate(action_spaces.AbstractActionSpace):
             state: Ordereddict of layers of sprites. Environment state.
             action: Numpy float array of size (2). Force to apply.
         """
-        if not self._id_done:
-            self._action *= 0  # reset
-            self._action += GridRotate._ACTIONS[action]*self._scaling_factor
-
-            for action_layer in self._action_layers:
-                for sprite in state[action_layer]:
-                    sprite.angle += self._action[0]
-                # sprite.angle_vel += self._action[0]
-
-            if self._action[0]!=0:
-                self._id_done = True
-
+        if not self._action_taken:
+            if action == 4:
+                return
+            elif 0 <= action <= 3:
+                print(action)
+                state[self._action_layer][action].opacity = 255
+                self._action_taken = True
+            else:
+                raise ValueError(f'Invalid action {action}')
 
     def reset(self, state):
         """Reset action space at start of new episode."""
         del state
-        self._action = np.zeros(2)
-        self._id_done = False
+        self._action_taken = False
 
     def random_action(self):
         """Return randomly sampled action."""
-        return np.random.randint(len(GridRotate._ACTIONS))
+        return np.random.randint(5)
 
     def action_spec(self):
         return self._action_spec

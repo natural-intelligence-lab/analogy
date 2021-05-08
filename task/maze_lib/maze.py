@@ -189,7 +189,7 @@ class Maze():
         
         self._walls_frozen.extend(walls_to_freeze)
 
-    def to_sprites(self, wall_width, **sprite_factors):
+    def to_sprites(self, wall_width, border_width, **sprite_factors):
         """Convert maze to list of sprites.
 
         Args:
@@ -216,9 +216,9 @@ class Maze():
                 [x_max, y_max],
                 [x_max, y_min],
             ])
-            maze_maze_span = max(self._width, self._height)
-            sprite_shape /= (maze_maze_span + 2)
-            sprite_shape += 1 / (maze_maze_span + 2)
+            maze_span = max(self._width, self._height)
+            sprite_shape /= maze_span
+            sprite_shape = 0.5 + (1 - 2 * border_width) * (sprite_shape - 0.5)
             new_sprite = sprite.Sprite(
                 x=0., y=0., shape=sprite_shape, **sprite_factors)
             sprites.append(new_sprite)

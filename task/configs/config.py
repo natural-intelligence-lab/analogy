@@ -21,24 +21,17 @@ from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
 _FIXATION_STEPS = 25
-_AGENT_POSITION = [0.5, 0.1]
 
 
 class TrialInitialization():
 
-    def __init__(self, stimulus_generator, prey_lead_in):
+    def __init__(self, stimulus_generator, prey_lead_in, border_width):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
+        self._border_width = border_width
 
         self._prey_factors = dict(
             shape='circle', scale=0.015, c0=0.333, c1=1., c2=1.)
-        self._agent_shape = 80*np.array([
-            [0.50849388, 0.5], [0.50830827, 0.50176598], [0.50775955, 0.50345477], [0.50687169, 0.50499258], [0.5, 0.5],
-            [0.49312831, 0.50499258], [0.49224045, 0.50345477], [0.49169173, 0.50176598], [0.49150612, 0.5],
-            [0.49169173, 0.49823402], [0.49224045, 0.49654523], [0.49312831, 0.49500742], [0.49431648, 0.49368782], [0.49575306, 0.49264408],
-            [0.49737525, 0.49192184], [0.49911215, 0.49155265], [0.50088785, 0.49155265], [0.50262475, 0.49192184], [0.50424694, 0.49264408],
-            [0.50568352, 0.49368782], [0.50687169, 0.49500742], [0.50775955, 0.49654523], [0.50830827, 0.49823402], [0.50849388, 0.5]
-        ])
         self._fixation_shape = 0.2 * np.array([
             [-5, 1], [-1, 1], [-1, 5], [1, 5], [1, 1], [5, 1], [5, -1], [1, -1],
             [1, -5], [-1, -5], [-1, -1], [-5, -1]
@@ -54,32 +47,24 @@ class TrialInitialization():
         prey_path = stimulus['prey_path']
         maze = maze_lib.Maze(maze_size, maze_size, prey_path=prey_path)
         maze.sample_distractors()
-        tunnels = maze.to_sprites(wall_width=0.05, c0=0., c1=0., c2=0.5)
-
-        # # maze_lib_new
-        # _WIDTH = 10
-        # _HEIGHT = 10
-        # _PREY_PATH = [
-        #     (2, 0), (2, 1), (2, 2), (3, 2), (3, 3), (4, 3), (5, 3), (6, 3), (6, 2),
-        #     (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (6, 7), (5, 7), (5, 8),
-        #     (5, 9),
-        # ]
-        # # Generate the maze
-        # maze = maze_lib_new.Maze(width=_WIDTH, height=_HEIGHT, prey_path=_PREY_PATH)
-        # maze.sample_distractors()
-        # # Render the maze
-        # wall_sprite_factors = dict(c0=180, c1=0., c2=0.5)  # gray
-        # wall_sprites = maze.to_sprites(wall_width=0.1, **wall_sprite_factors)
-
-
+        tunnels = maze.to_sprites(
+            wall_width=0.05, border_width=self._border_width, c0=0., c1=0.,
+            c2=0.5)
 
         prey = sprite.Sprite(**self._prey_factors)
 
         # pacman agent
-        agent = sprite.Sprite(
-            shape=self._agent_shape, scale=0.05,
-            c0=0.1667, c1=1., c2=1)  # yellow in HSV
-            # c0=0., c1=1., c2=0.66)  # red
+
+        agent_x = [0., 1., 0.5, 0.5]
+        agent_y = [0.5, 0.5, 0., 1.]
+        agent_angle = [0.5 * np.pi, 0.5 * np.pi, 0., 0.]
+
+        agents = [
+            sprite.Sprite(
+                x=x, y=y, shape='square', aspect_ratio=0.1, angle=a,
+                c0=0.667, c1=1., c2=1, opacity=0)
+            for x, y, a in zip(agent_x, agent_y, agent_angle)
+        ]
 
         # Fixation cross and screen
         fixation = sprite.Sprite(
@@ -94,8 +79,8 @@ class TrialInitialization():
         state = collections.OrderedDict([
             ('maze_background', []),
             ('prey', [prey]),
-            ('maze', wall_sprites),  # tunnels),
-            ('agent', [agent]),
+            ('maze', tunnels),
+            ('agent', agents),
             ('screen', [screen]),
             ('fixation', [fixation]),
             ('eye', [eye]),
@@ -103,9 +88,8 @@ class TrialInitialization():
 
         # Prey distance remaining is how far prey has to go to reach agent
         # It will be continually updated in the meta_state as the prey moves
-        # prey_distance_remaining = (
-        #     maze.arms[stimulus['prey_arm']].length + self._prey_lead_in)
-        prey_distance_remaining = 10
+        prey_distance_remaining = (
+            (1 - 2 * self._border_width) * len(prey_path) / maze_size)
 
         # TODO: add ts, tp here?
         self._meta_state = {
@@ -114,8 +98,8 @@ class TrialInitialization():
             'phase': '',  # fixation -> offline -> motion -> online -> reward -> ITI
             'trial_name': '',
             'stimulus_features': stimulus['features'],
-            'maze_arms': 17,
-            'prey_arm': 17,
+            'prey_path': prey_path,
+            'maze_size': maze_size,
             'prey_distance_remaining': prey_distance_remaining,
             'correct_direction': None,
         }
@@ -137,7 +121,8 @@ class Config():
                  stimulus_generator,
                  fixation_phase=True,
                  delay_phase=True,
-                 ms_per_unit=2000):
+                 ms_per_unit=2000,
+                 border_width=0.1):
         """Constructor.
         
         Args:
@@ -152,6 +137,7 @@ class Config():
         self._stimulus_generator = stimulus_generator
         self._fixation_phase = fixation_phase
         self._delay_phase = delay_phase
+        self._border_width = border_width
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / ms
@@ -159,7 +145,8 @@ class Config():
         self._prey_lead_in = 0.07
 
         self._trial_init = TrialInitialization(
-            stimulus_generator, prey_lead_in=self._prey_lead_in)
+            stimulus_generator, prey_lead_in=self._prey_lead_in,
+            border_width=self._border_width)
 
         # Create renderer
         self._observer = observers.PILRenderer(
@@ -178,7 +165,7 @@ class Config():
         self._maze_walk = maze_lib.MazeWalk(
             speed=0., avatar_layer='prey', start_lead_in=self._prey_lead_in)
         self._physics = physics_lib.Physics(
-            # corrective_physics=[self._maze_walk],
+            corrective_physics=[self._maze_walk],
         )
 
     def _construct_task(self):
@@ -197,13 +184,13 @@ class Config():
     def _construct_action_space(self):
         """Construct action space."""
 
-        controller_action_space = action_spaces_custom.GridRotate(
-            action_layers='agent',
+        hand_action_space = action_spaces_custom.CardinalDirections(
+            action_layer='agent',
         )
 
         self._action_space = action_spaces.Composite(
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
-            controller=controller_action_space,
+            hand=hand_action_space,
         )
 
     def _construct_game_rules(self):
@@ -215,8 +202,9 @@ class Config():
         # 1. Fixation phase
 
         def _reset_physics(meta_state):
-            # self._maze_walk.set_maze(
-            #     meta_state['maze_arms'], meta_state['prey_arm'])
+            self._maze_walk.set_prey_path(
+                meta_state['prey_path'], meta_state['maze_size'],
+                self._border_width)
             self._maze_walk.speed = 0
 
         reset_physics = gr.ModifyMetaState(_reset_physics)
@@ -225,10 +213,7 @@ class Config():
             dist = np.linalg.norm(
                 state['fixation'][0].position - state['eye'][0].position)
             eye_fixating = dist < _FIXATION_THRESHOLD
-            agent = state['agent'][0]
-            joystick_deflected = sum(agent.velocity != 0.)
-            agent.position = _AGENT_POSITION
-            return eye_fixating and not joystick_deflected
+            return eye_fixating
 
         def _increase_fixation_dur(meta_state):
             meta_state['fixation_duration'] += 1
@@ -296,8 +281,7 @@ class Config():
         update_motion_steps = gr.ModifyMetaState(_update_motion_steps)
 
         def _end_motion_phase(state):
-            agent = state['agent'][0]
-            return agent.angle != 0
+            return np.any(s.opacity > 0 for s in state['agent'])
 
         phase_motion = gr.Phase(
             one_time_rules=unglue,

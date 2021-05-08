@@ -123,65 +123,13 @@ class HumanAgent():
 
         canvas_half_width = render_size / 2
         action_space = env.action_space
-        if isinstance(action_space, action_spaces.Composite):
-            num_agents = len(action_space.action_spaces)
-            a_spaces = action_space.action_spaces.values()
-            if (num_agents == 2 and
-                    (any(isinstance(a, action_spaces.Grid) for a in a_spaces) or
-                     any(isinstance(a, action_spaces_custom.GridRotate) for a in a_spaces)) and
-                    any(isinstance(a, action_spaces.SetPosition)
-                        for a in a_spaces)):
-                logging.info(
-                    'One Grid action space and one SetPosition action space. '
-                    'Use arrow keys for the grid action space and clicking on '
-                    'the screen for setting position.')
-                keys = list(action_space.action_spaces.keys())
-                if isinstance(action_space.action_spaces[keys[0]], action_spaces.Grid) or \
-                        isinstance(action_space.action_spaces[keys[0]], action_spaces_custom.GridRotate):
-                    grid_key = keys[0]
-                    set_position_key = keys[1]
-                else:
-                    grid_key = keys[1]
-                    set_position_key = keys[0]
-                self.gui_frame = gui_frames.GridSetPosition(
-                    root=self.root,
-                    canvas=self._env_canvas,
-                    canvas_half_width=canvas_half_width,
-                    grid_key=grid_key,
-                    set_position_key=set_position_key,
-                )
-            else:
-                logging.info(
-                    'Composite action space provided, human controls only the '
-                    'first agent.')
-                action_space = list(action_space.action_spaces.values())[0]
-        elif isinstance(action_space, action_spaces.Grid):
-            logging.info('Grid action space, use arrow keys.')
-            self.gui_frame = gui_frames.GridActions(
-                self.root,
-                canvas_half_width=canvas_half_width,
-            )
-        elif isinstance(action_space, action_spaces_custom.GridRotate):
-            logging.info('Grid rotation action space, use arrow keys.')
-            self.gui_frame = gui_frames.GridActions(
-                self.root,
-                canvas_half_width=canvas_half_width,
-            )
-        elif isinstance(action_space, action_spaces.Joystick):
-            logging.info(
-                'Joystick action space, drag and move the joystick at the '
-                'bottom of the window.')
-            self.gui_frame = gui_frames.JoystickFrame(
-                self.root,
-                canvas_half_width=canvas_half_width,
-                motion_zone_radius=canvas_half_width - 5,
-            )
-        else:
-            raise ValueError(
-                'Cannot demo action space {}'.format(env.action_space))
-
-        if not isinstance(action_space, action_spaces.SetPosition):
-            self.gui_frame.canvas.pack(side=tk.BOTTOM)
+        self.gui_frame = gui_frames.HandEye(
+            root=self.root,
+            canvas=self._env_canvas,
+            canvas_half_width=canvas_half_width,
+            hand_key='hand',
+            eye_key='eye',
+        )
 
         ########################################################################
         # Create the reward plot and pack it into the middle of the window.
