@@ -5,8 +5,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-var discrete_controller = true
-
 group 'Keyboard variables' {
     var right_pressed = 0
     var left_pressed = 0
@@ -21,9 +19,9 @@ group 'Keyboard variables' {
     iodevice/usbhid_generic (
         usage_page = 1
         usage = 6
-        preferred_location_id = 344011264
+        // preferred_location_id = 344011264  // Hansem
         // preferred_location_id = 4245815296
-        // preferred_location_id = 2152726528  // macbook laptop
+        preferred_location_id = 2152726528  // macbook laptop
         // log_all_input_values = true
         )
 %end
@@ -44,7 +42,7 @@ group 'Keyboard variables' {
         )
 %end
 
-keyboard_device controller {
+keyboard_device hand {
     keyboard_channel (key = 'right_arrow'; value = right_pressed)
     keyboard_channel (key = 'left_arrow'; value = left_pressed)
     keyboard_channel (key = 'up_arrow'; value = up_pressed)

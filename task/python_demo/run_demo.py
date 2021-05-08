@@ -22,7 +22,7 @@ from utils import logger_env_wrapper
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('level',
-                    'random.random_12.random_12',
+                    'random.random_12.random_12_uniform_num_turns',
                     'Level.')
 flags.DEFINE_integer('render_size', 256,
                      'Height and width of the output image.')
@@ -64,7 +64,7 @@ def main(_):
         color_to_rgb=config['observers']['image'].color_to_rgb,
     )
     env = environment.Environment(**config)
-    env = logger_env_wrapper.MazeSetGoLoggingEnvironment(env)
+    # env = logger_env_wrapper.MazeSetGoLoggingEnvironment(env)
 
     if FLAGS.write_gif:
         gif_writer = gif_writer_lib.GifWriter(

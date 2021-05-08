@@ -9,8 +9,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-var discrete_controller = true
-
 %define update_joystick ()
     right_pressed = rocker_x > 128 + 24
     left_pressed = rocker_x < 128 - 24
@@ -49,7 +47,7 @@ group 'Joystick variables' {
     'button_X_channel': 2
 }
 
-joystick_device controller {
+joystick_device hand {
     iochannel/usbhid_generic_input_channel (
         usage_page = 1
         usage = joystick_name_to_usage['rocker_X_channel']

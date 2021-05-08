@@ -152,7 +152,7 @@ class TaskManager:
         
         return action
 
-    def _get_controller_action(self):
+    def _get_hand_action(self):
         """Get grid action."""
 
         if self.env.step_count==0:
@@ -201,8 +201,8 @@ class TaskManager:
             return
 
         eye_action = self._get_eye_action()
-        controller_action = self._get_controller_action()
-        action = {'eye': eye_action, 'controller': controller_action}
+        hand_action = self._get_hand_action()
+        action = {'eye': eye_action, 'hand': hand_action}
 
         timestep = self.env.step(action)
         reward = timestep.reward

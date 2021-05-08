@@ -4,11 +4,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// Include one of the following controller interfaces:
+// Include one of the following hand interfaces:
 
-%include 'controller_interfaces/keyboard'
-// %include 'controller_interfaces/gamepad_grid'
-// %include 'controller_interfaces/joystick_grid'
+%include 'hand_interfaces/keyboard'
+// %include 'hand_interfaces/gamepad_grid'
+// %include 'hand_interfaces/joystick_grid'
 
 
 // Include one of the following eye interfaces
@@ -132,7 +132,7 @@ var eye_to_frame_intercept = [0, 0]
                 // Python code receives joystick and eye tracking events only
                 // while a trial is active
                 start_io_device (eye_tracker)
-                start_io_device (controller)
+                start_io_device (hand)
 
                 queue_stimulus (image)
                 update_display ()
@@ -192,7 +192,7 @@ var eye_to_frame_intercept = [0, 0]
                 report('****  ENDING TRIAL  ****')
                 
                 stop_io_device (eye_tracker)
-                stop_io_device (controller)
+                stop_io_device (hand)
                 
                 end_trial = false
                 clear_display ()
@@ -243,8 +243,8 @@ protocol 'Eye Calibration' {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-protocol 'random_3' {
+protocol 'random_12_uniform_num_turns' {
     run_python_string (
-        't = TaskManager(level="random.random_3.random_3", delay_phase=False, fixation_phase=False, ms_per_unit=2000)')
+        't = TaskManager(level="random.random_12.random_12_uniform_num_turns", delay_phase=False, fixation_phase=False)')
     run_task ()
 }

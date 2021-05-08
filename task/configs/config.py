@@ -59,7 +59,7 @@ class TrialInitialization():
         response_angle = [0.5 * np.pi, 0.5 * np.pi, 0., 0.]
         responses = [
             sprite.Sprite(
-                x=x, y=y, shape='square', aspect_ratio=0.1, angle=a,
+                x=x, y=y, shape='square', aspect_ratio=0.15, angle=a,
                 c0=0.667, c1=1., c2=1, opacity=0)
             for x, y, a in zip(response_x, response_y, response_angle)
         ]
@@ -86,7 +86,7 @@ class TrialInitialization():
 
         # Prey distance remaining is how far prey has to go to exit maze
         # It will be continually updated in the meta_state as the prey moves
-        prey_distance_remaining = (
+        prey_distance_remaining = (self._prey_lead_in +
             (1 - 2 * self._border_width) * len(prey_path) / maze_size)
 
         # TODO: add ts, tp here?
@@ -136,8 +136,8 @@ class Config():
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / ms
-        self._prey_lead_in = 0.07
-        self._border_width = 0.1  # boundary space around the maze on all sides
+        self._prey_lead_in = 0.15
+        self._border_width = 0.18  # boundary space around the maze on all sides
 
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in,

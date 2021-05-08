@@ -6,6 +6,6 @@
 **.pyc
 **.idea**
 **logs**
-behavior_analysis**
 behavior_analysis/data**
+behavior_analysis/gifs**
 task/stimulus_plotting/plots**
