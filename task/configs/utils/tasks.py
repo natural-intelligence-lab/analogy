@@ -8,15 +8,15 @@ import numpy as np
 class TimeErrorReward(tasks.AbstractTask):
     """Timing task.
 
-    Reward is a tooth function around the time the prey reaches the agent's
-    position.
+    Reward is a tooth function around the time the prey exits the maze in the
+    direction of the response.
     """
 
     def __init__(self,
                  half_width,
                  maximum,
                  prey_speed,
-                 agent_layer='agent',
+                 response_layer='response',
                  prey_layer='prey'):
         """Constructor.
 
@@ -24,13 +24,13 @@ class TimeErrorReward(tasks.AbstractTask):
             half_width: reward window (i.e., width of tooth function)
             maximum: maximum reward at zero time error
             prey_speed: time error is computed by dividing distance_remaining with prey_speed
-            agent_layer: sprite layer
+            response_layer: sprite layer
             prey_layer: sprite layer
         """
         self._half_width = half_width
         self._maximum = maximum
         self._prey_speed = prey_speed
-        self._agent_layer = agent_layer
+        self._response_layer = response_layer
         self._prey_layer = prey_layer
 
     def reset(self, state, meta_state):
@@ -47,18 +47,35 @@ class TimeErrorReward(tasks.AbstractTask):
         return reward
 
     def reward(self, state, meta_state, step_count):
-        prey = state['prey'][0]
-        agent = state['agent'][0]
-        direction_correct = False
-
-        # pacman facing left and prey from left or
-        # pacman facing right and prey from right
-        # sprite.angle = -np.pi/2*d[1]  # for reward; d[1]=1,-1 for (r,l); 12 o'clock = degree zero & CCW for +
-        if (agent.angle==np.pi/2 and prey.angle==-np.pi/2) or (agent.angle == -np.pi / 2 and prey.angle==np.pi/2):
-            direction_correct = True
-
-        del state
         del step_count
+        
+        response = [s for s in state['response'] if s.opacity > 0]
+        
+        if len(response) == 0:
+            return 0, False
+        else:
+            response = response[0]
+
+        if response.x < 0.1:
+            response_direction = 0
+        elif response.x > 0.9:
+            response_direction = 1
+        elif response.y < 0.1:
+            response_direction = 2
+        elif response.y > 0.9:
+            response_direction = 3
+
+        prey = state['prey'][0]
+        if prey.angle == np.pi / 2:
+            prey_direction = 0
+        elif prey.angle == -np.pi / 2:
+            prey_direction = 1
+        elif prey.angle == 0.:
+            prey_direction = 2
+        elif prey.angle == np.pi:
+            prey_direction = 3
+        
+        direction_correct = response_direction == prey_direction
 
         if direction_correct and meta_state['phase'] == 'reward' and not self._reward_given:
             # Update reward

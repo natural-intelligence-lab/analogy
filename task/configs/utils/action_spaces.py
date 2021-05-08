@@ -1,4 +1,4 @@
-"""Discrete grid action space for controlling agent avatars."""
+"""Discrete grid action space for controlling response avatars."""
 
 from moog import action_spaces
 from dm_env import specs
@@ -13,7 +13,7 @@ class CardinalDirections(action_spaces.AbstractActionSpace):
     taken per trial.
     """
 
-    def __init__(self, action_layer='agent'):
+    def __init__(self, action_layer='response'):
         """Constructor.
 
         Args:
@@ -35,7 +35,6 @@ class CardinalDirections(action_spaces.AbstractActionSpace):
             if action == 4:
                 return
             elif 0 <= action <= 3:
-                print(action)
                 state[self._action_layer][action].opacity = 255
                 self._action_taken = True
             else:

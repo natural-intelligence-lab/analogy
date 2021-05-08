@@ -53,23 +53,21 @@ class TrialInitialization():
 
         prey = sprite.Sprite(**self._prey_factors)
 
-        # pacman agent
-
-        agent_x = [0., 1., 0.5, 0.5]
-        agent_y = [0.5, 0.5, 0., 1.]
-        agent_angle = [0.5 * np.pi, 0.5 * np.pi, 0., 0.]
-
-        agents = [
+        # Response sprites
+        response_x = [0., 1., 0.5, 0.5]
+        response_y = [0.5, 0.5, 0., 1.]
+        response_angle = [0.5 * np.pi, 0.5 * np.pi, 0., 0.]
+        responses = [
             sprite.Sprite(
                 x=x, y=y, shape='square', aspect_ratio=0.1, angle=a,
                 c0=0.667, c1=1., c2=1, opacity=0)
-            for x, y, a in zip(agent_x, agent_y, agent_angle)
+            for x, y, a in zip(response_x, response_y, response_angle)
         ]
 
         # Fixation cross and screen
         fixation = sprite.Sprite(
             x=0.5, y=0.5, shape=self._fixation_shape, scale=0.05,
-            c0=0., c1=0., c2=0.)
+            c0=0., c1=0., c2=0., opacity=0)
         screen = sprite.Sprite(
             x=0.5, y=0.5, shape='square', scale=2., c0=0., c1=0., c2=1.)
 
@@ -80,13 +78,13 @@ class TrialInitialization():
             ('maze_background', []),
             ('prey', [prey]),
             ('maze', tunnels),
-            ('agent', agents),
+            ('response', responses),
             ('screen', [screen]),
             ('fixation', [fixation]),
             ('eye', [eye]),
         ])
 
-        # Prey distance remaining is how far prey has to go to reach agent
+        # Prey distance remaining is how far prey has to go to exit maze
         # It will be continually updated in the meta_state as the prey moves
         prey_distance_remaining = (
             (1 - 2 * self._border_width) * len(prey_path) / maze_size)
@@ -121,8 +119,7 @@ class Config():
                  stimulus_generator,
                  fixation_phase=True,
                  delay_phase=True,
-                 ms_per_unit=2000,
-                 border_width=0.1):
+                 ms_per_unit=2000):
         """Constructor.
         
         Args:
@@ -137,12 +134,11 @@ class Config():
         self._stimulus_generator = stimulus_generator
         self._fixation_phase = fixation_phase
         self._delay_phase = delay_phase
-        self._border_width = border_width
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / ms
-        self._agent_speed = 0.5 * self._prey_speed
         self._prey_lead_in = 0.07
+        self._border_width = 0.1  # boundary space around the maze on all sides
 
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in,
@@ -171,7 +167,7 @@ class Config():
     def _construct_task(self):
         """Construct task."""
         prey_task = tasks_custom.TimeErrorReward(
-            half_width=100,
+            half_width=20,
             maximum=1,
             prey_speed=self._prey_speed,
         )
@@ -183,14 +179,9 @@ class Config():
 
     def _construct_action_space(self):
         """Construct action space."""
-
-        hand_action_space = action_spaces_custom.CardinalDirections(
-            action_layer='agent',
-        )
-
         self._action_space = action_spaces.Composite(
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
-            hand=hand_action_space,
+            hand=action_spaces_custom.CardinalDirections('response'),
         )
 
     def _construct_game_rules(self):
@@ -199,7 +190,10 @@ class Config():
         def _make_transparent(s):
             s.opacity = 0
 
-        # 1. Fixation phase
+        def _make_opaque(s):
+            s.opacity=255
+
+        # 1. ITI phase
 
         def _reset_physics(meta_state):
             self._maze_walk.set_prey_path(
@@ -208,6 +202,14 @@ class Config():
             self._maze_walk.speed = 0
 
         reset_physics = gr.ModifyMetaState(_reset_physics)
+
+        phase_iti = gr.Phase(
+            one_time_rules=reset_physics,
+            duration=10,
+            name='iti',
+        )
+
+        # 2. Fixation phase
 
         def _should_increase_fixation_dur(state, meta_state):
             dist = np.linalg.norm(
@@ -235,15 +237,17 @@ class Config():
         else:
             fixation_duration = np.inf
 
+        appear_fixation = gr.ModifySprites('fixation', _make_opaque)
+
         phase_fixation = gr.Phase(
-            one_time_rules=reset_physics,
+            one_time_rules=appear_fixation,
             continual_rules=[increase_fixation_dur, reset_fixation_dur],
             end_condition=_should_end_fixation,
             duration=fixation_duration,
             name='fixation',
         )
 
-        # 2. Offline phase
+        # 3. Offline phase
 
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
         if self._delay_phase:
@@ -256,7 +260,7 @@ class Config():
             name='delay',
         )
 
-        # 3. Motion phase
+        # 4. Motion phase
 
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
 
@@ -267,7 +271,7 @@ class Config():
             name='planning',
         )
 
-        # 4. Online phase
+        # 5. Visible motion phase
 
         def _unglue(meta_state):
             self._maze_walk.speed = self._prey_speed
@@ -280,21 +284,30 @@ class Config():
 
         update_motion_steps = gr.ModifyMetaState(_update_motion_steps)
 
-        def _end_motion_phase(state):
-            return np.any(s.opacity > 0 for s in state['agent'])
-
-        phase_motion = gr.Phase(
+        phase_motion_visible = gr.Phase(
             one_time_rules=unglue,
             continual_rules=update_motion_steps,
+            duration=10,
+            name='motion_visible',
+        )
+
+        # 6. Invisible motion phase
+
+        def _end_motion_phase(state):
+            return np.any([s.opacity > 0 for s in state['response']])
+
+        hide_prey = gr.ModifySprites('prey', _make_transparent)
+
+        phase_motion_invisible = gr.Phase(
+            one_time_rules=hide_prey,
+            continual_rules=update_motion_steps,
             end_condition=_end_motion_phase,
-            name='motion',
+            name='motion_invisible',
         )
 
-        # 5. Reward Phase
+        # 7. Reward Phase
 
-        reveal_prey = gr.ChangeLayer(
-            old_layer='maze', new_layer='maze_background'
-        )
+        reveal_prey = gr.ModifySprites('prey', _make_opaque)
 
         phase_reward = gr.Phase(
             one_time_rules=reveal_prey,
@@ -302,15 +315,15 @@ class Config():
             name='reward',
         )
 
-        # 6. ITI Phase
-
         # Final rules
         # fixation -> offline -> motion -> online -> reward -> ITI
         phase_sequence = gr.PhaseSequence(
+            phase_iti,
             phase_fixation,
             phase_delay,
             phase_planning,
-            phase_motion,
+            phase_motion_visible,
+            phase_motion_invisible,
             phase_reward,
             meta_state_phase_name_key='phase',
         )
