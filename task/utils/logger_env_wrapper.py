@@ -92,7 +92,7 @@ class MazeSetGoLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
         
         # These are the attributes that we'll log in the middle of episodes
         self._attributes_partial = [
-            'x', 'y', 'x_vel', 'y_vel', 'opacity', 'metadata']
+            'x', 'y', 'opacity', 'metadata']
 
         # Log partial attribute list
         attr_partial_filename = os.path.join(
@@ -194,7 +194,7 @@ class MazeSetGoLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
             x = [k, [self._serialize_sprite_partial(s) for s in self.state[k]]]
             return x
 
-        serialize_layers = ['agent', 'prey', 'eye', 'screen', 'fixation']
+        serialize_layers = ['response', 'prey', 'eye']
         serialized_state = [_serialize_state(k) for k in serialize_layers]
 
         return serialized_state
@@ -210,8 +210,8 @@ class MazeSetGoLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
 
         # Add maze to log
         maze_log = {
-            'maze_arms': self.meta_state['maze_arms'],
-            'prey_arm': self.meta_state['prey_arm'],
+            'maze_size': self.meta_state['maze_size'],
+            'prey_path': self.meta_state['prey_path'],
             'stimulus_features': self.meta_state['stimulus_features'],
         }
         self._episode_log.append(self._serialize(maze_log))

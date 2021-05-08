@@ -99,7 +99,6 @@ class TrialInitialization():
             'prey_path': prey_path,
             'maze_size': maze_size,
             'prey_distance_remaining': prey_distance_remaining,
-            'correct_direction': None,
         }
 
         return state
