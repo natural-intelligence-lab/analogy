@@ -57,24 +57,24 @@ class TimeErrorReward(tasks.AbstractTask):
             response = response[0]
 
         if response.x < 0.1:
-            response_direction = 0
+            response_direction = 0  # left
         elif response.x > 0.9:
-            response_direction = 1
+            response_direction = 1  # right
         elif response.y < 0.1:
-            response_direction = 2
+            response_direction = 2  # down
         elif response.y > 0.9:
-            response_direction = 3
+            response_direction = 3  # up
 
         prey = state['prey'][0]
         if prey.angle == np.pi / 2:
-            prey_direction = 0
+            prey_direction = 0    # left
         elif prey.angle == -np.pi / 2:
             prey_direction = 1
-        elif prey.angle == 0.:
+        elif prey.angle == 0.:  # down
             prey_direction = 2
         elif prey.angle == np.pi:
             prey_direction = 3
-        
+
         direction_correct = response_direction == prey_direction
 
         if direction_correct and meta_state['phase'] == 'reward' and not self._reward_given:

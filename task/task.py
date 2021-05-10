@@ -103,6 +103,7 @@ class TaskManager:
 
         This should be called at the beginning of every trial.
         """
+
         timestep = self.env.reset()
         if timestep is None:
             setvar('end_task', True)
@@ -119,6 +120,11 @@ class TaskManager:
             self._register_event_callback(varname)
         
         self.complete = False
+
+        # controlling image_size_x image_size_y after extracting from self.env
+        image_size = self.env.meta_state['image_size']
+        setvar('image_size_x', image_size)
+        setvar('image_size_y', image_size)
 
     def _register_event_callback(self, varname):
         self.events[varname] = []

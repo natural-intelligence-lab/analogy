@@ -22,6 +22,7 @@ from maze_lib.constants import max_reward, bonus_reward, reward_window
 _FIXATION_THRESHOLD = 0.4
 _FIXATION_STEPS = 25
 
+_IMAGE_SIZE = [10,20,30]
 
 class TrialInitialization():
 
@@ -89,6 +90,11 @@ class TrialInitialization():
         # It will be continually updated in the meta_state as the prey moves
         prey_distance_remaining = (self._prey_lead_in +
             (1 - 2 * self._border_width) * len(prey_path) / maze_size)
+        # prey_distance_remaining = (self._prey_lead_in + 2 * self._border_width +
+        #     len(prey_path) / maze_size)
+
+        # randomly choose image size across trials
+        image_size = np.random.choice(_IMAGE_SIZE)
 
         # TODO: add ts, tp here?
         self._meta_state = {
@@ -99,6 +105,7 @@ class TrialInitialization():
             'stimulus_features': stimulus['features'],
             'prey_path': prey_path,
             'maze_size': maze_size,
+            'image_size': image_size,
             'prey_distance_remaining': prey_distance_remaining,
         }
 

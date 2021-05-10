@@ -55,8 +55,8 @@ python_file ('task.py')
 
 var image_pixel_width = 512
 var image_pixel_height = 512
-var image_size_x = 10
-var image_size_y = 10
+var image_size_x = 20
+var image_size_y = 20
 var image_pos_x = 0
 var image_pos_y = 0
 
@@ -245,6 +245,6 @@ protocol 'Eye Calibration' {
 
 protocol 'random_12_uniform_num_turns' {
     run_python_string (
-        't = TaskManager(level="random.random_12.random_12_uniform_num_turns", delay_phase=False, fixation_phase=False)')
+        't = TaskManager(level="random.random_12.random_12_uniform_num_turns", delay_phase=False, fixation_phase=False, ms_per_unit=2000)')
     run_task ()
 }
