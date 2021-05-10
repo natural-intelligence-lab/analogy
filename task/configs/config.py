@@ -46,6 +46,7 @@ class TrialInitialization():
         maze_size = stimulus['maze_size']
         prey_path = stimulus['prey_path']
         maze = maze_lib.Maze(maze_size, maze_size, prey_path=prey_path)
+        maze.sample_distractor_exit(prey_path=prey_path)
         maze.sample_distractors()
         tunnels = maze.to_sprites(
             wall_width=0.05, border_width=self._border_width, c0=0., c1=0.,

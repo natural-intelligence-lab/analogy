@@ -14,10 +14,16 @@ import os
 #     '/Users/nicholaswatters/miniconda3/envs/mworks_moog/lib/python3.8/site-packages'
 # )
 
-# Local hansem
+# # laptop hansem
+# _PWD = '/Users/hansem/Documents/MazeSetGo/task'
+# _PYTHON_SITE_PACKAGES = (
+#     '/opt/anaconda3/envs/mworks/lib/python3.8/site-packages'
+# )
+
+# desktop hansem
 _PWD = '/Users/hansem/Documents/MazeSetGo/task'
 _PYTHON_SITE_PACKAGES = (
-    '/opt/anaconda3/envs/mworks/lib/python3.8/site-packages'
+    '/Users/hansem/miniconda3/envs/mworks/lib/python3.8/site-packages'
 )
 
 # Update pwd and python_site_packages variables in mworks

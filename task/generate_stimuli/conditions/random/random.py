@@ -3,7 +3,7 @@
 import numpy as np
 
 _MAX_TRIES = int(1e4)
-_MIN_SEGMENT_LENGTH = 2
+_MIN_SEGMENT_LENGTH = 3
 
 _DIRECTIONS_NAMED = {
     'N': (0, 1),
@@ -15,7 +15,9 @@ _DIRECTIONS = [np.array(x) for x in list(_DIRECTIONS_NAMED.values())]
 
 
 class PreyPathGenerator():
-    """Random prey path."""
+    """Random prey path.
+        no control over # turns, total path length
+    """
 
     def __init__(self, maze_size, min_segment_length):
         self._maze_size = maze_size
@@ -44,7 +46,7 @@ class PreyPathGenerator():
             elif (tail[1] == self._maze_size - 1 and
                     tuple(d) == _DIRECTIONS_NAMED['N']):
                 finished = True
-            elif tail[0] == 0 and tuple(d) == _DIRECTIONS_NAMED['S']:
+            elif tail[1] == 0 and tuple(d) == _DIRECTIONS_NAMED['S']:  # debug 2021/5/8
                 finished = True
 
         return maze_array, prey_path
@@ -54,9 +56,9 @@ class PreyPathGenerator():
         lengths = [0]
         for i in range(self._maze_size):
             tail = tail + direction
-            if np.any(tail < 0) or np.any(tail == self._maze_size):
+            if np.any(tail < 0) or np.any(tail == self._maze_size): # get out of maze
                 break
-            if maze_array[tail[0], tail[1]]:
+            if maze_array[tail[0], tail[1]]: # already exists in maze
                 break
             lengths.append(lengths[-1] + 1)
 
@@ -103,15 +105,16 @@ class PreyPathGenerator():
 class Random12():
 
     _NUM_CONDITIONS = int(1e3)
+    _MAZE_SIZE = 12
 
     def __init__(self):
-        self._maze_size = 12
+        self._maze_size = Random12._MAZE_SIZE
         self._prey_path_generator = PreyPathGenerator(
             maze_size=self._maze_size, min_segment_length=_MIN_SEGMENT_LENGTH)
 
     def _prey_path_to_segments(self, prey_path):
         directions = np.array(prey_path[1:]) - np.array(prey_path[:-1])
-        segments = [[]]
+        segments = [[prey_path[1]-prey_path[0]]]  # debug 2021/5/8
         prev_direction = directions[0]
         for d in directions[1:]:
             if np.array_equal(d, prev_direction):

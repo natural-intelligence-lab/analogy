@@ -55,8 +55,8 @@ python_file ('task.py')
 
 var image_pixel_width = 512
 var image_pixel_height = 512
-var image_size_x = 20
-var image_size_y = 20
+var image_size_x = 10
+var image_size_y = 10
 var image_pos_x = 0
 var image_pos_y = 0
 

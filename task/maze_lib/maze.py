@@ -4,6 +4,13 @@ import copy
 from moog import sprite
 import numpy as np
 
+_DIRECTIONS_NAMED = {
+    'N': (0, 1),
+    'S': (0, -1),
+    'E': (1, 0),
+    'W': (-1, 0),
+}
+_DIRECTIONS = [np.array(x) for x in list(_DIRECTIONS_NAMED.values())]
 
 class Maze():
     """Maze class."""
@@ -136,6 +143,55 @@ class Maze():
             wall_to_remove = self._walls_temporary[wall_index]
             self._remove_wall(wall_to_remove)
 
+    def sample_distractor_exit(self,prey_path=()):
+        """Sample distractor exit points around non-target side boundaries
+        """
+
+        walls_to_remove = []
+        # identify non-target side
+        tail = prey_path[-1]
+        d = np.subtract(prey_path[-1],prey_path[-2]) #  prey_path[-1] - prey_path[-2]
+        if tail[0] == 0 and tuple(d) == _DIRECTIONS_NAMED['W']:
+            nontarget_side = ['E', 'N', 'S']
+        elif (tail[0] == self._width - 1 and
+              tuple(d) == _DIRECTIONS_NAMED['E']):
+            nontarget_side = ['W', 'N', 'S']
+        elif (tail[1] == self._height - 1 and
+              tuple(d) == _DIRECTIONS_NAMED['N']):
+            nontarget_side = ['W', 'E', 'S']
+        elif tail[1] == 0 and tuple(d) == _DIRECTIONS_NAMED['S']:
+            nontarget_side = ['W', 'E', 'N']
+
+        # choose random wall except corners
+        for direction in nontarget_side:
+            if direction == 'E':
+                vertex_x = self._width
+                vertex_y = np.random.randint(1, self._height)  # not including corners
+                wall_to_remove = ((vertex_x, vertex_y),(vertex_x, vertex_y+1))
+            elif direction == 'W':
+                vertex_x = 0
+                vertex_y = np.random.randint(1, self._height)  # not including corners
+                wall_to_remove = ((vertex_x, vertex_y), (vertex_x, vertex_y + 1))
+            elif direction == 'N':
+                vertex_y = self._height
+                vertex_x = np.random.randint(1,self._width)  # not including corners
+                wall_to_remove = ((vertex_x, vertex_y),(vertex_x+1, vertex_y))
+            elif direction == 'S':
+                vertex_y = 0
+                vertex_x = np.random.randint(1,self._width)  # not including corners
+                wall_to_remove = ((vertex_x, vertex_y),(vertex_x+1, vertex_y))
+
+            # except entry points
+            if np.array_equal(wall_to_remove,self._entry_wall):
+                self.sample_distractor_exit(prey_path=prey_path)
+
+            walls_to_remove.append(wall_to_remove)
+
+        # remove chosen walls
+        for wall in walls_to_remove:
+            if wall in self._walls_frozen:
+                self._walls_frozen.remove(wall)
+
     def _set_prey_path(self, prey_path):
         """Set the prey path.
         
@@ -180,6 +236,11 @@ class Maze():
                 if wall in self._walls_frozen:
                     walls_to_remove.append(wall)
                     walls_to_freeze.remove(wall)
+                if np.array_equal(cell, prey_path[0]):
+                    self._entry_wall = wall
+                else:
+                    self._target_wall = wall
+
 
         for wall in walls_to_remove + walls_to_freeze:
             if wall in self._walls_temporary:
