@@ -90,8 +90,6 @@ class TrialInitialization():
         # It will be continually updated in the meta_state as the prey moves
         prey_distance_remaining = (self._prey_lead_in +
             (1 - 2 * self._border_width) * len(prey_path) / maze_size)
-        # prey_distance_remaining = (self._prey_lead_in + 2 * self._border_width +
-        #     len(prey_path) / maze_size)
 
         # randomly choose image size across trials
         image_size = np.random.choice(_IMAGE_SIZE)
@@ -125,7 +123,7 @@ class Config():
     def __init__(self,
                  stimulus_generator,
                  fixation_phase=True,
-                 delay_phase=True,
+                 offline_phase=True,
                  ms_per_unit=2000):
         """Constructor.
         
@@ -140,7 +138,7 @@ class Config():
         """
         self._stimulus_generator = stimulus_generator
         self._fixation_phase = fixation_phase
-        self._delay_phase = delay_phase
+        self._offline_phase = offline_phase
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / ms
@@ -173,8 +171,9 @@ class Config():
 
     def _construct_task(self):
         """Construct task."""
+
         prey_task = tasks_custom.TimeErrorReward(
-            half_width=20,
+            half_width=20,  # given 60 Hz, 333 ms
             maximum=1,
             prey_speed=self._prey_speed,
         )
@@ -255,30 +254,19 @@ class Config():
         )
 
         # 3. Offline phase
+        def _end_offline_phase(state):
+            return np.any([s.opacity > 0 for s in state['response']])
 
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
-        if self._delay_phase:
-            delay_duration = lambda: np.random.randint(30, 60)
-        else:
-            delay_duration = 1
-        phase_delay = gr.Phase(
-            one_time_rules=disappear_fixation,
-            duration=delay_duration,
-            name='delay',
-        )
-
-        # 4. Motion phase
-
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
 
-        planning_duration = 10
-        phase_planning = gr.Phase(
-            one_time_rules=[disappear_screen],
-            duration=planning_duration,
-            name='planning',
+        phase_offline = gr.Phase(
+            one_time_rules=[disappear_fixation, disappear_screen],
+            name='offline',
+            end_condition=_end_offline_phase,
         )
 
-        # 5. Visible motion phase
+        # 4. Visible motion phase
 
         def _unglue(meta_state):
             self._maze_walk.speed = self._prey_speed
@@ -298,7 +286,7 @@ class Config():
             name='motion_visible',
         )
 
-        # 6. Invisible motion phase
+        # 5. Invisible motion phase
 
         def _end_motion_phase(state):
             return np.any([s.opacity > 0 for s in state['response']])
@@ -312,7 +300,7 @@ class Config():
             name='motion_invisible',
         )
 
-        # 7. Reward Phase
+        # 6. Reward Phase
 
         reveal_prey = gr.ModifySprites('prey', _make_opaque)
 
@@ -323,12 +311,11 @@ class Config():
         )
 
         # Final rules
-        # fixation -> offline -> motion -> online -> reward -> ITI
+        # fixation -> offline -> visible motion -> invisible motion -> reward -> ITI
         phase_sequence = gr.PhaseSequence(
             phase_iti,
             phase_fixation,
-            phase_delay,
-            phase_planning,
+            phase_offline,
             phase_motion_visible,
             phase_motion_invisible,
             phase_reward,

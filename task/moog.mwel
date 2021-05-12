@@ -245,6 +245,6 @@ protocol 'Eye Calibration' {
 
 protocol 'random_12_uniform_num_turns' {
     run_python_string (
-        't = TaskManager(level="random.random_12.random_12_uniform_num_turns", delay_phase=False, fixation_phase=False, ms_per_unit=2000)')
+        't = TaskManager(level="random.random_12.random_12_uniform_num_turns", offline_phase=True, fixation_phase=False, ms_per_unit=2000)')
     run_task ()
 }
