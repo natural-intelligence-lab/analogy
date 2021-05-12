@@ -16,6 +16,7 @@ from moog import tasks
 import maze_lib
 
 from configs.utils import action_spaces as action_spaces_custom
+from configs.utils import action_spaces_offline as action_spaces_offline
 from configs.utils import tasks as tasks_custom
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
@@ -188,6 +189,7 @@ class Config():
         self._action_space = action_spaces.Composite(
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
             hand=action_spaces_custom.CardinalDirections('response'),
+            hand=action_spaces_offline.ready_spacebar('response'),
         )
 
     def _construct_game_rules(self):
