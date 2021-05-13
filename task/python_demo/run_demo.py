@@ -53,7 +53,7 @@ def main(_):
     
     config_instance = config_class(
         fixation_phase=False,
-        delay_phase=False,
+        offline_phase=True,
         ms_per_unit=800,
     )
 

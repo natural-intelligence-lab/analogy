@@ -5,24 +5,24 @@ from dm_env import specs
 import numpy as np
 
 
-class CardinalDirections(action_spaces.AbstractActionSpace):
-    """CardinalDirections action space.
+class YesNoResponse(action_spaces.AbstractActionSpace):
+    """Binary (yes/no) action space.
 
-    This action space has 5 actions {left, right, bottom, up, do-nothing}. These
+    This action space has 2 actions {yes, no/do-nothing}. These
     actions make invisible sprites visible. Only one non-nothing action can be
     taken per trial.
     """
 
-    def __init__(self, action_layer='response'):
+    def __init__(self, action_layer='responses_offline'):
         """Constructor.
 
         Args:
             action_layer: String. Must be a key in the environment state. There
-                must be 4 sprites in that layer, for the 4 directions.
+                must be 1 sprite in that layer, for the yes/no response.
 
         """
         self._action_layer = action_layer
-        self._action_spec = specs.DiscreteArray(5)
+        self._action_spec = specs.DiscreteArray(2)
 
     def step(self, state, action):
         """Apply action to environment state.
@@ -32,11 +32,12 @@ class CardinalDirections(action_spaces.AbstractActionSpace):
             action: Numpy float array of size (2). Force to apply.
         """
         if not self._action_taken:
-            if action == 4:
-                return
-            elif 0 <= action <= 3:
-                state[self._action_layer][action].opacity = 255
+            if action == 0:
+                for i in range(len(state[self._action_layer])):
+                    state[self._action_layer][i].opacity = 128
                 self._action_taken = True
+            elif action == 1:
+                return
             else:
                 raise ValueError(f'Invalid action {action}')
 
@@ -47,7 +48,7 @@ class CardinalDirections(action_spaces.AbstractActionSpace):
 
     def random_action(self):
         """Return randomly sampled action."""
-        return np.random.randint(5)
+        return np.random.randint(2)
 
     def action_spec(self):
         return self._action_spec

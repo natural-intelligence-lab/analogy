@@ -18,12 +18,13 @@ import maze_lib
 from configs.utils import action_spaces as action_spaces_custom
 from configs.utils import action_spaces_offline as action_spaces_offline
 from configs.utils import tasks as tasks_custom
+from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
 _FIXATION_STEPS = 25
 
-_IMAGE_SIZE = [10,20,30]
+_IMAGE_SIZE = [8, 16, 24]
 
 class TrialInitialization():
 
@@ -56,7 +57,7 @@ class TrialInitialization():
 
         prey = sprite.Sprite(**self._prey_factors)
 
-        # Response sprites
+        # Response sprites for online
         response_x = [0., 1., 0.5, 0.5]
         response_y = [0.5, 0.5, 0., 1.]
         response_angle = [0.5 * np.pi, 0.5 * np.pi, 0., 0.]
@@ -64,6 +65,13 @@ class TrialInitialization():
             sprite.Sprite(
                 x=x, y=y, shape='square', aspect_ratio=0.15, angle=a,
                 c0=0.667, c1=1., c2=1, opacity=0)
+            for x, y, a in zip(response_x, response_y, response_angle)
+        ]
+        # Response sprites for offline
+        responses_offline = [
+            sprite.Sprite(
+                x=x, y=y, shape='square', aspect_ratio=0.15, angle=a,
+                c0=0., c1=0., c2=0.5, opacity=0)
             for x, y, a in zip(response_x, response_y, response_angle)
         ]
 
@@ -82,6 +90,7 @@ class TrialInitialization():
             ('prey', [prey]),
             ('maze', tunnels),
             ('response', responses),
+            ('responses_offline', responses_offline),
             ('screen', [screen]),
             ('fixation', [fixation]),
             ('eye', [eye]),
@@ -95,7 +104,6 @@ class TrialInitialization():
         # randomly choose image size across trials
         image_size = np.random.choice(_IMAGE_SIZE)
 
-        # TODO: add ts, tp here?
         self._meta_state = {
             'fixation_duration': 0,
             'motion_steps': 0,
@@ -106,6 +114,8 @@ class TrialInitialization():
             'maze_size': maze_size,
             'image_size': image_size,
             'prey_distance_remaining': prey_distance_remaining,
+            'RT_offline': 0,
+            'RT_online': 0,
         }
 
         return state
@@ -178,18 +188,22 @@ class Config():
             maximum=1,
             prey_speed=self._prey_speed,
         )
+        offline_task = tasks_custom_offline.PressWhenReady(
+            condition=lambda _, meta_state: meta_state['phase'] == 'offline',
+            maximum_duration=600  # given 60 Hz, 10,000 ms
+        )
         timeout_task = tasks.Reset(
             condition=lambda _, meta_state: meta_state['phase'] == 'reward',
             steps_after_condition=15,
         )
-        self._task = tasks.CompositeTask(prey_task, timeout_task)
+        self._task = tasks.CompositeTask(prey_task, offline_task, timeout_task)
 
     def _construct_action_space(self):
         """Construct action space."""
         self._action_space = action_spaces.Composite(
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
             hand=action_spaces_custom.CardinalDirections('response'),
-            hand=action_spaces_offline.ready_spacebar('response'),
+            hand_offline=action_spaces_offline.YesNoResponse('responses_offline'),
         )
 
     def _construct_game_rules(self):
@@ -257,7 +271,7 @@ class Config():
 
         # 3. Offline phase
         def _end_offline_phase(state):
-            return np.any([s.opacity > 0 for s in state['response']])
+            return np.any([s.opacity > 0 for s in state['responses_offline']])
 
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
@@ -295,8 +309,10 @@ class Config():
 
         hide_prey = gr.ModifySprites('prey', _make_transparent)
 
+        make_transparent_offline_response = gr.ModifySprites('responses_offline', _make_transparent)
+
         phase_motion_invisible = gr.Phase(
-            one_time_rules=hide_prey,
+            one_time_rules=[hide_prey, make_transparent_offline_response],
             continual_rules=update_motion_steps,
             end_condition=_end_motion_phase,
             name='motion_invisible',

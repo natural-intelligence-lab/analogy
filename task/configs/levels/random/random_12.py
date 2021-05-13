@@ -11,7 +11,7 @@ def random_12(**kwargs):
     stimulus_generator = samplers.Sampler(
         stimuli_dir=os.path.join(
             get_stimuli_dir.stimuli_dir(), 'random/Random12'),
-        filter_fn=lambda f: f['num_turns'] == 0,
+        # filter_fn=lambda f: f['num_turns'] == 0,
     )
     print(len(stimulus_generator))
     return config.Config(stimulus_generator, **kwargs)

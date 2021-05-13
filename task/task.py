@@ -118,6 +118,9 @@ class TaskManager:
         for varname in ('up_pressed', 'down_pressed', 'left_pressed',
                         'right_pressed'):
             self._register_event_callback(varname)
+
+        self._space_keys_pressed = np.zeros(1, dtype=int)
+        self._register_event_callback('space_pressed')
         
         self.complete = False
 
@@ -195,6 +198,37 @@ class TaskManager:
         
         return key_ind
 
+    def _get_hand_offline_action(self):
+        """Get yes/no action."""
+
+        if self.env.step_count == 0:
+            # Don't move on the first step
+            # We set x_force and y_force to zero because for some reason the
+            # joystick initially gives a non-zero action, which persists unless
+            # we explicitly terminate it.
+            setvar('space_pressed', 0)
+            return 1
+
+        keys_pressed = np.array([
+            getvar('space_pressed')
+        ])
+        if sum(keys_pressed) > 1:
+            keys_pressed[self._space_keys_pressed] = 0
+
+        if sum(keys_pressed) > 1:  # dealing with multiple press?
+            random_ind = np.random.choice(np.argwhere(keys_pressed)[:, 0])
+            keys_pressed = np.zeros(1, dtype=int)
+            keys_pressed[random_ind] = 1
+
+        self._keys_pressed = keys_pressed
+
+        if sum(keys_pressed):
+            key_ind = np.argwhere(keys_pressed)[0, 0]
+        else:
+            key_ind = 1
+
+        return key_ind
+
     def step(self):
         """Step environment."""
 
@@ -208,7 +242,8 @@ class TaskManager:
 
         eye_action = self._get_eye_action()
         hand_action = self._get_hand_action()
-        action = {'eye': eye_action, 'hand': hand_action}
+        hand_offline_action = self._get_hand_offline_action()
+        action = {'eye': eye_action, 'hand': hand_action, 'hand_offline': hand_offline_action}
 
         timestep = self.env.step(action)
         reward = timestep.reward
