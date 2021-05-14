@@ -152,7 +152,7 @@ class Config():
         self._offline_phase = offline_phase
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
-        self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / ms
+        self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / refresh
         self._prey_lead_in = 0.15
         self._border_width = 0.18  # boundary space around the maze on all sides
 
