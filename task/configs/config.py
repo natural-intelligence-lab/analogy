@@ -24,7 +24,7 @@ from maze_lib.constants import max_reward, bonus_reward, reward_window
 _FIXATION_THRESHOLD = 0.4
 _FIXATION_STEPS = 25
 
-_IMAGE_SIZE = [8, 16, 24]
+_IMAGE_SIZE = [24]  # [8, 16, 24]
 
 class TrialInitialization():
 

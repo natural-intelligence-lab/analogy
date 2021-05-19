@@ -17,6 +17,9 @@ function RTanalysis(varargin)
 % dependence
 %: v2struct applytofig4keynote setFigPos plotReg plotCmap pplot.mat
 
+% log
+% 2021/5/19: negating prey_distance_at_response for tp
+
 load pplot.mat;
 
 %% input processing
@@ -45,7 +48,7 @@ borderWidth= 0.18;
 % translate distance into time
 pathLengthScreenUnit=(1 - 2 * borderWidth) * path_length / mazeSize;
 ts= double(pathLengthScreenUnit/speed/refreshRate*1000); % [ms]
-err=prey_distance_at_response/speed/refreshRate*1000; % [ms]
+err=-prey_distance_at_response/speed/refreshRate*1000; % [ms]
 tp=ts+err;
 rt=RT_offline;
 

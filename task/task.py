@@ -102,6 +102,7 @@ class TaskManager:
         """Reset environment.
 
         This should be called at the beginning of every trial.
+
         """
 
         timestep = self.env.reset()
