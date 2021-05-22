@@ -25,6 +25,14 @@ class GridActions(tk.Frame):
     them into discrete actions for a Grid action space.
     """
 
+    DIRECTIONS = [
+        np.array([-1, 0]),
+        np.array([1, 0]),
+        np.array([0, -1]),
+        np.array([0, 1]),
+        np.array([0, 0]),
+    ]
+
     def __init__(self, root, canvas_half_width=100):
         """Constructor.
 
@@ -66,9 +74,9 @@ class GridActions(tk.Frame):
     @property
     def action(self):
         if self._current_key is not None:
-            return self._current_key
+            return GridActions.DIRECTIONS[self._current_key]
         else:
-            return 4  # Do-nothing action
+            return GridActions.DIRECTIONS[4]  # Zero action
 
 
 class SetPositionFrame():

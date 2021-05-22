@@ -163,72 +163,17 @@ class TaskManager:
         return action
 
     def _get_hand_action(self):
-        """Get grid action."""
-
+        """Get joystick action."""
         if self.env.step_count==0:
             # Don't move on the first step
             # We set x_force and y_force to zero because for some reason the
             # joystick initially gives a non-zero action, which persists unless
             # we explicitly terminate it.
-            setvar('left_pressed', 0)
-            setvar('right_pressed', 0)
-            setvar('down_pressed', 0)
-            setvar('up_pressed', 0)
-            return 4
-
-        keys_pressed = np.array([
-            getvar('left_pressed'),
-            getvar('right_pressed'),
-            getvar('down_pressed'),
-            getvar('up_pressed'),
-        ])
-        if sum(keys_pressed) > 1:
-            keys_pressed[self._keys_pressed] = 0
-        
-        if sum(keys_pressed) > 1:
-            random_ind = np.random.choice(np.argwhere(keys_pressed)[:, 0])
-            keys_pressed = np.zeros(4, dtype=int)
-            keys_pressed[random_ind] = 1
-        
-        self._keys_pressed = keys_pressed
-
-        if sum(keys_pressed):
-            key_ind = np.argwhere(keys_pressed)[0, 0]
+            setvar('x_force', 0.)
+            setvar('y_force', 0.)
+            return np.zeros(2)
         else:
-            key_ind = 4
-        
-        return key_ind
-
-    def _get_hand_offline_action(self):
-        """Get yes/no action."""
-
-        if self.env.step_count == 0:
-            # Don't move on the first step
-            # We set x_force and y_force to zero because for some reason the
-            # joystick initially gives a non-zero action, which persists unless
-            # we explicitly terminate it.
-            setvar('space_pressed', 0)
-            return 1
-
-        keys_pressed = np.array([
-            getvar('space_pressed')
-        ])
-        if sum(keys_pressed) > 1:
-            keys_pressed[self._space_keys_pressed] = 0
-
-        if sum(keys_pressed) > 1:  # dealing with multiple press?
-            random_ind = np.random.choice(np.argwhere(keys_pressed)[:, 0])
-            keys_pressed = np.zeros(1, dtype=int)
-            keys_pressed[random_ind] = 1
-
-        self._keys_pressed = keys_pressed
-
-        if sum(keys_pressed):
-            key_ind = np.argwhere(keys_pressed)[0, 0]
-        else:
-            key_ind = 1
-
-        return key_ind
+            return np.array([getvar('x_force'), getvar('y_force')])
 
     def step(self):
         """Step environment."""
@@ -243,8 +188,7 @@ class TaskManager:
 
         eye_action = self._get_eye_action()
         hand_action = self._get_hand_action()
-        hand_offline_action = self._get_hand_offline_action()
-        action = {'eye': eye_action, 'hand': hand_action, 'hand_offline': hand_offline_action}
+        action = {'eye': eye_action, 'hand': hand_action}
 
         timestep = self.env.step(action)
         reward = timestep.reward

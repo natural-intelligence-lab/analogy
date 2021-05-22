@@ -16,25 +16,29 @@ from moog import tasks
 import maze_lib
 
 from configs.utils import action_spaces as action_spaces_custom
-from configs.utils import action_spaces_offline as action_spaces_offline
 from configs.utils import tasks as tasks_custom
 from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
 _FIXATION_STEPS = 25
+_AGENT_Y = 0.1
+_MAZE_Y = 0.15
+_MAZE_WIDTH = 0.7
 
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
 class TrialInitialization():
 
-    def __init__(self, stimulus_generator, prey_lead_in, border_width):
+    def __init__(self, stimulus_generator, prey_lead_in, static_prey=False,
+                 static_agent=False):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
-        self._border_width = border_width
+        self._static_prey = static_prey
+        self._static_agent = static_agent
 
         self._prey_factors = dict(
-            shape='circle', scale=0.015, c0=0.333, c1=1., c2=1.)
+            shape='circle', scale=0.015, c0=0, c1=255, c2=0)
         self._fixation_shape = 0.2 * np.array([
             [-5, 1], [-1, 1], [-1, 5], [1, 5], [1, 1], [5, 1], [5, -1], [1, -1],
             [1, -5], [-1, -5], [-1, -1], [-5, -1]
@@ -46,60 +50,59 @@ class TrialInitialization():
         if stimulus is None:
             return None
 
-        maze_size = stimulus['maze_size']
+        maze_width = stimulus['maze_width']
+        maze_height = stimulus['maze_height']
         prey_path = stimulus['prey_path']
-        maze = maze_lib.Maze(maze_size, maze_size, prey_path=prey_path)
-        maze.sample_distractor_exit(prey_path=prey_path)
-        maze.sample_distractors()
+        maze_walls = stimulus['maze_walls']
+        maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
+        cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
-            wall_width=0.05, border_width=self._border_width, c0=0., c1=0.,
-            c2=0.5)
+            wall_width=0.05, cell_size=cell_size, bottom_border=_MAZE_Y, c0=128,
+            c1=128, c2=128)
+
+        # Compute scaled and translated prey path
+        prey_path = 0.5 + np.array(stimulus['prey_path'])
+        cell_size = _MAZE_WIDTH / maze_width
+        prey_path *= cell_size
+        total_width = cell_size * maze_width
+        prey_path += np.array([[0.5 * (1 - total_width), _MAZE_Y]])
 
         prey = sprite.Sprite(**self._prey_factors)
 
-        # Response sprites for online
-        response_x = [0., 1., 0.5, 0.5]
-        response_y = [0.5, 0.5, 0., 1.]
-        response_angle = [0.5 * np.pi, 0.5 * np.pi, 0., 0.]
-        responses = [
-            sprite.Sprite(
-                x=x, y=y, shape='square', aspect_ratio=0.15, angle=a,
-                c0=0.667, c1=1., c2=1, opacity=0)
-            for x, y, a in zip(response_x, response_y, response_angle)
-        ]
-        # Response sprites for offline
-        responses_offline = [
-            sprite.Sprite(
-                x=x, y=y, shape='square', aspect_ratio=0.15, angle=a,
-                c0=0., c1=0., c2=0.5, opacity=0)
-            for x, y, a in zip(response_x, response_y, response_angle)
-        ]
+        if self._static_prey:
+            prey.position = [prey_path[0][0], _AGENT_Y - 0.001]
+
+        agent = sprite.Sprite(
+            x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.3, scale=0.05,
+            c0=128, c1=32, c2=32, metadata={'response': False},
+        )
+        if self._static_agent:
+            agent.mass = np.inf
 
         # Fixation cross and screen
         fixation = sprite.Sprite(
             x=0.5, y=0.5, shape=self._fixation_shape, scale=0.05,
-            c0=0., c1=0., c2=0., opacity=0)
+            c0=255, c1=255, c2=255, opacity=0)
         screen = sprite.Sprite(
-            x=0.5, y=0.5, shape='square', scale=2., c0=0., c1=0., c2=1.)
+            x=0.5, y=0.5, shape='square', scale=2., c0=0, c1=0, c2=0)
 
         # Invisible eye sprite
-        eye = sprite.Sprite(c0=0., c1=0., c2=0., opacity=0)
+        eye = sprite.Sprite(c0=0, c1=0, c2=0, opacity=0)
 
         state = collections.OrderedDict([
-            ('maze_background', []),
+            ('agent', [agent]),
             ('prey', [prey]),
             ('maze', tunnels),
-            ('response', responses),
-            ('responses_offline', responses_offline),
             ('screen', [screen]),
             ('fixation', [fixation]),
             ('eye', [eye]),
         ])
 
-        # Prey distance remaining is how far prey has to go to exit maze
+        # Prey distance remaining is how far prey has to go to reach agent
         # It will be continually updated in the meta_state as the prey moves
-        prey_distance_remaining = (self._prey_lead_in +
-            (1 - 2 * self._border_width) * len(prey_path) / maze_size)
+        prey_distance_remaining = (
+            self._prey_lead_in + cell_size * len(prey_path) + _MAZE_Y -
+            _AGENT_Y)
 
         # randomly choose image size across trials
         image_size = np.random.choice(_IMAGE_SIZE)
@@ -111,7 +114,8 @@ class TrialInitialization():
             'trial_name': '',
             'stimulus_features': stimulus['features'],
             'prey_path': prey_path,
-            'maze_size': maze_size,
+            'maze_width': maze_width,
+            'maze_height': maze_height,
             'image_size': image_size,
             'prey_distance_remaining': prey_distance_remaining,
             'RT_offline': 0,
@@ -134,7 +138,9 @@ class Config():
     def __init__(self,
                  stimulus_generator,
                  fixation_phase=True,
-                 offline_phase=True,
+                 prey_opacity=0,
+                 static_prey=False,
+                 static_agent=False,
                  ms_per_unit=2000):
         """Constructor.
         
@@ -149,22 +155,22 @@ class Config():
         """
         self._stimulus_generator = stimulus_generator
         self._fixation_phase = fixation_phase
-        self._offline_phase = offline_phase
+        self._prey_opacity = prey_opacity
+        self._static_prey = static_prey
+        self._static_agent = static_agent
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / refresh
-        self._prey_lead_in = 0.15
-        self._border_width = 0.18  # boundary space around the maze on all sides
+        self._prey_lead_in = 0.08
 
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in,
-            border_width=self._border_width)
+            static_prey=static_prey, static_agent=static_agent)
 
         # Create renderer
         self._observer = observers.PILRenderer(
             image_size=(256, 256),
             anti_aliasing=1,
-            color_to_rgb='hsv_to_rgb',
         )
 
         self._construct_action_space()
@@ -176,34 +182,36 @@ class Config():
         """Construct physics."""
         self._maze_walk = maze_lib.MazeWalk(
             speed=0., avatar_layer='prey', start_lead_in=self._prey_lead_in)
+        
+        if self._static_prey:
+            corrective_physics = []
+        else:
+            corrective_physics = [self._maze_walk]
+        
         self._physics = physics_lib.Physics(
-            corrective_physics=[self._maze_walk],
-        )
+            corrective_physics=corrective_physics)
 
     def _construct_task(self):
         """Construct task."""
 
-        prey_task = tasks_custom.TimeErrorReward(
-            half_width=20,  # given 60 Hz, 333 ms
-            maximum=1,
-            prey_speed=self._prey_speed,
-        )
-        offline_task = tasks_custom_offline.PressWhenReady(
-            condition=lambda _, meta_state: meta_state['phase'] == 'offline',
-            maximum_duration=600  # given 60 Hz, 10,000 ms
+        prey_task = tasks.ContactReward(
+            reward_fn=1.,
+            layers_0='agent',
+            layers_1='prey',
+            condition=lambda s_agent, _: s_agent.metadata['response'],
         )
         timeout_task = tasks.Reset(
             condition=lambda _, meta_state: meta_state['phase'] == 'reward',
             steps_after_condition=15,
         )
-        self._task = tasks.CompositeTask(prey_task, offline_task, timeout_task)
+        self._task = tasks.CompositeTask(prey_task, timeout_task)
 
     def _construct_action_space(self):
         """Construct action space."""
         self._action_space = action_spaces.Composite(
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
-            hand=action_spaces_custom.CardinalDirections('response'),
-            hand_offline=action_spaces_offline.YesNoResponse('responses_offline'),
+            hand=action_spaces_custom.JoystickColor(
+                up_color=(32, 128, 32), scaling_factor=0.01),
         )
 
     def _construct_game_rules(self):
@@ -212,15 +220,16 @@ class Config():
         def _make_transparent(s):
             s.opacity = 0
 
+        def _make_prey_transparent(s):
+            s.opacity = self._prey_opacity
+
         def _make_opaque(s):
             s.opacity=255
 
         # 1. ITI phase
 
         def _reset_physics(meta_state):
-            self._maze_walk.set_prey_path(
-                meta_state['prey_path'], meta_state['maze_size'],
-                self._border_width)
+            self._maze_walk.set_prey_path(meta_state['prey_path'])
             self._maze_walk.speed = 0
 
         reset_physics = gr.ModifyMetaState(_reset_physics)
@@ -270,8 +279,6 @@ class Config():
         )
 
         # 3. Offline phase
-        def _end_offline_phase(state):
-            return np.any([s.opacity > 0 for s in state['responses_offline']])
 
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
@@ -279,7 +286,7 @@ class Config():
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen],
             name='offline',
-            end_condition=_end_offline_phase,
+            duration=10,
         )
 
         # 4. Visible motion phase
@@ -305,14 +312,12 @@ class Config():
         # 5. Invisible motion phase
 
         def _end_motion_phase(state):
-            return np.any([s.opacity > 0 for s in state['response']])
+            return state['agent'][0].metadata['response']
 
-        hide_prey = gr.ModifySprites('prey', _make_transparent)
-
-        make_transparent_offline_response = gr.ModifySprites('responses_offline', _make_transparent)
+        hide_prey = gr.ModifySprites('prey', _make_prey_transparent)
 
         phase_motion_invisible = gr.Phase(
-            one_time_rules=[hide_prey, make_transparent_offline_response],
+            one_time_rules=[hide_prey],
             continual_rules=update_motion_steps,
             end_condition=_end_motion_phase,
             name='motion_invisible',

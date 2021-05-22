@@ -15,7 +15,7 @@ _DIRECTIONS = [np.array(x) for x in list(_DIRECTIONS_NAMED.values())]
 class Maze():
     """Maze class."""
 
-    def __init__(self, width, height, prey_path=()):
+    def __init__(self, width, height, prey_path=(), all_walls=None):
         """Constructor.
         
         Maze is a grid with walls between some of the cells.
@@ -32,10 +32,16 @@ class Maze():
         """
         self._width = width
         self._height = height
-        self._construct_walls()
 
-        self._construct_connected_components()
-        self._set_prey_path(prey_path)
+        if all_walls is None:
+            # Must randomly generate the maze
+            self._construct_walls()
+            self._construct_connected_components()
+            self._set_prey_path(prey_path)
+        else:
+            # Entire maze has been specified
+            self._walls_frozen = all_walls
+            self._walls_temporary = []
 
     def _construct_walls(self):
         """Construct self._walls_frozen and self._walls_temporary."""
@@ -250,11 +256,18 @@ class Maze():
         
         self._walls_frozen.extend(walls_to_freeze)
 
-    def to_sprites(self, wall_width, border_width, **sprite_factors):
+    def to_sprites(self,
+                   wall_width,
+                   cell_size,
+                   bottom_border,
+                   **sprite_factors):
         """Convert maze to list of sprites.
 
         Args:
             wall_width: Scalar. How wide the wall sprites should be.
+            cell_size: Scalar. Width and height of maze cells.
+            bottom_border: Scalar. How near to the bottom of the frame is the
+                bottom of the maze.
             sprite_factors: Dict. Other attributes of the sprites (e.g. color,
                 opacity, ...).
         """
@@ -277,11 +290,18 @@ class Maze():
                 [x_max, y_max],
                 [x_max, y_min],
             ])
-            maze_span = max(self._width, self._height)
-            sprite_shape /= maze_span
-            sprite_shape = 0.5 + (1 - 2 * border_width) * (sprite_shape - 0.5)
+            # Shrink sprite to cell_size
+            sprite_shape *= cell_size
+            # Move sprite right to center maze on the x axis and up by
+            # bottom_border
+            total_width = cell_size * self._width
+            sprite_shape += np.array([[0.5 * (1 - total_width), bottom_border]])
             new_sprite = sprite.Sprite(
                 x=0., y=0., shape=sprite_shape, **sprite_factors)
             sprites.append(new_sprite)
         
         return sprites
+
+    @property
+    def walls(self):
+        return self._walls_frozen + self._walls_temporary

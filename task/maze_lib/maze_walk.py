@@ -29,9 +29,8 @@ class MazeWalk(physics_lib.AbstractPhysics):
         self._avatar_layer = avatar_layer
         self._start_lead_in = start_lead_in
 
-    def set_prey_path(self, prey_path, maze_size, border_width):
-        prey_path = (0.5 + np.array(prey_path)) / maze_size
-        self._vertices = 0.5 + (1 - 2 * border_width) * (prey_path - 0.5)
+    def set_prey_path(self, prey_path):
+        self._vertices = prey_path
         directions = self._vertices[1:] - self._vertices[:-1]
         directions /= np.linalg.norm(directions, axis=1, keepdims=True)
         self._directions = directions

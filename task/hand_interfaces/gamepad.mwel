@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// PS3 Gamepad grid interface
+// PS3 Gamepad interface
 //
 // Usage: Use the left-side rocker to control left/right/up/down motion, and use
 // the 'X' button (bottom of the four on the right side) as a surrogate space
@@ -10,17 +10,31 @@
 
 
 %define update_joystick ()
-    right_pressed = rocker_x > 128 + 24
-    left_pressed = rocker_x < 128 - 24
-    up_pressed = rocker_y < 128 - 24
-    down_pressed = rocker_y > 128 + 24
+    
+    x_force = (
+        (rocker_x > 128 + 8) * (rocker_x - 128) / 128 +
+        (rocker_x < 128 - 8) * (rocker_x - 128) / 128
+    )
+    y_force = (
+        (rocker_y < 128 - 8) * (128 - rocker_y) / 128 +
+        (rocker_y > 128 + 8) * (128 - rocker_y) / 128
+    )
+
+    /*
+    // The gamepad rocker's resting position is a little noisy. Even when not
+    // touched, it's values are not exactly 128. That is why we ignore small
+    // actions above. In the version below we do not ignore small actions, but
+    // this means that the agent never stops moving, even when you let go of the
+    // rocker.
+    
+    x_force = rocker_x / 128 - 1
+    y_force = 1 - rocker_y / 128
+    */
 %end
 
 group 'Joystick variables' {
-    var right_pressed = 0
-    var left_pressed = 0
-    var up_pressed = 0
-    var down_pressed = 0
+    var x_force = 0
+    var y_force = 0
     var space_pressed = 0
 
     var rocker_x = 128 {
@@ -47,7 +61,7 @@ group 'Joystick variables' {
     'button_X_channel': 2
 }
 
-joystick_device hand {
+joystick_device controller {
     iochannel/usbhid_generic_input_channel (
         usage_page = 1
         usage = joystick_name_to_usage['rocker_X_channel']

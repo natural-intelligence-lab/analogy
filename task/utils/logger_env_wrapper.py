@@ -194,7 +194,7 @@ class MazeSetGoLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
             x = [k, [self._serialize_sprite_partial(s) for s in self.state[k]]]
             return x
 
-        serialize_layers = ['response', 'prey', 'eye']
+        serialize_layers = ['agent', 'prey', 'eye']
         serialized_state = [_serialize_state(k) for k in serialize_layers]
 
         return serialized_state
@@ -210,7 +210,8 @@ class MazeSetGoLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
 
         # Add maze to log
         maze_log = {
-            'maze_size': self.meta_state['maze_size'],
+            'maze_width': self.meta_state['maze_width'],
+            'maze_height': self.meta_state['maze_height'],
             'prey_path': self.meta_state['prey_path'],
             'stimulus_features': self.meta_state['stimulus_features'],
         }

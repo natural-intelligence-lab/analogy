@@ -33,11 +33,12 @@ def generate_stimuli(conditions, log_dir, log_every=1):
 
     num_conditions = len(conditions)
     count = 0
-    for maze_arms, prey_arm, features in conditions:
+    for maze_width, maze_height, prey_arm, maze_walls, features in conditions:
         count += 1
 
         # Serialize condition
-        condition_string = [maze_arms, prey_arm, features]
+        condition_string = [
+            maze_width, maze_height, prey_arm, maze_walls, features]
         condition_string = _serialize(condition_string)
 
         # Write to file

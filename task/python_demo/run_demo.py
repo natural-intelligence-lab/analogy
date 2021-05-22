@@ -23,18 +23,25 @@ from utils import logger_env_wrapper
 FLAGS = flags.FLAGS
 flags.DEFINE_string('level',
                     'random.random_12.random_12_uniform_num_turns',
+                    # 'random.random_12.random_12',
+                    # 'training.vertical_timing.vertical_timing_center',
+                    # 'training.vertical_timing.vertical_timing_random_x',
                     'Level.')
-flags.DEFINE_integer('render_size', 256,
+flags.DEFINE_integer('render_size', 512,
                      'Height and width of the output image.')
 flags.DEFINE_integer('anti_aliasing', 1, 'Renderer anti-aliasing factor.')
 flags.DEFINE_integer('fps', 20, 'Frames per second.')
 flags.DEFINE_integer('reward_history', 30,
                      'Number of historical reward timesteps to plot.')
 
+flags.DEFINE_integer('prey_opacity', 255, 'Prey opacity during occlusion.')
+flags.DEFINE_boolean('static_prey', False, 'Whether prey is static.')
+flags.DEFINE_boolean('static_agent', False, 'Whether agent is static.')
+
 # Flags for gif writing
-flags.DEFINE_boolean('write_gif', False, 'Whether to write a gif.')
+flags.DEFINE_boolean('write_gif', True, 'Whether to write a gif.')
 flags.DEFINE_string('gif_file',
-                    os.path.join(os.getcwd(), 'logs/gifs/test_0.gif'),
+                    os.path.join(os.getcwd(), 'logs/gifs/r.gif'),
                     'File path to write the gif to.')
 flags.DEFINE_integer('gif_fps', 15, 'Frames per second for the gif.')
 
@@ -53,7 +60,9 @@ def main(_):
     
     config_instance = config_class(
         fixation_phase=False,
-        offline_phase=True,
+        prey_opacity=FLAGS.prey_opacity,
+        static_prey=FLAGS.static_prey,
+        static_agent=FLAGS.static_agent,
         ms_per_unit=800,
     )
 
