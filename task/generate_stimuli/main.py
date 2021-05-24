@@ -11,8 +11,8 @@ sys.path.append('..')
 import conditions
 import generator
 
-# _CONDITION = 'random.Random12'
-_CONDITION = 'training.VerticalTiming'
+_CONDITION = 'random.Random12'
+# _CONDITION = 'training.VerticalTiming'
 
 # Log directory
 _LOGDIR = os.path.join(os.getcwd(), '../stimuli')

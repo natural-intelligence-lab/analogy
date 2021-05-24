@@ -166,6 +166,11 @@ plotReg(num_turns,err,hFig,'k');
 xlabel('# turns'); ylabel('t_p - t_s (ms)');
 applytofig4keynote;
 
+% tp-ts=f(# turns)
+[rho,pval]=partialcorr(num_turns(:),err(:),path_length(:));
+disp([rho pval]);
+
+% tp-ts=f(path length)
 [rho,pval]=partialcorr(num_turns(:),err(:),path_length(:));
 disp([rho pval]);
 

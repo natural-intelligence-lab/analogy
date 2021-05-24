@@ -17,6 +17,8 @@ _DIRECTIONS = [np.array(x) for x in list(_DIRECTIONS_NAMED.values())]
 
 class PreyPathGenerator():
     """Random prey path.
+        exit always at South side, randomly selected from uniform distribution
+        entry among North, East, West but South not allowed
         no control over # turns, total path length
     """
 
@@ -134,7 +136,7 @@ class Random12():
         prey_path = self._prey_path_generator()
         maze = maze_lib.Maze(
             width=self._maze_size, height=self._maze_size, prey_path=prey_path)
-        # maze.sample_distractor_exit(prey_path=prey_path)
+        maze.sample_distractor_exit(prey_path=prey_path)
         maze.sample_distractors()
         maze_walls = maze.walls
 

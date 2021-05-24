@@ -150,47 +150,26 @@ class Maze():
             self._remove_wall(wall_to_remove)
 
     def sample_distractor_exit(self,prey_path=()):
-        """Sample distractor exit points around non-target side boundaries
+        """Sample distractor exit points at South side
+            remove every other grid including correct exit point
         """
 
         walls_to_remove = []
-        # identify non-target side
+        # identify correct exit point
         tail = prey_path[-1]
-        d = np.subtract(prey_path[-1],prey_path[-2]) #  prey_path[-1] - prey_path[-2]
-        if tail[0] == 0 and tuple(d) == _DIRECTIONS_NAMED['W']:
-            nontarget_side = ['E', 'N', 'S']
-        elif (tail[0] == self._width - 1 and
-              tuple(d) == _DIRECTIONS_NAMED['E']):
-            nontarget_side = ['W', 'N', 'S']
-        elif (tail[1] == self._height - 1 and
-              tuple(d) == _DIRECTIONS_NAMED['N']):
-            nontarget_side = ['W', 'E', 'S']
-        elif tail[1] == 0 and tuple(d) == _DIRECTIONS_NAMED['S']:
-            nontarget_side = ['W', 'E', 'N']
 
-        # choose random wall except corners
-        for direction in nontarget_side:
-            if direction == 'E':
-                vertex_x = self._width
-                vertex_y = np.random.randint(1, self._height)  # not including corners
-                wall_to_remove = ((vertex_x, vertex_y),(vertex_x, vertex_y+1))
-            elif direction == 'W':
-                vertex_x = 0
-                vertex_y = np.random.randint(1, self._height)  # not including corners
-                wall_to_remove = ((vertex_x, vertex_y), (vertex_x, vertex_y + 1))
-            elif direction == 'N':
-                vertex_y = self._height
-                vertex_x = np.random.randint(1,self._width)  # not including corners
-                wall_to_remove = ((vertex_x, vertex_y),(vertex_x+1, vertex_y))
-            elif direction == 'S':
-                vertex_y = 0
-                vertex_x = np.random.randint(1,self._width)  # not including corners
-                wall_to_remove = ((vertex_x, vertex_y),(vertex_x+1, vertex_y))
+        # remove from correct exit point to its right
+        for grid in range(tail[0],self._width,2):
+            vertex_y = 0
+            vertex_x = grid
+            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
+            walls_to_remove.append(wall_to_remove)
 
-            # except entry points
-            if np.array_equal(wall_to_remove,self._entry_wall):
-                self.sample_distractor_exit(prey_path=prey_path)
-
+        # remove from correct exit point to its left
+        for grid in range(0,tail[0],2):
+            vertex_y = 0
+            vertex_x = grid
+            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
             walls_to_remove.append(wall_to_remove)
 
         # remove chosen walls
