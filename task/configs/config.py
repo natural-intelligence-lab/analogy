@@ -280,13 +280,19 @@ class Config():
 
         # 3. Offline phase
 
+        def _end_offline_phase(state, meta_state):
+            correct_exit_x = meta_state['prey_path'][-1][0]
+            agent_x = state['agent'][0].x
+            cell_size = _MAZE_WIDTH / meta_state['maze_width']
+            return abs(correct_exit_x - agent_x) < cell_size/2
+
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
 
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen],
             name='offline',
-            duration=10,
+            end_condition=_end_offline_phase,  # duration=10,
         )
 
         # 4. Visible motion phase
