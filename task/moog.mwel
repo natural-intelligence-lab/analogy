@@ -278,3 +278,9 @@ protocol 'random_12_uniform_num_turns' {
         't = TaskManager(level="random.random_12.random_12_uniform_num_turns", fixation_phase=False, ms_per_unit=2000)')
     run_task ()
 }
+
+protocol 'Vertical prey, random height' {
+    run_python_string (
+        't = TaskManager(level="random.vertical_random_height.vertical_random_height", fixation_phase=False, ms_per_unit=2000)')
+    run_task ()
+}

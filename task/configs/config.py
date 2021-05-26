@@ -74,7 +74,7 @@ class TrialInitialization():
 
         agent = sprite.Sprite(
             x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.3, scale=0.05,
-            c0=128, c1=32, c2=32, metadata={'response': False},
+            c0=128, c1=32, c2=32, metadata={'response': False, 'moved': False},
         )
         if self._static_agent:
             agent.mass = np.inf
@@ -280,17 +280,21 @@ class Config():
 
         # 3. Offline phase
 
-        def _end_offline_phase(state, meta_state):
-            correct_exit_x = meta_state['prey_path'][-1][0]
-            agent_x = state['agent'][0].x
-            cell_size = _MAZE_WIDTH / meta_state['maze_width']
-            return abs(correct_exit_x - agent_x) < cell_size/2
+        def _end_offline_phase(state):
+            agent = state['agent'][0]
+            return (agent.metadata['moved'] and np.all(agent.velocity == 0))
 
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
 
+        def _track_moved(s):
+            if not np.all(s.velocity == 0):
+                s.metadata['moved'] = True
+        update_agent_metadata = gr.ModifySprites('agent', _track_moved)
+
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen],
+            continual_rules=update_agent_metadata,
             name='offline',
             end_condition=_end_offline_phase,  # duration=10,
         )
