@@ -22,8 +22,9 @@ class PreyPathGenerator():
         no control over # turns, total path length
     """
 
-    def __init__(self, maze_size, min_segment_length):
-        self._maze_size = maze_size
+    def __init__(self, maze_height, maze_width, min_segment_length):
+        self._maze_height = maze_height
+        self._maze_width = maze_width
         self._min_segment_length = min_segment_length
     
     def __call__(self, num_tries=0):
@@ -43,10 +44,10 @@ class PreyPathGenerator():
             d = prey_path[-1] - prey_path[-2]
             if tail[0] == 0 and tuple(d) == _DIRECTIONS_NAMED['W']:
                 finished = True
-            elif (tail[0] == self._maze_size - 1 and
+            elif (tail[0] == self._maze_width - 1 and
                     tuple(d) == _DIRECTIONS_NAMED['E']):
                 finished = True
-            elif (tail[1] == self._maze_size - 1 and
+            elif (tail[1] == self._maze_height - 1 and
                     tuple(d) == _DIRECTIONS_NAMED['N']):
                 finished = True
             elif tail[1] == 0 and tuple(d) == _DIRECTIONS_NAMED['S']:
@@ -58,12 +59,22 @@ class PreyPathGenerator():
 
         return prey_path
 
+    def _out_of_maze(self, position):
+        if np.any(position < 0):
+            return True
+        if position[0] >= self._maze_width:
+            return True
+        if position[1] >= self._maze_height:
+            return True
+        return False
+
     def _valid_lengths(self, maze_array, prey_path, direction):
         tail = prey_path[-1]
         lengths = [0]
-        for i in range(self._maze_size):
+
+        for i in range(max(self._maze_width, self._maze_height)):
             tail = tail + direction
-            if np.any(tail < 0) or np.any(tail == self._maze_size): # get out of maze
+            if self._out_of_maze(tail):
                 break
             if maze_array[tail[0], tail[1]]: # already exists in maze
                 break
@@ -99,14 +110,28 @@ class PreyPathGenerator():
             return True
 
     def _sample_exit(self):
-        maze_array = np.zeros((self._maze_size, self._maze_size))
-        exit_x = int(np.random.randint(0, self._maze_size))
+        maze_array = np.zeros((self._maze_height, self._maze_width))
+        exit_x = int(np.random.randint(0, self._maze_width))
         prey_path = []
         for i in range(self._min_segment_length):
             maze_array[exit_x, i] = 1
             prey_path.append(np.array([exit_x, i]))
         
         return maze_array, prey_path
+
+
+def _prey_path_to_segments(prey_path):
+    directions = np.array(prey_path[1:]) - np.array(prey_path[:-1])
+    segments = [[prey_path[1]-prey_path[0]]]  # debug 2021/5/8
+    prev_direction = directions[0]
+    for d in directions[1:]:
+        if np.array_equal(d, prev_direction):
+            segments[-1].append(d)
+        else:
+            segments.append([d])
+        prev_direction = d
+
+    return segments
 
 
 class Random12():
@@ -117,20 +142,8 @@ class Random12():
     def __init__(self):
         self._maze_size = Random12._MAZE_SIZE
         self._prey_path_generator = PreyPathGenerator(
-            maze_size=self._maze_size, min_segment_length=_MIN_SEGMENT_LENGTH)
-
-    def _prey_path_to_segments(self, prey_path):
-        directions = np.array(prey_path[1:]) - np.array(prey_path[:-1])
-        segments = [[prey_path[1]-prey_path[0]]]  # debug 2021/5/8
-        prev_direction = directions[0]
-        for d in directions[1:]:
-            if np.array_equal(d, prev_direction):
-                segments[-1].append(d)
-            else:
-                segments.append([d])
-            prev_direction = d
-
-        return segments
+            maze_height=self._maze_size, maze_width=self._maze_size,
+            min_segment_length=_MIN_SEGMENT_LENGTH)
 
     def _sample_condition(self):
         prey_path = self._prey_path_generator()
@@ -141,7 +154,7 @@ class Random12():
         maze_walls = maze.walls
 
         start_x = prey_path[0][0]
-        segments = self._prey_path_to_segments(prey_path)
+        segments = _prey_path_to_segments(prey_path)
         num_turns = len(segments) - 1
         path_length = sum(len(x) for x in segments)
 
@@ -160,5 +173,39 @@ class Random12():
         conditions = [
             self._sample_condition()
             for _ in range(Random12._NUM_CONDITIONS)
+        ]
+        return conditions
+
+
+class VerticalPreyRandomHeight():
+
+    _SAMPLES_PER_CONDITION = int(1e2)
+
+    def __init__(self):
+        self._maze_width = 12
+        self._maze_heights = range(2, 12)
+
+    def _sample_condition(self, height, x):
+        prey_path = [[x, i] for i in range(height - 1, -1, -1)]
+        maze = maze_lib.Maze(
+            width=self._maze_width, height=height, prey_path=prey_path)
+        maze.sample_distractor_exit(prey_path=prey_path)
+        maze.sample_distractors()
+        maze_walls = maze.walls
+
+        features = {
+            'name': 'VerticalPreyRandomHeight',
+            'x': x,
+            'height': height,
+        }
+        condition = [self._maze_width, height, prey_path, maze_walls, features]
+        return condition
+
+    def __call__(self):
+        conditions = [
+            self._sample_condition(height, x)
+            for _ in range(VerticalPreyRandomHeight._SAMPLES_PER_CONDITION)
+            for x in range(self._maze_width)
+            for height in self._maze_heights
         ]
         return conditions
