@@ -21,7 +21,7 @@ from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
-_FIXATION_STEPS = 25
+_FIXATION_STEPS = 30
 _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
@@ -77,7 +77,7 @@ class TrialInitialization():
             c0=128, c1=32, c2=32, metadata={'response': False, 'moved': False},
         )
         if self._static_agent:
-            agent.mass = np.inf
+            agent.mass = 10  #  np.inf
 
         # Fixation cross and screen
         fixation = sprite.Sprite(
@@ -194,12 +194,19 @@ class Config():
     def _construct_task(self):
         """Construct task."""
 
-        prey_task = tasks.ContactReward(
-            reward_fn=1.,
-            layers_0='agent',
-            layers_1='prey',
-            condition=lambda s_agent, _: s_agent.metadata['response'],
-        )
+        prey_task = tasks_custom.TimeErrorReward(
+             half_width=80,  # given 60 Hz, 666*2 ms
+             maximum=1,
+             prey_speed=self._prey_speed,
+         )
+
+        # prey_task = tasks.ContactReward(
+        #     reward_fn=1.,
+        #     layers_0='agent',
+        #     layers_1='prey',
+        #     condition=lambda s_agent, _: s_agent.metadata['response'],
+        # )
+
         timeout_task = tasks.Reset(
             condition=lambda _, meta_state: meta_state['phase'] == 'reward',
             steps_after_condition=15,
@@ -236,16 +243,17 @@ class Config():
 
         phase_iti = gr.Phase(
             one_time_rules=reset_physics,
-            duration=10,
+            duration=30,
             name='iti',
         )
 
         # 2. Fixation phase
 
         def _should_increase_fixation_dur(state, meta_state):
-            dist = np.linalg.norm(
-                state['fixation'][0].position - state['eye'][0].position)
-            eye_fixating = dist < _FIXATION_THRESHOLD
+            # dist = np.linalg.norm(
+            #     state['fixation'][0].position - state['eye'][0].position)
+            # eye_fixating = dist < _FIXATION_THRESHOLD
+            eye_fixating = 0 < 1
             return eye_fixating
 
         def _increase_fixation_dur(meta_state):
@@ -261,20 +269,20 @@ class Config():
         )
 
         def _should_end_fixation(state, meta_state):
-            return meta_state['fixation_duration'] >= _FIXATION_STEPS
+            agent = state['agent'][0]
+            return (meta_state['fixation_duration'] >= _FIXATION_STEPS and np.all(agent.velocity == 0))
 
         if not self._fixation_phase:
-            fixation_duration = 10
+            fixation_duration = 30
         else:
-            fixation_duration = np.inf
+            fixation_duration = 0 # np.inf
 
         appear_fixation = gr.ModifySprites('fixation', _make_opaque)
 
         phase_fixation = gr.Phase(
             one_time_rules=appear_fixation,
             continual_rules=[increase_fixation_dur, reset_fixation_dur],
-            end_condition=_should_end_fixation,
-            duration=fixation_duration,
+            end_condition=_should_end_fixation, #  duration=fixation_duration,
             name='fixation',
         )
 
@@ -296,7 +304,8 @@ class Config():
             one_time_rules=[disappear_fixation, disappear_screen],
             continual_rules=update_agent_metadata,
             name='offline',
-            end_condition=_end_offline_phase,  # duration=10,
+            # end_condition=_end_offline_phase,  # 
+            duration=10,
         )
 
         # 4. Visible motion phase

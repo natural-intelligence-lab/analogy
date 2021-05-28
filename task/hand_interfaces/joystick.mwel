@@ -10,13 +10,14 @@
 
 %define update_joystick ()
 
+    // threshold = 30 // originally 4
     x_force = (
-        (rocker_x > 512 +4) * (rocker_x - 512) / 512 +
-        (rocker_x < 512 -4) * (rocker_x - 512) / 512
+        (rocker_x > 512 +30) * (rocker_x - 512) / 512 +
+        (rocker_x < 512 -30) * (rocker_x - 512) / 512
     )
     y_force = (
-        (rocker_y < 512 -4) * (512 - rocker_y) / 512 +
-        (rocker_y > 512 +4) * (512 - rocker_y) / 512
+        -(rocker_y < 512 -30) * (512 - rocker_y) / 512 +
+        -(rocker_y > 512 +30) * (512 - rocker_y) / 512
     )
     
     /*
@@ -48,18 +49,19 @@ group 'Joystick variables' {
     iodevice/usbhid_generic (
         usage_page = 1
         usage = 4
-        preferred_location_id = 52494336 // logi joystick 0
+        // preferred_location_id = 342884352 // logitec extreme 3D
+        // preferred_location_id = 52494336 // logi joystick 0
         // log_all_input_values = true
         )
 %end
 
 %define joystick_name_to_usage = {
-    'rocker_X_channel': 48,
-    'rocker_Y_channel': 49,
+    'rocker_X_channel': 49, // 48,
+    'rocker_Y_channel': 48, // 49,
     'button': 1
 }
 
-joystick_device controller {
+joystick_device hand {
     iochannel/usbhid_generic_input_channel (
         usage_page = 1
         usage = joystick_name_to_usage['rocker_X_channel']

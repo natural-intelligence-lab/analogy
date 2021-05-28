@@ -115,10 +115,10 @@ class TaskManager:
         for varname in ('eye_x', 'eye_y'):
             self._register_event_callback(varname)
 
-        self._keys_pressed = np.zeros(4, dtype=int)
-        for varname in ('up_pressed', 'down_pressed', 'left_pressed',
-                        'right_pressed'):
-            self._register_event_callback(varname)
+        # self._keys_pressed = np.zeros(4, dtype=int)
+        # for varname in ('up_pressed', 'down_pressed', 'left_pressed',
+        #                 'right_pressed'):
+        #     self._register_event_callback(varname)
 
         self._space_keys_pressed = np.zeros(1, dtype=int)
         self._register_event_callback('space_pressed')
@@ -195,7 +195,7 @@ class TaskManager:
         img = timestep.observation['image']
 
         if reward:
-            setvar('reward_duration', reward * 1000)  # ms to us
+            setvar('reward_duration', reward)  # ms to us
 
         if timestep.last():
             setvar('end_trial', True)
