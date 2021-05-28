@@ -77,7 +77,7 @@ class TrialInitialization():
             c0=128, c1=32, c2=32, metadata={'response': False, 'moved': False},
         )
         if self._static_agent:
-            agent.mass = 10  #  np.inf
+            agent.mass = np.inf
 
         # Fixation cross and screen
         fixation = sprite.Sprite(
@@ -270,7 +270,7 @@ class Config():
 
         def _should_end_fixation(state, meta_state):
             agent = state['agent'][0]
-            return (meta_state['fixation_duration'] >= _FIXATION_STEPS and np.all(agent.velocity == 0))
+            return (meta_state['fixation_duration'] >= _FIXATION_STEPS and agent.metadata['response']==False
 
         if not self._fixation_phase:
             fixation_duration = 30
