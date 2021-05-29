@@ -116,7 +116,8 @@ class JoystickColor(action_spaces.AbstractActionSpace):
         np.array([0, 0]),  # Nothing
     ]
 
-    def __init__(self, up_color, scaling_factor=1., action_layer='agent'):
+    def __init__(self, up_color, scaling_factor=1., action_layer='agent',
+                 joystick_layer='joystick'):
         """Constructor.
         
         Args:
@@ -129,6 +130,7 @@ class JoystickColor(action_spaces.AbstractActionSpace):
         self._up_color =  up_color
         self._scaling_factor = scaling_factor
         self._action_layer = action_layer
+        self._joystick_layer = joystick_layer
 
         self._action_spec = specs.BoundedArray(
             shape=(2,), dtype=np.float32, minimum=-1, maximum=1)
@@ -140,6 +142,10 @@ class JoystickColor(action_spaces.AbstractActionSpace):
             state: OrderedDict. Environment state.
             action: Numpy float array of size (2) in [-1, 1]. Force to apply.
         """
+
+        # Move joystick sprite
+        for sprite in state[self._joystick_layer]:
+            sprite.position = 0.4 * action + 0.5
 
         # Project to cardinal directions
         if np.all(action == 0):

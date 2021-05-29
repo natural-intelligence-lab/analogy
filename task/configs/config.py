@@ -16,6 +16,7 @@ from moog import tasks
 import maze_lib
 
 from configs.utils import action_spaces as action_spaces_custom
+from configs.utils import game_rules as custom_game_rules
 from configs.utils import tasks as tasks_custom
 from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
@@ -72,13 +73,6 @@ class TrialInitialization():
         if self._static_prey:
             prey.position = [prey_path[0][0], _AGENT_Y - 0.001]
 
-        agent = sprite.Sprite(
-            x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.3, scale=0.05,
-            c0=128, c1=32, c2=32, metadata={'response': False, 'moved': False},
-        )
-        if self._static_agent:
-            agent.mass = np.inf
-
         # Fixation cross and screen
         fixation = sprite.Sprite(
             x=0.5, y=0.5, shape=self._fixation_shape, scale=0.05,
@@ -89,11 +83,24 @@ class TrialInitialization():
         # Invisible eye sprite
         eye = sprite.Sprite(c0=0, c1=0, c2=0, opacity=0)
 
+        # Joystick sprite
+        joystick = sprite.Sprite(
+            x=0.5, y=0.5, shape='square', aspect_ratio=0.3, scale=0.05,
+            c0=32, c1=128, c2=32,
+        )
+
+        # Joystick fixation sprite
+        joystick_fixation = sprite.Sprite(
+            x=0.5, y=0.5, shape='circle', scale=0.015, c0=0, c1=255, c2=0,
+        )
+
         state = collections.OrderedDict([
-            ('agent', [agent]),
+            ('agent', []),
             ('prey', [prey]),
             ('maze', tunnels),
             ('screen', [screen]),
+            ('joystick_fixation', [joystick_fixation]),
+            ('joystick', [joystick]),
             ('fixation', [fixation]),
             ('eye', [eye]),
         ])
@@ -123,6 +130,16 @@ class TrialInitialization():
         }
 
         return state
+
+    def create_agent(self, state):
+        agent = sprite.Sprite(
+            x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.3, scale=0.05,
+            c0=128, c1=32, c2=32, metadata={'response': False, 'moved': False},
+        )
+        if self._static_agent:
+            agent.mass = np.inf
+
+        state['agent'] = [agent]
 
     def meta_state_initializer(self):
         """Meta-state initializer."""
@@ -158,6 +175,9 @@ class Config():
         self._prey_opacity = prey_opacity
         self._static_prey = static_prey
         self._static_agent = static_agent
+
+        # How close to center joystick must be to count as joystick centering
+        self._joystick_center_threshold = 0.05
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / refresh
@@ -198,20 +218,16 @@ class Config():
              half_width=80,  # given 60 Hz, 666*2 ms
              maximum=1,
              prey_speed=self._prey_speed,
-         )
+        )
 
-        # prey_task = tasks.ContactReward(
-        #     reward_fn=1.,
-        #     layers_0='agent',
-        #     layers_1='prey',
-        #     condition=lambda s_agent, _: s_agent.metadata['response'],
-        # )
+        joystick_center_task = tasks_custom.BeginPhase('fixation')
 
         timeout_task = tasks.Reset(
             condition=lambda _, meta_state: meta_state['phase'] == 'reward',
             steps_after_condition=15,
         )
-        self._task = tasks.CompositeTask(prey_task, timeout_task)
+        self._task = tasks.CompositeTask(
+            prey_task, joystick_center_task, timeout_task)
 
     def _construct_action_space(self):
         """Construct action space."""
@@ -247,13 +263,31 @@ class Config():
             name='iti',
         )
 
-        # 2. Fixation phase
+        # 2. Joystick centering phase
+
+        appear_joystick = gr.ModifySprites(
+            ['joystick_fixation', 'joystick'], _make_opaque)
+
+        def _should_end_joystick_fixation(state):
+            joystick_pos = state['joystick'][0].position
+            dist_from_center = np.linalg.norm(joystick_pos - 0.5 * np.ones(2))
+            return dist_from_center < self._joystick_center_threshold
+
+        phase_joystick_center = gr.Phase(
+            one_time_rules=appear_joystick,
+            end_condition=_should_end_joystick_fixation,
+            name='joystick_fixation',
+        )
+
+        # 3. Fixation phase
+
+        disappear_joystick = gr.ModifySprites(
+            ['joystick_fixation', 'joystick'], _make_transparent)
 
         def _should_increase_fixation_dur(state, meta_state):
-            # dist = np.linalg.norm(
-            #     state['fixation'][0].position - state['eye'][0].position)
-            # eye_fixating = dist < _FIXATION_THRESHOLD
-            eye_fixating = 0 < 1
+            dist = np.linalg.norm(
+                state['fixation'][0].position - state['eye'][0].position)
+            eye_fixating = dist < _FIXATION_THRESHOLD
             return eye_fixating
 
         def _increase_fixation_dur(meta_state):
@@ -269,24 +303,26 @@ class Config():
         )
 
         def _should_end_fixation(state, meta_state):
-            agent = state['agent'][0]
-            return (meta_state['fixation_duration'] >= _FIXATION_STEPS and agent.metadata['response']==False
+            return (meta_state['fixation_duration'] >= _FIXATION_STEPS)
 
         if not self._fixation_phase:
-            fixation_duration = 30
+            fixation_duration = 0
         else:
-            fixation_duration = 0 # np.inf
+            fixation_duration = np.inf
 
         appear_fixation = gr.ModifySprites('fixation', _make_opaque)
 
         phase_fixation = gr.Phase(
-            one_time_rules=appear_fixation,
+            one_time_rules=[appear_fixation, disappear_joystick],
             continual_rules=[increase_fixation_dur, reset_fixation_dur],
-            end_condition=_should_end_fixation, #  duration=fixation_duration,
+            end_condition=_should_end_fixation,
+            duration=fixation_duration,
             name='fixation',
         )
 
-        # 3. Offline phase
+        # 4. Offline phase
+
+        create_agent = custom_game_rules.CreateAgent(self._trial_init)
 
         def _end_offline_phase(state):
             agent = state['agent'][0]
@@ -301,14 +337,14 @@ class Config():
         update_agent_metadata = gr.ModifySprites('agent', _track_moved)
 
         phase_offline = gr.Phase(
-            one_time_rules=[disappear_fixation, disappear_screen],
+            one_time_rules=[disappear_fixation, disappear_screen, create_agent],
             continual_rules=update_agent_metadata,
             name='offline',
             # end_condition=_end_offline_phase,  # 
             duration=10,
         )
 
-        # 4. Visible motion phase
+        # 5. Visible motion phase
 
         def _unglue(meta_state):
             self._maze_walk.speed = self._prey_speed
@@ -328,7 +364,7 @@ class Config():
             name='motion_visible',
         )
 
-        # 5. Invisible motion phase
+        # 6. Invisible motion phase
 
         def _end_motion_phase(state):
             return state['agent'][0].metadata['response']
@@ -342,7 +378,7 @@ class Config():
             name='motion_invisible',
         )
 
-        # 6. Reward Phase
+        # 7. Reward Phase
 
         reveal_prey = gr.ModifySprites('prey', _make_opaque)
 
@@ -353,9 +389,9 @@ class Config():
         )
 
         # Final rules
-        # fixation -> offline -> visible motion -> invisible motion -> reward -> ITI
         phase_sequence = gr.PhaseSequence(
             phase_iti,
+            phase_joystick_center,
             phase_fixation,
             phase_offline,
             phase_motion_visible,
