@@ -8,7 +8,8 @@
 
 // %include 'hand_interfaces/keyboard'
 // %include 'hand_interfaces/gamepad'
-%include 'hand_interfaces/joystick'
+// %include 'hand_interfaces/joystick'
+%include 'hand_interfaces/joystick_monkey'
 
 
 // Include one of the following eye interfaces

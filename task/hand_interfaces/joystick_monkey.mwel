@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Joystick interface
+// Joystick interface for the monkey rig. This joystick is rotated 90 degrees
+// from the joystick in the psychophysics rig.
 //
 // Usage: Use the control left/right/up/down motion, and use the buttom as a
 // surrogate space bar.
@@ -16,8 +17,8 @@
         (rocker_x < 512 - 30) * (rocker_x - 512) / 512
     )
     y_force = (
-        (rocker_y < 512 - 30) * (512 - rocker_y) / 512 +
-        (rocker_y > 512 + 30) * (512 - rocker_y) / 512
+        -(rocker_y < 512 - 30) * (512 - rocker_y) / 512 +
+        -(rocker_y > 512 + 30) * (512 - rocker_y) / 512
     )
     
     /*
@@ -56,8 +57,8 @@ group 'Joystick variables' {
 %end
 
 %define joystick_name_to_usage = {
-    'rocker_X_channel': 48,
-    'rocker_Y_channel': 49,
+    'rocker_X_channel': 49, // 48,
+    'rocker_Y_channel': 48, // 49,
     'button': 1
 }
 

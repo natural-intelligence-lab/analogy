@@ -2,8 +2,8 @@
 
 import os
 
-# Rig
-# _PWD = '/Users/jazlab/Documents/nwatters/maze_set_go/task'
+# Psychophysics rig
+# _PWD = '/Users/jazlab/Documents/MazeSetGo/task'
 # _PYTHON_SITE_PACKAGES = (
 #     '/Users/jazlab/miniconda/envs/nwatters/lib/python3.8/site-packages'
 # )

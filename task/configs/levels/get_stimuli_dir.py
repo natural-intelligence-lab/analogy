@@ -15,7 +15,7 @@ def stimuli_dir():
         )
 
         # Psychophysics rig
-        # return '/Users/jazlab/Documents/nwatters/maze_pong/task/stimuli'
+        # return '/Users/jazlab/Documents/MazeSetGo/task/stimuli'
 
         # Laptop nwatters
         # return (
