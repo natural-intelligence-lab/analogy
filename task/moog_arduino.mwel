@@ -6,10 +6,10 @@
 
 // Include one of the following hand interfaces:
 
-%include 'hand_interfaces/keyboard'
+// %include 'hand_interfaces/keyboard'
 // %include 'hand_interfaces/gamepad'
 // %include 'hand_interfaces/joystick'
-// %include 'hand_interfaces/joystick_monkey'
+%include 'hand_interfaces/joystick_monkey'
 
 
 // Include one of the following eye interfaces
@@ -109,7 +109,7 @@ var default_iti = 0s
 var eye_to_frame_coeffs = [[0, 0], [0, 0]]
 var eye_to_frame_intercept = [0, 0]
 
-var reward_gain = 8000
+var reward_gain = 15000
 
 var num_trials = 0
 var num_completeTrials = 0
