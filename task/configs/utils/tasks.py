@@ -99,6 +99,6 @@ class BeginPhase(tasks.AbstractTask):
 
         if meta_state['phase'] == self._phase and not self._reward_given:
             self._reward_given = True
-            return 1, False
+            return 0.1, False
         else:
             return 0, False

@@ -22,7 +22,7 @@ from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
-_FIXATION_STEPS = 30
+_FIXATION_STEPS = 60 # 30
 _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
@@ -215,7 +215,7 @@ class Config():
         """Construct task."""
 
         prey_task = tasks_custom.TimeErrorReward(
-             half_width=80,  # given 60 Hz, 666*2 ms
+             half_width=40,  # given 60 Hz, 666*2/2 ms
              maximum=1,
              prey_speed=self._prey_speed,
         )
@@ -259,7 +259,7 @@ class Config():
 
         phase_iti = gr.Phase(
             one_time_rules=reset_physics,
-            duration=30,
+            duration=60 # 30,
             name='iti',
         )
 
