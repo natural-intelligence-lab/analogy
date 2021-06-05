@@ -22,7 +22,8 @@ from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
-_FIXATION_STEPS = 60 # 30
+_ITI=60
+_FIXATION_STEPS = 60  # 30
 _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
@@ -259,7 +260,7 @@ class Config():
 
         phase_iti = gr.Phase(
             one_time_rules=reset_physics,
-            duration=60 # 30,
+            duration=_ITI,  # 30,
             name='iti',
         )
 

@@ -175,14 +175,14 @@ disp([rho pval]);
 % get non-zero-turn trials
 [mut,sdt,nt,tmp]=plotTpTs(ts(num_turns~=0),tp(num_turns~=0),0,'k',hF,'-',10);
 
-hFig=figure; hold all; setFigPos(1,5);
+figure; hold all; setFigPos(1,5);
 plot(mut,sdt,'ko-','markerfacecolor','w');
 plot(m,sd,'ko','markerfacecolor','k');
-axis tight;% xlim([0 4000]);
 % xlim([0 4000]);
-plotReg(m,sd,hFig,'k');
-% plot([0 max(xlim)],[0 sd/m*max(xlim)],'k:');
-% plotVertical(gca,unique(ts(num_turns==0)),[]);
+plot([0 max(xlim)],[0 sd/m*max(xlim)],'k:');
+
+axis tight;% xlim([0 4000]);
+plotVertical(gca,unique(ts(num_turns==0)),[]);
 
 xlabel('mean t_p');
 ylabel('SD t_p');
