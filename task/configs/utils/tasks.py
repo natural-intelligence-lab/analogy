@@ -115,10 +115,19 @@ class OfflineReward(tasks.AbstractTask):
         del meta_state
         self._reward_given = False
 
+    def _get_x_distance_threshold(self, agent, prey):
+        """Get maximum x displacement for agent and prey to still intersect."""
+        agent_x_vertices = agent.vertices[:, 0]
+        agent_width = np.max(agent_x_vertices) - np.min(agent_x_vertices)
+        prey_x_vertices = prey.vertices[:, 0]
+        prey_width = np.max(prey_x_vertices) - np.min(prey_x_vertices)
+        x_distance_threshold = 0.5 * (agent_width + prey_width)
+        return x_distance_threshold
+
     def reward(self, state, meta_state, step_count):
         del step_count
 
-        if meta_state['phase'] == self._phase and not self._reward_given:
+        if meta_state['phase'] == self._phase and not self._reward_given and len(state['agent']) > 0:
 
             agent = state['agent'][0]
             prey = state['prey'][0]
@@ -130,3 +139,5 @@ class OfflineReward(tasks.AbstractTask):
                 return 1, False
             else:
                 return 0, False
+        else:
+            return 0, False
