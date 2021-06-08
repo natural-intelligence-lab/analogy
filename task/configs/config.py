@@ -223,12 +223,14 @@ class Config():
 
         joystick_center_task = tasks_custom.BeginPhase('fixation')
 
+        offline_task = tasks_custom.OfflineReward('offline')
+
         timeout_task = tasks.Reset(
             condition=lambda _, meta_state: meta_state['phase'] == 'reward',
             steps_after_condition=15,
         )
         self._task = tasks.CompositeTask(
-            prey_task, joystick_center_task, timeout_task)
+            prey_task, joystick_center_task, offline_task, timeout_task)
 
     def _construct_action_space(self):
         """Construct action space."""
@@ -341,8 +343,7 @@ class Config():
             one_time_rules=[disappear_fixation, disappear_screen, create_agent],
             continual_rules=update_agent_metadata,
             name='offline',
-            # end_condition=_end_offline_phase,  # 
-            duration=10,
+            end_condition=_end_offline_phase,  #  duration=10,
         )
 
         # 5. Visible motion phase

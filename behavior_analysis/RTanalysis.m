@@ -52,14 +52,25 @@ refreshRate=60;
 speed=1000/(refreshRate*2000); % frameWidth / refresh
 mazeSize=12;
 borderWidth= 0.18;
+cell_size = 0.7/12; % _MAZE_WIDTH / maze_width
 
 % translate distance into time
-pathLengthScreenUnit=(1 - 2 * borderWidth) * path_length / mazeSize;
+pathLengthScreenUnit=cell_size*path_length+(0.15-0.1);
+% pathLengthScreenUnit=(1 - 2 * borderWidth) * path_length / mazeSize;% pilot#1
 ts= double(pathLengthScreenUnit/speed/refreshRate*1000); % [ms]
 err=-prey_distance_at_response/speed/refreshRate*1000; % [ms]
 tp=ts+err;
 rt=RT_offline;
 
+% for pilot #2
+%         prey_distance_remaining = (
+%             self._prey_lead_in + cell_size * len(prey_path) + _MAZE_Y -
+%             _AGENT_Y)
+% _AGENT_Y = 0.1
+% _MAZE_Y = 0.15
+% self._prey_lead_in = 0.08
+
+% for pilot #1
 %         # Prey distance remaining is how far prey has to go to exit maze
 %         # It will be continually updated in the meta_state as the prey moves
 %         prey_distance_remaining = (self._prey_lead_in +

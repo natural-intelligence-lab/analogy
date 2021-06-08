@@ -99,6 +99,34 @@ class BeginPhase(tasks.AbstractTask):
 
         if meta_state['phase'] == self._phase and not self._reward_given:
             self._reward_given = True
-            return 0.1, False
+            return 0, False
         else:
             return 0, False
+
+class OfflineReward(tasks.AbstractTask):
+    """Task to give reward if agent move to correct exit."""
+
+    def __init__(self, phase):
+        """Constructor."""
+        self._phase = phase
+
+    def reset(self, state, meta_state):
+        del state
+        del meta_state
+        self._reward_given = False
+
+    def reward(self, state, meta_state, step_count):
+        del step_count
+
+        if meta_state['phase'] == self._phase and not self._reward_given:
+
+            agent = state['agent'][0]
+            prey = state['prey'][0]
+            x_distance_threshold = self._get_x_distance_threshold(agent, prey)
+            prey_exit_x = meta_state['prey_path'][-1][0]
+
+            if np.abs(agent.x - prey_exit_x) < x_distance_threshold:
+                self._reward_given = True
+                return 1, False
+            else:
+                return 0, False

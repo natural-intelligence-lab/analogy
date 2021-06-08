@@ -201,6 +201,17 @@ class TaskManager:
             setvar('end_trial', True)
             self.complete = True
 
+            """TO DO: save ts, tp in metadata of config.py and read it to MWorks here
+            """
+            # # read error from meta state and set mworks variables
+            # prey_distance_remaining = self.env.meta_state['prey_distance_remaining']
+            #
+            # ts = double(pathLengthScreenUnit / speed / refreshRate * 1000); % [ms]
+            # err = -prey_distance_at_response / speed / refreshRate * 1000; % [ms]
+            #
+            # setvar('image_size_x', image_size)
+            # setvar('image_size_y', image_size)
+
         # MWorks' Python image stimulus requires a contiguous buffer, so we use
         # ascontiguousarray to provide one.
         to_return = np.ascontiguousarray(img)
