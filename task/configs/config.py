@@ -215,11 +215,11 @@ class Config():
     def _construct_task(self):
         """Construct task."""
 
-        prey_task = tasks_custom.TimeErrorReward(
-             half_width=40,  # given 60 Hz, 666*2/2 ms
-             maximum=1,
-             prey_speed=self._prey_speed,
-        )
+        # prey_task = tasks_custom.TimeErrorReward(
+        #      half_width=40,  # given 60 Hz, 666*2/2 ms
+        #      maximum=1,
+        #      prey_speed=self._prey_speed,
+        # )
 
         joystick_center_task = tasks_custom.BeginPhase('fixation')
 
@@ -230,7 +230,7 @@ class Config():
             steps_after_condition=15,
         )
         self._task = tasks.CompositeTask(
-            prey_task, joystick_center_task, offline_task, timeout_task)
+            joystick_center_task, offline_task, timeout_task) # prey_task, 
 
     def _construct_action_space(self):
         """Construct action space."""
@@ -396,8 +396,8 @@ class Config():
             phase_joystick_center,
             phase_fixation,
             phase_offline,
-            phase_motion_visible,
-            phase_motion_invisible,
+            # phase_motion_visible,
+            # phase_motion_invisible,
             phase_reward,
             meta_state_phase_name_key='phase',
         )
