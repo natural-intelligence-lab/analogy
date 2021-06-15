@@ -12,9 +12,9 @@ class VerticalTiming():
         self._heights = range(self._min_height, self._max_height + 1)
 
     def _sample_condition(self, height, x):
-        # exclude trials where x is near initial paddle position (0.5)
-        if np.abs(x-self._maze_width/2) < 1:
-            return []
+        # # exclude trials where x is near initial paddle position (0.5)
+        # if np.abs(x-self._maze_width/2) < 1:
+        #     return []
 
         prey_path = [[x, i] for i in range(height, -1, -1)]
 
