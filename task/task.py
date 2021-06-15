@@ -130,6 +130,11 @@ class TaskManager:
         setvar('image_size_x', image_size)
         setvar('image_size_y', image_size)
 
+        # extracting # trials for left & right target
+        prey_exit_x = self.env.meta_state['prey_path'][-1][0]
+        id_left_prey = prey_exit_x < 0.5
+        setvar('id_left_prey', id_left_prey)
+
     def _register_event_callback(self, varname):
         self.events[varname] = []
         def cb(evt):

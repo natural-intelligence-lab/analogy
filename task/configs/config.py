@@ -237,7 +237,8 @@ class Config():
         self._action_space = action_spaces.Composite(
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
             hand=action_spaces_custom.JoystickColor(
-                up_color=(32, 128, 32), scaling_factor=0.01),
+                up_color=(128, 32, 32),  # red # (32, 128, 32), # green
+                scaling_factor=0.01),
         )
 
     def _construct_game_rules(self):
@@ -251,6 +252,11 @@ class Config():
 
         def _make_opaque(s):
             s.opacity=255
+
+        def _make_green(s):
+            s.c0 = 32
+            s.c1 = 128
+            s.c2 = 32
 
         # 1. ITI phase
 
@@ -339,9 +345,29 @@ class Config():
                 s.metadata['moved'] = True
         update_agent_metadata = gr.ModifySprites('agent', _track_moved)
 
+        # change agent color if offline reward
+        def _get_x_distance_threshold(agent, prey):
+            """Get maximum x displacement for agent and prey to still intersect."""
+            agent_x_vertices = agent.vertices[:, 0]
+            agent_width = np.max(agent_x_vertices) - np.min(agent_x_vertices)
+            prey_x_vertices = prey.vertices[:, 0]
+            prey_width = np.max(prey_x_vertices) - np.min(prey_x_vertices)
+            x_distance_threshold = 0.5 * (agent_width + prey_width)
+            return x_distance_threshold
+        def _offline_reward(state, meta_state):
+            agent = state['agent'][0]
+            prey = state['prey'][0]
+            x_distance_threshold = _get_x_distance_threshold(agent, prey)
+            prey_exit_x = meta_state['prey_path'][-1][0]
+            return np.abs(agent.x - prey_exit_x) < x_distance_threshold
+        update_agent_color = gr.ConditionalRule(
+            condition=lambda state, x: _offline_reward(state, x),
+            rules=gr.ModifySprites('agent', _make_green)
+        )
+
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen, create_agent],
-            continual_rules=update_agent_metadata,
+            continual_rules=[update_agent_metadata, update_agent_color],
             name='offline',
             end_condition=_end_offline_phase,  #  duration=10,
         )
