@@ -41,7 +41,7 @@ flags.DEFINE_boolean('static_prey', False, 'Whether prey is static.')
 flags.DEFINE_boolean('static_agent', False, 'Whether agent is static.')
 
 # Flags for gif writing
-flags.DEFINE_boolean('write_gif', True, 'Whether to write a gif.')
+flags.DEFINE_boolean('write_gif', False, 'Whether to write a gif.')
 flags.DEFINE_string('gif_file',
                     os.path.join(os.getcwd(), 'logs/gifs/r.gif'),
                     'File path to write the gif to.')

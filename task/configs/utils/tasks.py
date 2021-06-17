@@ -5,6 +5,8 @@ from dm_env import specs
 import numpy as np
 import inspect
 
+_EPSILON = 1e-4
+
 
 class TimeErrorReward(tasks.AbstractTask):
     """Timing task.
@@ -104,11 +106,20 @@ class BeginPhase(tasks.AbstractTask):
             return 0, False
 
 class OfflineReward(tasks.AbstractTask):
-    """Task to give reward if agent move to correct exit."""
+    """Give reward if agent stops at correct exit during offline phase."""
 
-    def __init__(self, phase):
-        """Constructor."""
+    def __init__(self, phase, max_rewarding_dist=0.):
+        """Constructor.
+        
+        Args:
+            phase: String. Phase of task in which to give reward.
+            max_rewarding_dist: Scalar. Maximum distance (in units of screen
+                width) from the correct exit to give reward. The reward is
+                linearly interpolated between zero at this value and 1 at the
+                correct exit.
+        """
         self._phase = phase
+        self._max_rewarding_dist = max_rewarding_dist
 
     def reset(self, state, meta_state):
         del state
@@ -127,17 +138,20 @@ class OfflineReward(tasks.AbstractTask):
     def reward(self, state, meta_state, step_count):
         del step_count
 
-        if meta_state['phase'] == self._phase and not self._reward_given and len(state['agent']) > 0:
+        if (meta_state['phase'] == self._phase and
+                not self._reward_given and
+                len(state['agent']) > 0 and
+                np.all(state['agent'][0].velocity == 0)):
 
             agent = state['agent'][0]
             prey = state['prey'][0]
             x_distance_threshold = self._get_x_distance_threshold(agent, prey)
             prey_exit_x = meta_state['prey_path'][-1][0]
 
-            if np.abs(agent.x - prey_exit_x) < x_distance_threshold:
-                self._reward_given = True
-                return 1, False
-            else:
-                return 0, False
+            agent_prey_dist = np.abs(agent.x - prey_exit_x)
+            error = max(0, agent_prey_dist - x_distance_threshold)
+            reward = max(0, 1 - error / (self._max_rewarding_dist + _EPSILON))
         else:
-            return 0, False
+            reward = 0.
+        
+        return reward, False

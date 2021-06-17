@@ -22,7 +22,7 @@ from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
-_ITI=60
+_ITI = 60
 _FIXATION_STEPS = 60  # 30
 _AGENT_Y = 0.1
 _MAZE_Y = 0.15
@@ -215,22 +215,27 @@ class Config():
     def _construct_task(self):
         """Construct task."""
 
-        # prey_task = tasks_custom.TimeErrorReward(
-        #      half_width=40,  # given 60 Hz, 666*2/2 ms
-        #      maximum=1,
-        #      prey_speed=self._prey_speed,
-        # )
+        prey_task = tasks_custom.TimeErrorReward(
+             half_width=40,  # given 60 Hz, 666*2/2 ms
+             maximum=1,
+             prey_speed=self._prey_speed,
+        )
 
         joystick_center_task = tasks_custom.BeginPhase('fixation')
 
-        offline_task = tasks_custom.OfflineReward('offline')
+        offline_task = tasks_custom.OfflineReward(
+            'offline', max_rewarding_dist=0.1)
 
         timeout_task = tasks.Reset(
             condition=lambda _, meta_state: meta_state['phase'] == 'reward',
             steps_after_condition=15,
         )
         self._task = tasks.CompositeTask(
-            joystick_center_task, offline_task, timeout_task) # prey_task, 
+            joystick_center_task,
+            offline_task,
+            timeout_task,
+            # prey_task,
+        )
 
     def _construct_action_space(self):
         """Construct action space."""
@@ -268,7 +273,7 @@ class Config():
 
         phase_iti = gr.Phase(
             one_time_rules=reset_physics,
-            duration=_ITI,  # 30,
+            duration=_ITI,
             name='iti',
         )
 
