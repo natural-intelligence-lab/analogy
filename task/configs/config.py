@@ -28,6 +28,9 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 
+_MAX_REWARDING_DIST=0.2
+_EPSILON=1e-4 # FOR REWARD FUNCTION
+
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
 class TrialInitialization():
@@ -224,7 +227,7 @@ class Config():
         joystick_center_task = tasks_custom.BeginPhase('fixation')
 
         offline_task = tasks_custom.OfflineReward(
-            'offline', max_rewarding_dist=0.1)
+            'offline', max_rewarding_dist=_MAX_REWARDING_DIST)
 
         timeout_task = tasks.Reset(
             condition=lambda _, meta_state: meta_state['phase'] == 'reward',
@@ -351,22 +354,26 @@ class Config():
         update_agent_metadata = gr.ModifySprites('agent', _track_moved)
 
         # change agent color if offline reward
-        def _get_x_distance_threshold(agent, prey):
-            """Get maximum x displacement for agent and prey to still intersect."""
-            agent_x_vertices = agent.vertices[:, 0]
-            agent_width = np.max(agent_x_vertices) - np.min(agent_x_vertices)
-            prey_x_vertices = prey.vertices[:, 0]
-            prey_width = np.max(prey_x_vertices) - np.min(prey_x_vertices)
-            x_distance_threshold = 0.5 * (agent_width + prey_width)
-            return x_distance_threshold
-        def _offline_reward(state, meta_state):
-            agent = state['agent'][0]
-            prey = state['prey'][0]
-            x_distance_threshold = _get_x_distance_threshold(agent, prey)
-            prey_exit_x = meta_state['prey_path'][-1][0]
-            return np.abs(agent.x - prey_exit_x) < x_distance_threshold
+        def _reward(state, meta_state):
+            if len(state['agent']) > 0:
+                agent = state['agent'][0]
+                if (meta_state['phase'] == 'offline' and
+                        agent.metadata['moved'] and
+                        np.all(state['agent'][0].velocity == 0)):
+
+                    prey = state['prey'][0]
+                    prey_exit_x = meta_state['prey_path'][-1][0]
+                    agent_prey_dist = np.abs(agent.x - prey_exit_x)
+                    reward = max(0, 1 - agent_prey_dist / (_MAX_REWARDING_DIST + _EPSILON))
+                else:
+                    reward = 0.
+            else:
+                reward = 0.
+            return reward
+        def _offline_reward(state, meta_state):            
+            return _reward(state, meta_state) > 0
         update_agent_color = gr.ConditionalRule(
-            condition=lambda state, x: _offline_reward(state, x),
+            condition=lambda state, x: _offline_reward(state, x)>0,
             rules=gr.ModifySprites('agent', _make_green)
         )
 

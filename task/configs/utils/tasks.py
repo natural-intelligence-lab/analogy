@@ -137,20 +137,22 @@ class OfflineReward(tasks.AbstractTask):
 
     def reward(self, state, meta_state, step_count):
         del step_count
-
-        if (meta_state['phase'] == self._phase and
-                not self._reward_given and
-                len(state['agent']) > 0 and
-                np.all(state['agent'][0].velocity == 0)):
-
+        if len(state['agent']) > 0:
             agent = state['agent'][0]
-            prey = state['prey'][0]
-            x_distance_threshold = self._get_x_distance_threshold(agent, prey)
-            prey_exit_x = meta_state['prey_path'][-1][0]
+            if (meta_state['phase'] == self._phase and
+                    not self._reward_given and
+                    agent.metadata['moved'] and
+                    np.all(state['agent'][0].velocity == 0)):
 
-            agent_prey_dist = np.abs(agent.x - prey_exit_x)
-            error = max(0, agent_prey_dist - x_distance_threshold)
-            reward = max(0, 1 - error / (self._max_rewarding_dist + _EPSILON))
+                prey = state['prey'][0]
+                # x_distance_threshold = self._get_x_distance_threshold(agent, prey)
+                prey_exit_x = meta_state['prey_path'][-1][0]
+
+                agent_prey_dist = np.abs(agent.x - prey_exit_x)
+                # error = max(0, agent_prey_dist) - x_distance_threshold)
+                reward = max(0, 1 - agent_prey_dist / (self._max_rewarding_dist + _EPSILON))
+            else:
+                reward = 0.
         else:
             reward = 0.
         
