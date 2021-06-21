@@ -11,8 +11,8 @@ sys.path.append('..')
 import conditions
 import generator
 
-# _CONDITION = 'random.Random12Square'
-_CONDITION = 'random.VerticalPreyRandomHeight'
+_CONDITION = 'random.Random12Square'
+# _CONDITION = 'random.VerticalPreyRandomHeight'
 # _CONDITION = 'training.VerticalTiming'
 
 # Log directory
