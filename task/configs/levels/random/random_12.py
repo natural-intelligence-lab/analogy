@@ -10,7 +10,7 @@ from configs.levels import get_stimuli_dir
 def random_12(**kwargs):
     stimulus_generator = samplers.Sampler(
         stimuli_dir=os.path.join(
-            get_stimuli_dir.stimuli_dir(), 'random/Random12'),
+            get_stimuli_dir.stimuli_dir(), 'random/Random12Square'),
     )
     return config.Config(stimulus_generator, **kwargs)
 

@@ -137,17 +137,16 @@ class Maze():
             if v == component_1:
                 self._connected_components[k] = component_0
 
-    def _set_distractor_path(self, prey_path):
-        """Set the prey path.
+    def set_distractor_path(self, distractor_path):
+        """Set the distractor path.
 
-        Removes walls in between cells in the prey path, and adds walls on the
-        boundary of the prey path to self._walls_frozen.
+        Removes walls in between cells in the distractor path, and adds walls on the
+        boundary of the distractor path to self._walls_frozen.
 
-        Removes maze periphery walls touching the first and last prey_path
-        cells.
+        Prey path is preserved by using _walls_frozen
 
         Args:
-            Prey_path: Iterable of int 2-tuples, indexes of cells comprising the
+            distractor_path: Iterable of int 2-tuples, indexes of cells comprising the
                 prey path. Should be ordered, so the first and last elements are
                 on the maze periphery.
         """
@@ -156,12 +155,12 @@ class Maze():
         walls_to_freeze = []
 
         # First, add all cell boundary walls to walls_to_freeze
-        for cell in prey_path:
+        for cell in distractor_path:
             walls_to_freeze.extend(self._cell_to_walls(cell))
         walls_to_freeze = list(set(walls_to_freeze))
 
         # Now, remove border walls between consecutive cells
-        for cell_0, cell_1 in zip(prey_path[:-1], prey_path[1:]):
+        for cell_0, cell_1 in zip(distractor_path[:-1], distractor_path[1:]):
             if cell_0[0] == cell_1[0]:  # Cells are vertically adjacent
                 vertex_left = (cell_0[0], max(cell_0[1], cell_1[1]))
                 vertex_right = (vertex_left[0] + 1, vertex_left[1])
@@ -171,20 +170,9 @@ class Maze():
                 vertex_top = (max(cell_0[0], cell_1[0]), cell_0[1] + 1)
                 wall = (vertex_bottom, vertex_top)
 
-            walls_to_freeze.remove(wall)
-            walls_to_remove.append(wall)
-
-        # Finally, remove the maze periphery walls touching the first and last
-        # cell
-        for cell in [prey_path[0], prey_path[-1]]:
-            for wall in self._cell_to_walls(cell):
-                if wall in self._walls_frozen:
-                    walls_to_remove.append(wall)
-                    walls_to_freeze.remove(wall)
-                if np.array_equal(cell, prey_path[0]):
-                    self._entry_wall = wall
-                else:
-                    self._target_wall = wall
+            if wall not in self._walls_frozen:
+                walls_to_freeze.remove(wall)
+                walls_to_remove.append(wall)
 
         for wall in walls_to_remove + walls_to_freeze:
             if wall in self._walls_temporary:
