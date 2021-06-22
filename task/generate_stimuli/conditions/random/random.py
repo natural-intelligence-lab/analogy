@@ -15,7 +15,7 @@ _N_LENGTH_ZEROTURN = 6
 _NUM_ZEROTURN = int(30*2) # 30 trials/condition * 3 vertical height * 2 rep.
 _NUM_CONDITIONS = int(1e3) # assuming 500 trial for 50 min (6 sec/trial)
 
-_NUM_DISTRACTOR_SAMPLE = 3
+_NUM_DISTRACTOR_SAMPLE = 5
 
 _DIRECTIONS_NAMED = {
     'N': (0, 1),
@@ -160,11 +160,12 @@ class Random12Square():
         prey_path = self._prey_path_generator()
         maze = maze_lib.Maze(
             width=self._maze_size, height=self._maze_size, prey_path=prey_path)
+        maze.sample_distractor_entry(prey_path=prey_path)
         maze.sample_distractor_exit(prey_path=prey_path)
-        maze.sample_distractors()
         for i in range(_NUM_DISTRACTOR_SAMPLE):
             distractor_path = self._prey_path_generator()
             maze.set_distractor_path(distractor_path=distractor_path)
+        maze.sample_distractors()
 
         maze_walls = maze.walls
 
@@ -189,11 +190,12 @@ class Random12Square():
         prey_path = [[x, i] for i in range(height - 1, -1, -1)]
         maze = maze_lib.Maze(
             width=self._maze_size, height=height, prey_path=prey_path)
+        maze.sample_distractor_entry(prey_path=prey_path)
         maze.sample_distractor_exit(prey_path=prey_path)
-        maze.sample_distractors()
         for i in range(_NUM_DISTRACTOR_SAMPLE):
             distractor_path = self._prey_path_generator()
             maze.set_distractor_path(distractor_path=distractor_path)
+        maze.sample_distractors()
 
         maze_walls = maze.walls
 
@@ -222,7 +224,8 @@ class Random12Square():
             for height in self._maze_heights
         ]
         all_conditions = np.concatenate((conditions, conditions_zeroturn), axis=0)
-
+        rng = np.random.default_rng()
+        all_conditions = rng.permutation(all_conditions,axis=0)
         return all_conditions
 
 

@@ -137,51 +137,6 @@ class Maze():
             if v == component_1:
                 self._connected_components[k] = component_0
 
-    def set_distractor_path(self, distractor_path):
-        """Set the distractor path.
-
-        Removes walls in between cells in the distractor path, and adds walls on the
-        boundary of the distractor path to self._walls_frozen.
-
-        Prey path is preserved by using _walls_frozen
-
-        Args:
-            distractor_path: Iterable of int 2-tuples, indexes of cells comprising the
-                prey path. Should be ordered, so the first and last elements are
-                on the maze periphery.
-        """
-
-        walls_to_remove = []
-        walls_to_freeze = []
-
-        # First, add all cell boundary walls to walls_to_freeze
-        for cell in distractor_path:
-            walls_to_freeze.extend(self._cell_to_walls(cell))
-        walls_to_freeze = list(set(walls_to_freeze))
-
-        # Now, remove border walls between consecutive cells
-        for cell_0, cell_1 in zip(distractor_path[:-1], distractor_path[1:]):
-            if cell_0[0] == cell_1[0]:  # Cells are vertically adjacent
-                vertex_left = (cell_0[0], max(cell_0[1], cell_1[1]))
-                vertex_right = (vertex_left[0] + 1, vertex_left[1])
-                wall = (vertex_left, vertex_right)
-            else:  # Cells are horizontally adjacent
-                vertex_bottom = (max(cell_0[0], cell_1[0]), cell_0[1])
-                vertex_top = (max(cell_0[0], cell_1[0]), cell_0[1] + 1)
-                wall = (vertex_bottom, vertex_top)
-
-            if wall not in self._walls_frozen:
-                walls_to_freeze.remove(wall)
-                walls_to_remove.append(wall)
-
-        for wall in walls_to_remove + walls_to_freeze:
-            if wall in self._walls_temporary:
-                self._walls_temporary.remove(wall)
-            if wall in self._walls_frozen:
-                self._walls_frozen.remove(wall)
-
-        self._walls_frozen.extend(walls_to_freeze)
-
     def sample_distractors(self):
         """Sample the maze outside of the prey path.
 
@@ -221,6 +176,61 @@ class Maze():
         for wall in walls_to_remove:
             if wall in self._walls_frozen:
                 self._walls_frozen.remove(wall)
+
+    def sample_distractor_entry(self,prey_path=()):
+        """Sample distractor exit points at North side
+            remove every other grid including correct exit point
+        """
+
+        walls_to_remove = []
+        # identify correct exit point
+        tail = prey_path[0]
+
+        # remove from correct exit point to its right
+        for grid in range(tail[0],self._width,2):
+            vertex_y = self._height
+            vertex_x = grid
+            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
+            walls_to_remove.append(wall_to_remove)
+
+        # remove from correct exit point to its left
+        for grid in range(0,tail[0],2):
+            vertex_y = self._height
+            vertex_x = grid
+            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
+            walls_to_remove.append(wall_to_remove)
+
+        # remove chosen walls
+        for wall in walls_to_remove:
+            if wall in self._walls_frozen:
+                self._walls_frozen.remove(wall)
+
+    def set_distractor_path(self, distractor_path):
+        """Set the distractor path.
+
+        Removes walls in between cells in the distractor path, and adds walls on the
+        boundary of the distractor path to self._walls_frozen.
+
+        Prey path is preserved by using _walls_frozen
+
+        Args:
+            distractor_path: Iterable of int 2-tuples, indexes of cells comprising the
+                prey path. Should be ordered, so the first and last elements are
+                on the maze periphery.
+        """
+        # Now, remove border walls between consecutive cells
+        for cell_0, cell_1 in zip(distractor_path[:-1], distractor_path[1:]):
+            if cell_0[0] == cell_1[0]:  # Cells are vertically adjacent
+                vertex_left = (cell_0[0], max(cell_0[1], cell_1[1]))
+                vertex_right = (vertex_left[0] + 1, vertex_left[1])
+                wall = (vertex_left, vertex_right)
+            else:  # Cells are horizontally adjacent
+                vertex_bottom = (max(cell_0[0], cell_1[0]), cell_0[1])
+                vertex_top = (max(cell_0[0], cell_1[0]), cell_0[1] + 1)
+                wall = (vertex_bottom, vertex_top)
+
+            if (wall not in self._walls_frozen) and (wall in self._walls_temporary):
+                self._remove_wall(wall)
 
     def _set_prey_path(self, prey_path):
         """Set the prey path.
