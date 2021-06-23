@@ -29,14 +29,15 @@ import importlib
 import numpy as np
 import os
 import threading
+import time
 
 from utils import logger_env_wrapper
 
 from moog import environment
 from moog import observers
 
-from configs import config as config_lib
-
+# from configs import config as config_lib
+from configs import config_human as config_lib
 
 class TaskManager:
     """OOG task manager.
@@ -135,6 +136,14 @@ class TaskManager:
         id_left_prey = prey_exit_x < 0.5
         setvar('id_left_prey', id_left_prey)
 
+        # time stamp
+        self.flag1 = True
+        self.flag2 = True
+        self.flag3 = True
+        self.flag4 = True
+        self.flag5 = True
+        self.flag6 = True
+
     def _register_event_callback(self, varname):
         self.events[varname] = []
         def cb(evt):
@@ -206,16 +215,30 @@ class TaskManager:
             setvar('end_trial', True)
             self.complete = True
 
-            """TO DO: save ts, tp in metadata of config.py and read it to MWorks here
-            """
-            # # read error from meta state and set mworks variables
-            # prey_distance_remaining = self.env.meta_state['prey_distance_remaining']
-            #
-            # ts = double(pathLengthScreenUnit / speed / refreshRate * 1000); % [ms]
-            # err = -prey_distance_at_response / speed / refreshRate * 1000; % [ms]
-            #
-            # setvar('image_size_x', image_size)
-            # setvar('image_size_y', image_size)
+            setvar('RT_offline',self.env.meta_state['RT_offline'])
+            setvar('ts', self.env.meta_state['ts'])
+            setvar('tp', self.env.meta_state['tp'])
+
+
+        if self.env.meta_state['phase'] == 'fixation' and self.flag1:
+            setvar('tFix',time.time())
+            self.flag1 = False
+        if self.env.meta_state['phase'] == 'offline' and self.flag2:
+            setvar('tOffline',time.time())
+            self.flag2 = False
+        if self.env.meta_state['phase'] == 'offline' and self.env.state['agent'][0].metadata['moved'] and self.flag3:
+            setvar('tOfflineRT',time.time())
+            self.flag3 = False
+        if self.env.meta_state['phase'] == 'motion_visible' and self.flag4:
+            setvar('tVisMotion',time.time())
+            self.flag4 = False
+        if self.env.meta_state['phase'] == 'motion_invisible' and self.flag5:
+            setvar('tInvMotion',time.time())
+            self.flag5 = False
+        if self.env.meta_state['phase'] == 'reward' and self.flag6:
+            setvar('tRew',time.time())
+            self.flag6 = False
+
 
         # MWorks' Python image stimulus requires a contiguous buffer, so we use
         # ascontiguousarray to provide one.
