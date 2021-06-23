@@ -2,7 +2,8 @@
 
 import os
 
-from configs import config
+# from configs import config
+from configs import config_human as config
 from configs import samplers
 from configs.levels import get_stimuli_dir
 

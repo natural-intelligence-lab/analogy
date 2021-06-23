@@ -375,7 +375,7 @@ class Config():
             condition=lambda state, x: _offline_reward(state, x) > 0,
             rules=gr.ModifySprites('agent', _make_green)
         )
-        def _increase_RT_offline(state,meta_state):
+        def _increase_RT_offline(state, meta_state):
             agent = state['agent'][0]
             if not agent.metadata['moved']:
                 meta_state['RT_offline'] += 1
@@ -420,10 +420,10 @@ class Config():
 
         hide_prey = gr.ModifySprites('prey', _make_prey_transparent)
 
-        def _increase_tp(state,meta_state):
+        def _increase_tp(state, meta_state):
             meta_state['tp'] += 1
 
-        def update_ts(state,meta_state):
+        def update_ts(state, meta_state):
             meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed
 
         phase_motion_invisible = gr.Phase(
