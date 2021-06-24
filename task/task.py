@@ -99,6 +99,14 @@ class TaskManager:
 
         self._end_task = False
 
+        # time stamp
+        self.flag1 = True
+        self.flag2 = True
+        self.flag3 = True
+        self.flag4 = True
+        self.flag5 = True
+        self.flag6 = True
+
     def reset(self):
         """Reset environment.
 
@@ -131,10 +139,10 @@ class TaskManager:
         setvar('image_size_x', image_size)
         setvar('image_size_y', image_size)
 
-        # extracting # trials for left & right target
-        prey_exit_x = self.env.meta_state['prey_path'][-1][0]
-        id_left_prey = prey_exit_x < 0.5
-        setvar('id_left_prey', id_left_prey)
+        # # extracting # trials for left & right target
+        # prey_exit_x = self.env.meta_state['prey_path'][-1][0]
+        # id_left_prey = prey_exit_x < 0.5
+        # setvar('id_left_prey', id_left_prey)
 
         # time stamp
         self.flag1 = True
@@ -226,9 +234,13 @@ class TaskManager:
         if self.env.meta_state['phase'] == 'offline' and self.flag2:
             setvar('tOffline',time.time())
             self.flag2 = False
-        if self.env.meta_state['phase'] == 'offline' and self.env.state['agent'][0].metadata['moved'] and self.flag3:
-            setvar('tOfflineRT',time.time())
-            self.flag3 = False
+
+        agent = self.env.state['agent']
+        if self.env.meta_state['phase'] == 'offline' and self.flag3:
+            if len(agent) > 0:
+                if agent[0].metadata['moved']:
+                    setvar('tOfflineRT',time.time())
+                    self.flag3 = False
         if self.env.meta_state['phase'] == 'motion_visible' and self.flag4:
             setvar('tVisMotion',time.time())
             self.flag4 = False

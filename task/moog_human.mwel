@@ -17,8 +17,6 @@
 %include 'eye_interfaces/mouse'
 // %include 'eye_interfaces/eyelink'
 
-// Nidaq interface and reward variable
-// %include 'nidaq'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -108,16 +106,8 @@ var default_iti = 0s
 var eye_to_frame_coeffs = [[0, 0], [0, 0]]
 var eye_to_frame_intercept = [0, 0]
 
-var reward_gain = 18000
-
 var num_trials = 0
 var num_completeTrials = 0
-
-var id_left_prey = 0
-var num_trials_left = 0
-var num_completeTrials_left = 0
-var num_trials_right = 0
-var num_completeTrials_right = 0
 
 var RT_offline = 0
 var tp = 0
@@ -158,7 +148,6 @@ var tRew = 0
                 // while a trial is active
                 start_io_device (eye_tracker)
                 start_io_device (hand)
-                // start_io_device (nidaq)
 
                 queue_stimulus (image)
                 update_display ()
@@ -188,49 +177,25 @@ var tRew = 0
                     when = task_error
                     )
             }
-            state 'Wait for completion after success or failure' {
-
-                goto (
-                    target = 'End trial'
-                    when = end_trial
-                    )
-                goto (
-                    target = 'End protocol'
-                    when = end_task
-                    )
-                goto (
-                    target = 'Task error'
-                    when = task_error
-                    )
-            }
 
             state 'Success' {
                 play_sound (success_sound)
 
                 num_completeTrials = num_completeTrials + 1
-                if (id_left_prey) {
-                    num_completeTrials_left = num_completeTrials_left + 1
-                }
-                if (!id_left_prey) {
-                    num_completeTrials_right = num_completeTrials_right + 1
-                }
 
-                report ('Dispensing reward for $(reward_duration*reward_gain) ms')
+                report ('Dispensing reward')
 
                 goto ('Reward')
             }
 
             state 'Reward' {
-                // report ('Dispensing reward for $(reward_duration / 1000) ms')
+                // report ('Dispensing reward')
 
-                // In a real experiment, reward_line could control a digital
-                // output on a NIDAQ or other device
                 reward_line = true
-                wait(reward_duration*reward_gain)
+                // wait(reward_duration)
                 reward_line = false
                 reward_duration = 0
 
-                // goto ('Wait for completion after success or failure')
                 goto ('Wait for completion')
             }
 
@@ -238,7 +203,6 @@ var tRew = 0
                 play_sound (failure_sound)
                 reward_duration = 0
 
-                // goto ('Wait for completion after success or failure')
                 goto ('Wait for completion')
             }
 
@@ -247,15 +211,8 @@ var tRew = 0
 
                 stop_io_device (eye_tracker)
                 stop_io_device (hand)
-                // stop_io_device (nidaq)
 
                 num_trials = num_trials + 1
-                if (id_left_prey) {
-                    num_trials_left = num_trials_left + 1
-                }
-                if (!id_left_prey) {
-                    num_trials_right = num_trials_right + 1
-                }
 
                 end_trial = false
                 clear_display ()

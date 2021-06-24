@@ -22,8 +22,9 @@ from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 _FIXATION_THRESHOLD = 0.4
-_ITI = 15  #  250 ms
-_FIXATION_STEPS = 15  #  250 ms
+_ITI = 6  #  100 ms
+_FIXATION_STEPS = 6  #  100 ms
+_REWARD = 6 # 100 ms
 _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
@@ -232,13 +233,13 @@ class Config():
         # offline_task = tasks_custom.OfflineReward(
         #     'offline', max_rewarding_dist=_MAX_REWARDING_DIST)
         #
-        # timeout_task = tasks.Reset(
-        #     condition=lambda _, meta_state: meta_state['phase'] == 'reward',
-        #     steps_after_condition=15,
-        # )
+        timeout_task = tasks.Reset(
+            condition=lambda _, meta_state: meta_state['phase'] == 'reward',
+            steps_after_condition=_REWARD,
+        )
         self._task = tasks.CompositeTask(
             prey_task,
-            # timeout_task,
+            timeout_task,
             # joystick_center_task,
             # offline_task,
         )
@@ -375,10 +376,16 @@ class Config():
             condition=lambda state, x: _offline_reward(state, x) > 0,
             rules=gr.ModifySprites('agent', _make_green)
         )
-        def _increase_RT_offline(state, meta_state):
+
+        def _should_increase_RT_offline(state, meta_state):
             agent = state['agent'][0]
-            if not agent.metadata['moved']:
-                meta_state['RT_offline'] += 1
+            return not agent.metadata['moved']
+        def _increase_RT_offline(meta_state):
+            meta_state['RT_offline'] += 1
+        update_RT_offline = gr.ConditionalRule(
+            condition=_should_increase_RT_offline,
+            rules=gr.ModifyMetaState(_increase_RT_offline)
+        )
 
         # end_condition
         def _end_offline_phase(state):
@@ -387,7 +394,7 @@ class Config():
 
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen, create_agent],
-            continual_rules=[update_agent_metadata, update_agent_color, _increase_RT_offline],
+            continual_rules=[update_agent_metadata, update_agent_color, update_RT_offline],
             name='offline',
             end_condition=_end_offline_phase,  # duration=10,
         )
@@ -406,10 +413,15 @@ class Config():
 
         update_motion_steps = gr.ModifyMetaState(_update_motion_steps)
 
+        def _end_vis_motion_phase(state,meta_state):
+            if meta_state['motion_steps'] > (self._prey_lead_in / self._prey_speed):
+                return True
+            return False
+
         phase_motion_visible = gr.Phase(
             one_time_rules=unglue,
             continual_rules=update_motion_steps,
-            duration=10,
+            end_condition=_end_vis_motion_phase,  #  duration=10,
             name='motion_visible',
         )
 
@@ -420,15 +432,17 @@ class Config():
 
         hide_prey = gr.ModifySprites('prey', _make_prey_transparent)
 
-        def _increase_tp(state, meta_state):
+        def _increase_tp(meta_state):
             meta_state['tp'] += 1
+        increase_tp = gr.ModifyMetaState(_increase_tp)
 
-        def update_ts(state, meta_state):
+        def _update_ts(meta_state):
             meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed
+        update_ts = gr.ModifyMetaState(_update_ts)
 
         phase_motion_invisible = gr.Phase(
             one_time_rules=[hide_prey, update_ts],
-            continual_rules=[update_motion_steps, _increase_tp],
+            continual_rules=[update_motion_steps, increase_tp],
             end_condition=_end_motion_phase,
             name='motion_invisible',
         )

@@ -200,6 +200,30 @@ class Maze():
             wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
             walls_to_remove.append(wall_to_remove)
 
+        # if entry is on left or right boundary, remove
+        # if tail[1] !=self._height:  # either left or right boundary
+        for grid in range(0, tail[1], 2):  # below entry
+            vertex_x = 0  # left
+            vertex_y = grid
+            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
+            walls_to_remove.append(wall_to_remove)
+
+            vertex_x = self._width  # right
+            vertex_y = grid
+            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
+            walls_to_remove.append(wall_to_remove)
+        for grid in range(tail[1], self._height, 2): # above entry
+            vertex_x = 0  # left
+            vertex_y = grid
+            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
+            walls_to_remove.append(wall_to_remove)
+
+            vertex_x = self._width
+            vertex_y = grid
+            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
+            walls_to_remove.append(wall_to_remove)
+
+
         # remove chosen walls
         for wall in walls_to_remove:
             if wall in self._walls_frozen:
