@@ -223,9 +223,12 @@ class TaskManager:
             setvar('end_trial', True)
             self.complete = True
 
-            setvar('RT_offline',self.env.meta_state['RT_offline'])
-            setvar('ts', self.env.meta_state['ts'])
-            setvar('tp', self.env.meta_state['tp'])
+            RT_offline=self.env.meta_state['RT_offline']*60  # [ms]
+            setvar('RT_offline',RT_offline)
+            ts = self.env.meta_state['ts']*60
+            setvar('ts', ts)
+            tp = self.env.meta_state['tp']*60
+            setvar('tp', tp)
 
 
         if self.env.meta_state['phase'] == 'fixation' and self.flag1:

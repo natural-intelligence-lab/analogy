@@ -203,26 +203,34 @@ class Maze():
         # if entry is on left or right boundary, remove
         # if tail[1] !=self._height:  # either left or right boundary
         for grid in range(0, tail[1], 2):  # below entry
-            vertex_x = 0  # left
-            vertex_y = grid
-            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
-            walls_to_remove.append(wall_to_remove)
-
-            vertex_x = self._width  # right
-            vertex_y = grid
-            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
-            walls_to_remove.append(wall_to_remove)
+            if tail[0] == 0 and tail[1]!=self._height:
+                vertex_x = 0  # left
+                vertex_y = grid
+                wall_to_remove = ((vertex_x, vertex_y), (vertex_x , vertex_y + 1))
+                walls_to_remove.append(wall_to_remove)
+            if tail[0] == self._width and tail[1]!=self._height:
+                vertex_x = self._width  # right
+                vertex_y = grid
+                wall_to_remove = ((vertex_x, vertex_y), (vertex_x , vertex_y + 1))
+                walls_to_remove.append(wall_to_remove)
         for grid in range(tail[1], self._height, 2): # above entry
-            vertex_x = 0  # left
-            vertex_y = grid
-            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
-            walls_to_remove.append(wall_to_remove)
+            if tail[0] == 0 and tail[1]!=self._height:
+                vertex_x = 0  # left
+                vertex_y = grid
+                wall_to_remove = ((vertex_x, vertex_y), (vertex_x , vertex_y + 1))
+                walls_to_remove.append(wall_to_remove)
+            if tail[0] == self._width and tail[1]!=self._height:
+                vertex_x = self._width
+                vertex_y = grid
+                wall_to_remove = ((vertex_x, vertex_y), (vertex_x , vertex_y + 1))
+                walls_to_remove.append(wall_to_remove)
 
-            vertex_x = self._width
-            vertex_y = grid
-            wall_to_remove = ((vertex_x, vertex_y), (vertex_x + 1, vertex_y))
-            walls_to_remove.append(wall_to_remove)
-
+        # # if it's prey path, keep it
+        # for cell in [prey_path[0], prey_path[-1]]:
+        #     for wall in self._cell_to_walls(cell):
+        #         for wall2 in walls_to_remove:
+        #             if np.array_equal(wall,wall2):
+        #                 walls_to_remove.remove(wall)
 
         # remove chosen walls
         for wall in walls_to_remove:
