@@ -249,7 +249,7 @@ class Config():
         self._action_space = action_spaces.Composite(
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
             hand=action_spaces_custom.JoystickColor(
-                up_color=(128, 32, 32),  # red # (32, 128, 32), # green
+                up_color=(32, 128, 32), # green
                 scaling_factor=0.01),
         )
 
@@ -394,7 +394,7 @@ class Config():
 
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen, create_agent],
-            continual_rules=[update_agent_metadata, update_agent_color, update_RT_offline],
+            continual_rules=[update_agent_metadata, update_RT_offline],  # update_agent_color
             name='offline',
             end_condition=_end_offline_phase,  # duration=10,
         )
@@ -404,8 +404,9 @@ class Config():
         def _unglue(meta_state):
             self._maze_walk.speed = self._prey_speed
             meta_state['prey_speed'] = self._prey_speed
-
         unglue = gr.ModifyMetaState(_unglue)
+
+        glue_agent = custom_game_rules.GlueAgent()
 
         def _update_motion_steps(meta_state):
             meta_state['motion_steps'] += 1
@@ -419,7 +420,7 @@ class Config():
             return False
 
         phase_motion_visible = gr.Phase(
-            one_time_rules=unglue,
+            one_time_rules=[unglue,glue_agent],
             continual_rules=update_motion_steps,
             end_condition=_end_vis_motion_phase,  #  duration=10,
             name='motion_visible',
@@ -453,7 +454,7 @@ class Config():
 
         phase_reward = gr.Phase(
             one_time_rules=reveal_prey,
-            continual_rules=update_motion_steps,
+            continual_rules=[update_motion_steps],
             name='reward',
         )
 
