@@ -9,13 +9,13 @@ def stimuli_dir():
         # Running the python demo, so give relative path
         return '../stimuli'
     else:
-        # Laptop hansem
-        return (
-            '/Users/hansem/Documents/MazeSetGo/task/stimuli'
-        )
+        # # Laptop hansem
+        # return (
+        #     '/Users/hansem/Documents/MazeSetGo/task/stimuli'
+        # )
 
         # Psychophysics rig
-        # return '/Users/jazlab/Documents/MazeSetGo/task/stimuli'
+        return '/Users/jazlab/Documents/MazeSetGo/task/stimuli'
 
         # Laptop nwatters
         # return (

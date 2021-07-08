@@ -108,6 +108,7 @@ var eye_to_frame_intercept = [0, 0]
 
 var num_trials = 0
 var num_completeTrials = 0
+var num_trials_block = 100
 
 var RT_offline = 0
 var tp = 0
@@ -195,6 +196,11 @@ var tRew = 0
                 // wait(reward_duration)
                 reward_line = false
                 reward_duration = 0
+
+                goto (
+                    target = 'End protocol'
+                    when = (num_completeTrials%num_trials_block == 0)
+                )
 
                 goto ('Wait for completion')
             }
