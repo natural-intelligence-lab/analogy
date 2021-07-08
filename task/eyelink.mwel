@@ -1,0 +1,107 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// Eyelink interface
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+group 'Eye variables' {
+    var eye_x = 0
+    var eye_y = 0
+    var eye_x_calibrated = 0
+    var eye_y_calibrated = 0
+    var eye_rx = 0
+    var eye_ry = 0
+    var eye_lx = 0
+    var eye_ly = 0
+    var pupil_rx = 0
+    var pupil_ry = 0
+    var pupil_lx = 0
+    var pupil_ly = 0
+    var pupil_size_r = 0
+    var pupil_size_l = 0
+    var blink_r = 0
+    var blink_l = 0
+    var saccade_r = 0
+    var saccade_l = 0
+    var fixation_r = 0
+    var fixation_l = 0
+    var eye_in_saccade = false
+    var cal_target_x = 0 // for eyelink-driven calibration
+    var cal_target_y = 0
+}
+
+eyelink eye_tracker (
+    tracker_ip = '100.1.1.1'
+    eye_lx = eye_lx
+    eye_ly = eye_ly
+    eye_rx = eye_rx
+    eye_ry = eye_ry
+    pupil_lx = pupil_lx
+    pupil_ly = pupil_ly
+    pupil_rx = pupil_rx
+    pupil_ry = pupil_ry
+    pupil_size_r = pupil_size_r
+    pupil_size_l = pupil_size_l
+    blink_r = blink_r
+    blink_l = blink_l
+    saccade_r = saccade_r
+    saccade_l = saccade_l
+    fixation_r = fixation_r
+    fixation_l = fixation_l
+    data_interval = 1ms
+    tracking_dist = 1024
+    cal_target_x = cal_target_x // for eyelink-driven calibration
+    cal_target_y = cal_target_y
+    cal_target_visible = cal_target_visible
+
+    )
+
+// for eyelink-driven calibration
+var cal_target_visible (false) {
+    choose {
+        when (cal_target_visible) {
+            queue_stimulus (cal_target)
+            update_display ()
+        }
+        otherwise {
+            clear_display ()
+        }
+    }
+}
+circle cal_target (
+    color = 1,0,0
+    x_size = 1
+    x_position = cal_target_x
+    y_position = cal_target_y
+    )
+
+//linear_eye_calibrator eye_calibrator (
+standard_eye_calibrator eye_calibrator ( // use quadratic (9 parameters)
+    eyeh_raw = pupil_lx
+    eyev_raw = pupil_ly
+    eyeh_calibrated = eye_x_calibrated
+    eyev_calibrated = eye_y_calibrated
+    )
+
+boxcar_filter_1d (
+    in1 = eye_x_calibrated
+    out1 = eye_x
+    width_samples = 5
+    )
+
+boxcar_filter_1d (
+    in1 = eye_y_calibrated
+    out1 = eye_y
+    width_samples = 5
+    )
+
+
+basic_eye_monitor (
+    eyeh_calibrated = eye_x
+    eyev_calibrated = eye_y
+    eye_state = eye_in_saccade
+    width_samples = 5
+    saccade_entry_speed = 60
+    saccade_exit_speed = 20
+    )

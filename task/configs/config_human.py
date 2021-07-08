@@ -292,7 +292,8 @@ class Config():
         def _should_end_joystick_fixation(state):
             joystick_pos = state['joystick'][0].position
             dist_from_center = np.linalg.norm(joystick_pos - 0.5 * np.ones(2))
-            return dist_from_center < self._joystick_center_threshold
+            joystick_v = state['joystick'][0].velocity
+            return (dist_from_center < self._joystick_center_threshold) & np.all(joystick_v == 0)
 
         phase_joystick_center = gr.Phase(
             one_time_rules=appear_joystick,

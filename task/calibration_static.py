@@ -3,6 +3,19 @@
 The main class in this file is CalibrationManager, which is a task to be run by
 moog.mwel that fits a linear regression between the raw eye position and the
 corresponding frame position.
+
+
+Note
+<one time>
+- set up camera distance as close as possible but eye is not around the FOV edge
+- adjust eyelink camera focus to minimize corneal reflection size
+
+<every time>
+1) adjust chair & chin rest
+2) eyelink camera set up: click on FOV and auto threshold
+3) ask subjects to look at 4 corners of screen
+
+
 """
 
 ################################################################################

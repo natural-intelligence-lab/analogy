@@ -6,16 +6,16 @@
 
 // Include one of the following hand interfaces:
 
-%include 'hand_interfaces/keyboard'
+// %include 'hand_interfaces/keyboard'
 // %include 'hand_interfaces/gamepad'
-// %include 'hand_interfaces/joystick'
+%include 'hand_interfaces/joystick'
 // %include 'hand_interfaces/joystick_monkey'
 
 
 // Include one of the following eye interfaces
 
-%include 'eye_interfaces/mouse'
-// %include 'eye_interfaces/eyelink'
+// %include 'eye_interfaces/mouse'
+%include 'eye_interfaces/eyelink'
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -289,7 +289,7 @@ protocol 'timing, displaced' {
 
 protocol 'random_12' {
     run_python_string (
-        't = TaskManager(level="random.random_12.random_12", fixation_phase=False, ms_per_unit=2000)') //_uniform_num_turns
+        't = TaskManager(level="random.random_12.random_12", fixation_phase=False, ms_per_unit=3000)') //_uniform_num_turns
     run_task ()
 }
 
