@@ -51,7 +51,7 @@ group 'Joystick variables' {
         usage = 4
         // preferred_location_id = 342884352 // logitec extreme 3D
         // preferred_location_id = 52494336 // logi joystick 0
-        log_all_input_values = true
+        // log_all_input_values = true
         )
 %end
 
