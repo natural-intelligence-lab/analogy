@@ -32,7 +32,7 @@ _MAZE_WIDTH = 0.55
 _MAX_REWARDING_DIST = 0.2
 _EPSILON = 1e-4  # FOR REWARD FUNCTION
 
-_IMAGE_SIZE = [16]  # [8, 16, 24]
+_IMAGE_SIZE = [20] # [16]  # [8, 16, 24]
 
 
 class TrialInitialization():
@@ -325,9 +325,9 @@ class Config():
         )
 
         def _should_end_fixation(state, meta_state):
-            return (meta_state['fixation_duration'] >= _FIXATION_STEPS)
+            return (meta_state['fixation_duration'] >= _FIXATION_STEPS)  # 6 frames 100ms
 
-        if not self._fixation_phase:
+        if not self._fixation_phase:  # protocol 'random_12'
             fixation_duration = 0
         else:
             fixation_duration = np.inf
@@ -349,34 +349,34 @@ class Config():
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
         create_agent = custom_game_rules.CreateAgent(self._trial_init)
 
-        # continual_rules
-        #   change agent color if offline reward
-        def _reward(state, meta_state):
-            if len(state['agent']) > 0:
-                agent = state['agent'][0]
-                if (meta_state['phase'] == 'offline' and
-                        agent.metadata['moved'] and
-                        np.all(state['agent'][0].velocity == 0)):
-                    prey = state['prey'][0]
-                    prey_exit_x = meta_state['prey_path'][-1][0]
-                    agent_prey_dist = np.abs(agent.x - prey_exit_x)
-                    reward = max(0, 1 - agent_prey_dist / (_MAX_REWARDING_DIST + _EPSILON))
-                else:
-                    reward = 0.
-            else:
-                reward = 0.
-            return reward
-        def _offline_reward(state, meta_state):
-            return _reward(state, meta_state) > 0
+        # # continual_rules
+        # #   change agent color if offline reward
+        # def _reward(state, meta_state):
+        #     if len(state['agent']) > 0:
+        #         agent = state['agent'][0]
+        #         if (meta_state['phase'] == 'offline' and
+        #                 agent.metadata['moved'] and
+        #                 np.all(state['agent'][0].velocity == 0)):
+        #             prey = state['prey'][0]
+        #             prey_exit_x = meta_state['prey_path'][-1][0]
+        #             agent_prey_dist = np.abs(agent.x - prey_exit_x)
+        #             reward = max(0, 1 - agent_prey_dist / (_MAX_REWARDING_DIST + _EPSILON))
+        #         else:
+        #             reward = 0.
+        #     else:
+        #         reward = 0.
+        #     return reward
+        # def _offline_reward(state, meta_state):
+        #     return _reward(state, meta_state) > 0
 
         def _track_moved(s):
             if not np.all(s.velocity == 0):
                 s.metadata['moved'] = True
         update_agent_metadata = gr.ModifySprites('agent', _track_moved)
-        update_agent_color = gr.ConditionalRule(
-            condition=lambda state, x: _offline_reward(state, x) > 0,
-            rules=gr.ModifySprites('agent', _make_green)
-        )
+        # update_agent_color = gr.ConditionalRule(
+        #     condition=lambda state, x: _offline_reward(state, x) > 0,
+        #     rules=gr.ModifySprites('agent', _make_green)
+        # )
 
         def _should_increase_RT_offline(state, meta_state):
             agent = state['agent'][0]
