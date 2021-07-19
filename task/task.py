@@ -36,8 +36,17 @@ from utils import logger_env_wrapper
 from moog import environment
 from moog import observers
 
-# from configs import config as config_lib
-from configs import config_human as config_lib
+if getvar('platform') == 'laptop':
+    # from configs import config as config_lib
+    from configs import config_human as config_lib
+elif getvar('platform') == 'desktop':
+    # from configs import config as config_lib
+    from configs import config_human as config_lib
+elif getvar('platform') == 'psychophysics':
+    from configs import config_human as config_lib
+elif getvar('platform') == 'monkey':
+    from configs import config as config_lib
+    
 
 class TaskManager:
     """OOG task manager.
@@ -138,11 +147,6 @@ class TaskManager:
         image_size = self.env.meta_state['image_size']
         setvar('image_size_x', image_size)
         setvar('image_size_y', image_size)
-
-        # # extracting # trials for left & right target
-        # prey_exit_x = self.env.meta_state['prey_path'][-1][0]
-        # id_left_prey = prey_exit_x < 0.5
-        # setvar('id_left_prey', id_left_prey)
 
         # time stamp
         self.flag1 = True
