@@ -6,10 +6,10 @@
 
 // Include one of the following hand interfaces:
 
-// %include 'hand_interfaces/keyboard'
+%include 'hand_interfaces/keyboard'
 // %include 'hand_interfaces/gamepad'
 // %include 'hand_interfaces/joystick'
-%include 'hand_interfaces/joystick_monkey'
+// %include 'hand_interfaces/joystick_monkey'
 
 
 // Include one of the following eye interfaces
@@ -18,7 +18,8 @@
 // %include 'eye_interfaces/eyelink'
 
 // Nidaq interface and reward variable
-%include 'nidaq'
+// %include 'nidaq'
+%include 'firmata'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -156,7 +157,8 @@ var num_completeTrials_right = 0
                 // while a trial is active
                 start_io_device (eye_tracker)
                 start_io_device (hand)
-                start_io_device (nidaq)
+                start_io_device (firmata)
+                // start_io_device (nidaq)
 
                 queue_stimulus (image)
                 update_display ()
@@ -173,21 +175,6 @@ var num_completeTrials_right = 0
                     target = 'Failure'
                     when = reward_duration < 0
                     )
-                goto (
-                    target = 'End trial'
-                    when = end_trial
-                    )
-                goto (
-                    target = 'End protocol'
-                    when = end_task
-                    )
-                goto (
-                    target = 'Task error'
-                    when = task_error
-                    )
-            }
-            state 'Wait for completion after success or failure' {
-
                 goto (
                     target = 'End trial'
                     when = end_trial
@@ -228,7 +215,6 @@ var num_completeTrials_right = 0
                 reward_line = false
                 reward_duration = 0
 
-                // goto ('Wait for completion after success or failure')
                 goto ('Wait for completion')
             }
 
@@ -236,7 +222,6 @@ var num_completeTrials_right = 0
                 play_sound (failure_sound)
                 reward_duration = 0
                 
-                // goto ('Wait for completion after success or failure')
                 goto ('Wait for completion')
             }
 
@@ -245,7 +230,8 @@ var num_completeTrials_right = 0
                 
                 stop_io_device (eye_tracker)
                 stop_io_device (hand)
-                stop_io_device (nidaq)
+                stop_io_device (firmata)
+                // stop_io_device (nidaq)
                 
                 num_trials = num_trials + 1
                 if (id_left_prey) {
