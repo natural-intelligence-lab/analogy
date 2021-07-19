@@ -34,7 +34,7 @@ elif getvar('platform') == 'monkey':
     # laptop hansem
     _PWD = '/Users/hansem/Documents/MazeSetGo/task'
     _PYTHON_SITE_PACKAGES = (
-        '/Users/hansem/opt/anaconda3/envs/mworks/lib/python3.8/site-packages'
+        '/opt/miniconda3/envs/mworks/lib/python3.9/site-packages'
     )
 else:
     raise ValueError('Invalid platform')
