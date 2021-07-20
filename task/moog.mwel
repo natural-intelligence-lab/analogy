@@ -141,6 +141,10 @@ var tVisMotion = 0
 var tInvMotion = 0
 var tRew = 0
 
+var RT_offline = 0
+var tp = 0
+var ts = 0
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Shared Task Protocol Body
