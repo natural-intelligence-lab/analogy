@@ -45,8 +45,10 @@ elif getvar('platform') == 'desktop':
     # from configs import config_human as config_lib
 elif getvar('platform') == 'psychophysics':
     from configs import config_human as config_lib
-elif getvar('platform') == 'monkey':
+elif getvar('platform') == 'monkey_ephys':
     from configs import config as config_lib
+elif getvar('platform') == 'monkey_train':
+    from configs import config_g as config_lib
     
 
 class TaskManager:

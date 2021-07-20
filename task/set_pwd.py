@@ -30,11 +30,17 @@ elif getvar('platform') == 'psychophysics':
     _PYTHON_SITE_PACKAGES = (
         '/opt/anaconda3/envs/mworks/lib/python3.8/site-packages'
     )
-elif getvar('platform') == 'monkey':
-    # laptop hansem
+elif getvar('platform') == 'monkey_ephys':
+    # H
     _PWD = '/Users/hansem/Documents/MazeSetGo/task'
     _PYTHON_SITE_PACKAGES = (
         '/opt/miniconda3/envs/mworks/lib/python3.9/site-packages'
+    )
+elif getvar('platform') == 'monkey_train':
+    # G
+    _PWD = '/Users/hansem/Documents/MazeSetGo/task'
+    _PYTHON_SITE_PACKAGES = (
+        '/opt/anaconda3/envs/mworks/lib/python3.9/site-packages'
     )
 else:
     raise ValueError('Invalid platform')

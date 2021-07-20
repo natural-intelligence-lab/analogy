@@ -19,14 +19,16 @@
 
 // Nidaq interface and reward variable
 // %include 'nidaq'
-%include 'firmata'
+%include 'firmata_ephys'
+//%include 'firmata_train'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Choose platform
 //
 ///////////////////////////////////////////////////////////////////////////////
-var platform = 'monkey'
+var platform = 'monkey_ephys'
+// var platform = 'monkey_train'
 // var platform = 'psychophysics'
 // var platform = 'laptop'
 // var platform = 'desktop'
@@ -130,6 +132,14 @@ var num_trials_left = 0
 var num_completeTrials_left = 0
 var num_trials_right = 0
 var num_completeTrials_right = 0
+
+//time stamps for eye movement analysis
+var tFix = 0
+var tOffline = 0
+var tOfflineRT = 0
+var tVisMotion = 0
+var tInvMotion = 0
+var tRew = 0
 
 ///////////////////////////////////////////////////////////////////////////////
 //
