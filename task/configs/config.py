@@ -35,8 +35,10 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 
-_MAX_REWARDING_DIST=0.1
+_MAX_REWARDING_DIST=0.25
 _EPSILON=1e-4 # FOR REWARD FUNCTION
+
+_MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
 
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
@@ -440,8 +442,12 @@ class Config():
         def _increase_tp(meta_state):
             meta_state['tp'] += 1
         increase_tp = gr.ModifyMetaState(_increase_tp)
-        def _end_motion_phase(state):
-            return state['agent'][0].metadata['response']
+
+        def _end_motion_phase(state,meta_state):
+            id_response = state['agent'][0].metadata['response']
+            id_late = meta_state['tp'] > _MAX_WAIT_TIME_GAIN*meta_state['ts']
+            return id_response or id_late
+
         phase_motion_invisible = gr.Phase(
             one_time_rules=[hide_prey,update_ts],
             continual_rules=[update_motion_steps,increase_tp],
