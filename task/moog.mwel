@@ -313,7 +313,7 @@ protocol 'move joystick up' {
 
 protocol 'static timing' {
     run_python_string (
-        't = TaskManager(level="training.vertical_timing.vertical_timing_center", fixation_phase=False, static_agent=True, prey_opacity=255, ms_per_unit=4000)')
+        't = TaskManager(level="training.vertical_timing_online.vertical_timing_center", fixation_phase=False, static_agent=True, prey_opacity=255, ms_per_unit=4000)')
     run_task ()
 }
 
