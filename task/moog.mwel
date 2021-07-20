@@ -19,16 +19,16 @@
 
 // Nidaq interface and reward variable
 // %include 'nidaq'
-%include 'firmata_ephys'
-//%include 'firmata_train'
+// %include 'firmata_ephys'
+%include 'firmata_train'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Choose platform
 //
 ///////////////////////////////////////////////////////////////////////////////
-var platform = 'monkey_ephys'
-// var platform = 'monkey_train'
+//var platform = 'monkey_ephys'
+var platform = 'monkey_train'
 // var platform = 'psychophysics'
 // var platform = 'laptop'
 // var platform = 'desktop'
