@@ -40,8 +40,9 @@ if getvar('platform') == 'laptop':
     # from configs import config as config_lib
     from configs import config_human as config_lib
 elif getvar('platform') == 'desktop':
+    from configs import config_g as config_lib
     # from configs import config as config_lib
-    from configs import config_human as config_lib
+    # from configs import config_human as config_lib
 elif getvar('platform') == 'psychophysics':
     from configs import config_human as config_lib
 elif getvar('platform') == 'monkey':
@@ -155,6 +156,10 @@ class TaskManager:
         self.flag4 = True
         self.flag5 = True
         self.flag6 = True
+
+        # TBD: debug - how to change _MAX_REWARDING_DIST during task running?
+        # max_rewarding_dist = getvar('max_rewarding_dist')
+        # self.env.meta_state['max_rewarding_dist'] = max_rewarding_dist
 
     def _register_event_callback(self, varname):
         self.events[varname] = []

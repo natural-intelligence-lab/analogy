@@ -1,10 +1,5 @@
 """Common grid_chase task config.
 
-TO DO:
-1) for offline+online (H), no online if no offline reward
-2) how to change _MAX_REWARDING_DIST during task running? _MAX_REWARDING_DIST
-3) change initial agent position? configs/levels/training/vertical_timing.py
-
 """
 
 import abc
@@ -228,12 +223,12 @@ class Config():
     def _construct_task(self):
         """Construct task."""
 
-        prey_task = tasks_custom.TimeErrorReward(
-             half_width=40,  # given 60 Hz, 666*2/2 ms
-             maximum=1,
-             prey_speed=self._prey_speed,
-             max_rewarding_dist = _MAX_REWARDING_DIST
-        )
+        # prey_task = tasks_custom.TimeErrorReward(
+        #      half_width=40,  # given 60 Hz, 666*2/2 ms
+        #      maximum=1,
+        #      prey_speed=self._prey_speed,
+        #      max_rewarding_dist = _MAX_REWARDING_DIST
+        # )
 
         # joystick_center_task = tasks_custom.BeginPhase('fixation')
 
@@ -248,7 +243,7 @@ class Config():
             # joystick_center_task,
             offline_task,
             timeout_task,
-            prey_task,
+            # prey_task,
         )
 
     def _construct_action_space(self):
@@ -466,8 +461,8 @@ class Config():
             phase_joystick_center,
             phase_fixation,
             phase_offline,
-            phase_motion_visible,
-            phase_motion_invisible,
+            # phase_motion_visible,
+            # phase_motion_invisible,
             phase_reward,
             meta_state_phase_name_key='phase',
         )
