@@ -35,10 +35,11 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 
-_MAX_REWARDING_DIST=0.25
+_MAX_REWARDING_DIST=0.15
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 
 _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
+_JOYSTICK_FIXATION_POSTOFFLINE = 12 # 200
 
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
@@ -143,6 +144,7 @@ class TrialInitialization():
             'tp': 0,
             'ts': 0,
             'max_rewarding_dist': _MAX_REWARDING_DIST,
+            'joystick_fixation_postoffline': 0
         }
 
         return state
@@ -396,13 +398,23 @@ class Config():
             rules=gr.ModifyMetaState(_increase_RT_offline)
         )
         # end_condition
-        def _end_offline_phase(state):
+        def _should_increase_joystick_fixation_dur(state,meta_state):
+            if len(state['agent']) > 0:
+                agent = state['agent'][0]
+                return (meta_state['phase'] == 'offline' and agent.metadata['moved'] and np.all(agent.velocity == 0))
+        def _increase_joystick_fixation_dur(meta_state):
+            meta_state['joystick_fixation_postoffline'] += 1
+        update_joystick_fixation_dur = gr.ConditionalRule(
+            condition=_should_increase_joystick_fixation_dur,
+            rules=gr.ModifyMetaState(_increase_joystick_fixation_dur)
+        )
+        def _end_offline_phase(state,meta_state):
             agent = state['agent'][0]
-            return (agent.metadata['moved'] and np.all(agent.velocity == 0))
+            return agent.metadata['moved'] and meta_state['joystick_fixation_postoffline']>_JOYSTICK_FIXATION_POSTOFFLINE # np.all(agent.velocity == 0) # 
 
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen, create_agent],
-            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color],  # update_agent_color
+            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color,update_joystick_fixation_dur],  # update_agent_color 
             name='offline',
             end_condition=_end_offline_phase,  #  duration=10,
         )
