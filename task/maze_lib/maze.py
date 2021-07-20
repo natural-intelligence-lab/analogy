@@ -149,6 +149,16 @@ class Maze():
             wall_to_remove = self._walls_temporary[wall_index]
             self._remove_wall(wall_to_remove)
 
+
+    def remove_distractors(self):
+        """remove all outside of the prey path.
+
+        """
+        wall_index = 0
+        while len(self._walls_temporary) > 0:
+            wall_to_remove = self._walls_temporary[wall_index]
+            self._remove_wall(wall_to_remove)
+
     def sample_distractor_exit(self,prey_path=()):
         """Sample distractor exit points at South side
             remove every other grid including correct exit point

@@ -261,3 +261,56 @@ class VerticalPreyRandomHeight():
             for height in self._maze_heights
         ]
         return conditions
+
+
+
+class PathNoDistract():
+
+    def __init__(self):
+        self._maze_size = _MAZE_SIZE
+        self._prey_path_generator = PreyPathGenerator(
+            maze_height=self._maze_size, maze_width=self._maze_size,
+            min_segment_length=_MIN_SEGMENT_LENGTH)
+
+        self._maze_heights = range(_MIN_LENGTH_ZEROTURN, _MAX_LENGTH_ZEROTURN, _N_LENGTH_ZEROTURN)  # for 0 turn mazes
+        self._maze_width = _MAZE_SIZE
+
+    def _sample_condition(self):
+        prey_path = self._prey_path_generator()
+        maze = maze_lib.Maze(
+            width=self._maze_size, height=self._maze_size, prey_path=prey_path)
+        # maze.sample_distractor_entry(prey_path=prey_path)
+        # maze.sample_distractor_exit(prey_path=prey_path)
+        # for i in range(_NUM_DISTRACTOR_SAMPLE):
+        #     distractor_path = self._prey_path_generator()
+        #     maze.set_distractor_path(distractor_path=distractor_path)
+        # maze.sample_distractors()
+        maze.remove_distractors()
+
+        maze_walls = maze.walls
+
+        start_x = prey_path[0][0]
+        segments = _prey_path_to_segments(prey_path)
+        num_turns = len(segments) - 1
+        path_length = sum(len(x) for x in segments)
+
+        features = {
+            'name': 'Random12',
+            'start_x': start_x,
+            'num_turns': num_turns,
+            'path_length': path_length,
+        }
+        maze_width = self._maze_size
+        maze_height = self._maze_size
+        condition = [maze_width, maze_height, prey_path, maze_walls, features]
+        return condition
+
+
+    def __call__(self):
+        conditions = [
+            self._sample_condition()
+            for _ in range(_NUM_CONDITIONS)
+        ]
+        rng = np.random.default_rng()
+        conditions = rng.permutation(conditions,axis=0)
+        return conditions

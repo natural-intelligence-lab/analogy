@@ -19,16 +19,16 @@
 
 // Nidaq interface and reward variable
 // %include 'nidaq'
-// %include 'firmata_ephys'
-%include 'firmata_train'
+%include 'firmata_ephys'
+// %include 'firmata_train'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Choose platform
 //
 ///////////////////////////////////////////////////////////////////////////////
-//var platform = 'monkey_ephys'
-var platform = 'monkey_train'
+var platform = 'monkey_ephys'
+// var platform = 'monkey_train'
 // var platform = 'psychophysics'
 // var platform = 'laptop'
 // var platform = 'desktop'
@@ -326,6 +326,12 @@ protocol 'timing, moving agent' {
 protocol 'timing, displaced' {
     run_python_string (
         't = TaskManager(level="training.vertical_timing.vertical_timing_random_x", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
+    run_task ()
+}
+
+protocol 'path_no_distract_uniform_num_turns, displaced' {
+    run_python_string (
+        't = TaskManager(level="training.path_no_distract.path_no_distract_uniform_num_turns", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
     run_task ()
 }
 
