@@ -281,6 +281,11 @@ class Config():
             s.c1 = 128
             s.c2 = 32
 
+        def _make_red(s):
+            s.c0 = 128
+            s.c1 = 32
+            s.c2 = 32
+
         # 1. ITI phase
 
         def _reset_physics(meta_state):
@@ -427,6 +432,8 @@ class Config():
         unglue = gr.ModifyMetaState(_unglue)
 
         glue_agent = custom_game_rules.GlueAgent()
+        make_agent_red = gr.ModifySprites('agent', _make_red)
+
 
         def _update_motion_steps(meta_state):
             meta_state['motion_steps'] += 1
@@ -439,7 +446,7 @@ class Config():
             return False
 
         phase_motion_visible = gr.Phase(
-            one_time_rules=[unglue,glue_agent],
+            one_time_rules=[unglue,glue_agent,make_agent_red],
             continual_rules=update_motion_steps,
             end_condition=_end_vis_motion_phase,  # duration=10,
             name='motion_visible',

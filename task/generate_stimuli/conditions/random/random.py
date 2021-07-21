@@ -272,20 +272,13 @@ class PathNoDistract():
             maze_height=self._maze_size, maze_width=self._maze_size,
             min_segment_length=_MIN_SEGMENT_LENGTH)
 
-        self._maze_heights = range(_MIN_LENGTH_ZEROTURN, _MAX_LENGTH_ZEROTURN, _N_LENGTH_ZEROTURN)  # for 0 turn mazes
+        self._maze_heights = _MAZE_SIZE
         self._maze_width = _MAZE_SIZE
 
     def _sample_condition(self):
         prey_path = self._prey_path_generator()
         maze = maze_lib.Maze(
-            width=self._maze_size, height=self._maze_size, prey_path=prey_path)
-        # maze.sample_distractor_entry(prey_path=prey_path)
-        # maze.sample_distractor_exit(prey_path=prey_path)
-        # for i in range(_NUM_DISTRACTOR_SAMPLE):
-        #     distractor_path = self._prey_path_generator()
-        #     maze.set_distractor_path(distractor_path=distractor_path)
-        # maze.sample_distractors()
-        maze.remove_distractors()
+            width=self._maze_size, height=self._maze_size, prey_path=prey_path,all_walls=None, prey_path_only=1)
 
         maze_walls = maze.walls
 

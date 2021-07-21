@@ -6,16 +6,16 @@
 
 // Include one of the following hand interfaces:
 
-// %include 'hand_interfaces/keyboard'
+%include 'hand_interfaces/keyboard'
 // %include 'hand_interfaces/gamepad'
-%include 'hand_interfaces/joystick'
+//%include 'hand_interfaces/joystick'
 // %include 'hand_interfaces/joystick_monkey'
 
 
 // Include one of the following eye interfaces
 
-// %include 'eye_interfaces/mouse'
-%include 'eye_interfaces/eyelink'
+%include 'eye_interfaces/mouse'
+// %include 'eye_interfaces/eyelink'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -23,9 +23,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 // var platform = 'monkey'
-var platform = 'psychophysics'
+// var platform = 'psychophysics'
 // var platform = 'laptop'
-// var platform = 'desktop'
+var platform = 'desktop'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -299,6 +299,18 @@ protocol 'timing, moving agent' {
 protocol 'timing, displaced' {
     run_python_string (
         't = TaskManager(level="training.vertical_timing.vertical_timing_random_x", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
+    run_task ()
+}
+
+protocol 'path_no_distract' {
+    run_python_string (
+        't = TaskManager(level="training.path_no_distract.path_no_distract", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
+    run_task ()
+}
+
+protocol 'path_no_distract_uniform_num_turns' {
+    run_python_string (
+        't = TaskManager(level="training.path_no_distract.path_no_distract_uniform_num_turns", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
     run_task ()
 }
 

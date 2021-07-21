@@ -329,7 +329,13 @@ protocol 'timing, displaced' {
     run_task ()
 }
 
-protocol 'path_no_distract_uniform_num_turns, displaced' {
+protocol 'path_no_distract' {
+    run_python_string (
+        't = TaskManager(level="training.path_no_distract.path_no_distract", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
+    run_task ()
+}
+
+protocol 'path_no_distract_uniform_num_turns' {
     run_python_string (
         't = TaskManager(level="training.path_no_distract.path_no_distract_uniform_num_turns", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
     run_task ()

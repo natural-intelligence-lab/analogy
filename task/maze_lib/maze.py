@@ -15,7 +15,7 @@ _DIRECTIONS = [np.array(x) for x in list(_DIRECTIONS_NAMED.values())]
 class Maze():
     """Maze class."""
 
-    def __init__(self, width, height, prey_path=(), all_walls=None):
+    def __init__(self, width, height, prey_path=(), all_walls=None, prey_path_only=None):
         """Constructor.
         
         Maze is a grid with walls between some of the cells.
@@ -35,9 +35,15 @@ class Maze():
 
         if all_walls is None:
             # Must randomly generate the maze
-            self._construct_walls()
-            self._construct_connected_components()
-            self._set_prey_path(prey_path)
+            if prey_path_only is None:
+                self._construct_walls()
+                self._construct_connected_components()
+                self._set_prey_path(prey_path)
+            else:
+                self._walls_temporary =[]
+                self._walls_frozen=[]
+                self._connected_components=[]
+                self._set_prey_path(prey_path)
         else:
             # Entire maze has been specified
             self._walls_frozen = all_walls
@@ -149,15 +155,6 @@ class Maze():
             wall_to_remove = self._walls_temporary[wall_index]
             self._remove_wall(wall_to_remove)
 
-
-    def remove_distractors(self):
-        """remove all outside of the prey path.
-
-        """
-        wall_index = 0
-        while len(self._walls_temporary) > 0:
-            wall_to_remove = self._walls_temporary[wall_index]
-            self._remove_wall(wall_to_remove)
 
     def sample_distractor_exit(self,prey_path=()):
         """Sample distractor exit points at South side
@@ -317,6 +314,14 @@ class Maze():
             for wall in self._cell_to_walls(cell):
                 if wall in self._walls_frozen:
                     walls_to_remove.append(wall)
+                    walls_to_freeze.remove(wall)
+                if wall[0][1]==wall[1][1]: # horizontal
+                    if wall[0][1]==0 or wall[0][1]==self._height: # bottom or top
+                        walls_to_freeze.remove(wall)
+                if wall[0][0] == wall[1][0]:  # vertical
+                    if wall[0][0] == 0 or wall[1][0] == self._width:  # bottom or top
+                        walls_to_freeze.remove(wall)
+                if wall[0]==0 or wall[0]==self._width: # left or right
                     walls_to_freeze.remove(wall)
                 if np.array_equal(cell, prey_path[0]):
                     self._entry_wall = wall

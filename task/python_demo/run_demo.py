@@ -22,6 +22,7 @@ from utils import logger_env_wrapper
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('level',
+                    # 'training.path_no_distract.path_no_distract_uniform_num_turns'
                     # 'random.random_12.random_12_uniform_num_turns',
                     # 'random.random_12.random_12',
                     # 'random.vertical_random_height.vertical_random_height',

@@ -18,7 +18,14 @@ def path_no_distract_uniform_num_turns(**kwargs):
             length=100,
             filter_fn=lambda f: f['num_turns'] == i,
         )
-        for i in range(min_num_turns, max_num_turns, step_num_turns)
+        for i in range(min_num_turns, max_num_turns+1, step_num_turns)
     ]
     stimulus_generator = samplers.MixtureSampler(*num_turns_samplers)
+    return config.Config(stimulus_generator, **kwargs)
+
+def path_no_distract(**kwargs):
+    stimulus_generator = samplers.Sampler(
+        stimuli_dir=os.path.join(
+            get_stimuli_dir.stimuli_dir(), 'random/PathNoDistract'),
+    )
     return config.Config(stimulus_generator, **kwargs)
