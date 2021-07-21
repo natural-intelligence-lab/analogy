@@ -43,6 +43,8 @@ _JOYSTICK_FIXATION_POSTOFFLINE = 12 # 200
 
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
+_STEP_OPACITY = 20  # [0 255]
+
 class TrialInitialization():
 
     def __init__(self, stimulus_generator, prey_lead_in, static_prey=False,
@@ -136,6 +138,7 @@ class TrialInitialization():
             'stimulus_features': stimulus['features'],
             'prey_path': prey_path,
             'prey_speed': 0,
+            'prey_opacity': 255,
             'maze_width': maze_width,
             'maze_height': maze_height,
             'image_size': image_size,
@@ -199,7 +202,7 @@ class Config():
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / refresh
-        self._prey_lead_in = 0.08
+        self._prey_lead_in = 0.15  # 0.08
 
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in,
@@ -275,6 +278,12 @@ class Config():
 
         def _make_opaque(s):
             s.opacity=255
+
+        def _increase_opacity(s):
+            s.opacity=min(255,s.opacity+_STEP_OPACITY)
+
+        def _decrease_opacity(s):
+            s.opacity=max(0,s.opacity-_STEP_OPACITY)
 
         def _make_green(s):
             s.c0 = 32
@@ -453,8 +462,9 @@ class Config():
         )
 
         # 6. Invisible motion phase
-
-        hide_prey = gr.ModifySprites('prey', _make_prey_transparent)
+        set_prey_opacity = gr.ModifySprites('prey', _make_prey_transparent)
+        # hide_prey = gr.ModifySprites('prey', _make_prey_transparent)
+        # _increase_opacity
         def _update_ts(meta_state):
             meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed
         update_ts = gr.ModifyMetaState(_update_ts)
@@ -468,7 +478,7 @@ class Config():
             return id_response or id_late
 
         phase_motion_invisible = gr.Phase(
-            one_time_rules=[hide_prey,update_ts],
+            one_time_rules=[,update_ts],  # hide_prey
             continual_rules=[update_motion_steps,increase_tp],
             end_condition=_end_motion_phase,
             name='motion_invisible',
