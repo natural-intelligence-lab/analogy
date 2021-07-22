@@ -43,17 +43,41 @@ _JOYSTICK_FIXATION_POSTOFFLINE = 12 # 200
 
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
-_STEP_OPACITY = 20  # [0 255]
+_STEP_OPACITY = 40  # [0 255]
+
+class PreyOpacityStaircase():
+
+    def __init__(self,
+                 init_value=255,
+                 success_delta=_STEP_OPACITY,
+                 failure_delta=_STEP_OPACITY,
+                 minval=0,
+                 maxval=255):
+        self._opacity = init_value
+        self._success_delta = success_delta
+        self._failure_delta = failure_delta
+        self._minval = minval
+        self._maxval = maxval
+
+    def step(self, reward):
+        if reward > 0:
+            self._opacity = max(self._opacity - self._success_delta, self._minval)
+        elif reward <= 0:
+            self._opacity = min(self._opacity + self._failure_delta, self._maxval)
+
+    @property
+    def opacity(self):
+        return self._opacity
 
 class TrialInitialization():
 
     def __init__(self, stimulus_generator, prey_lead_in, static_prey=False,
-                 static_agent=False):
+                 static_agent=False,prey_opacity_staircase=None):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
         self._static_prey = static_prey
         self._static_agent = static_agent
-
+        self._prey_opacity_staircase=prey_opacity_staircase
         self._prey_factors = dict(
             shape='circle', scale=0.015, c0=0, c1=255, c2=0)
         self._fixation_shape = 0.2 * np.array([
@@ -130,6 +154,11 @@ class TrialInitialization():
         # randomly choose image size across trials
         image_size = np.random.choice(_IMAGE_SIZE)
 
+        if self._prey_opacity_staircase is None:
+            self._prey_opacity = 255
+        else:
+            self._prey_opacity = self._prey_opacity_staircase.opacity
+
         self._meta_state = {
             'fixation_duration': 0,
             'motion_steps': 0,
@@ -138,7 +167,7 @@ class TrialInitialization():
             'stimulus_features': stimulus['features'],
             'prey_path': prey_path,
             'prey_speed': 0,
-            'prey_opacity': 255,
+            'prey_opacity': self._prey_opacity,
             'maze_width': maze_width,
             'maze_height': maze_height,
             'image_size': image_size,
@@ -175,11 +204,13 @@ class Config():
 
     def __init__(self,
                  stimulus_generator,
+                 prey_opacity_staircase=None,
                  fixation_phase=True,
                  prey_opacity=0,
                  static_prey=False,
                  static_agent=False,
-                 ms_per_unit=2000):
+                 ms_per_unit=2000,
+                 ):
         """Constructor.
         
         Args:
@@ -193,9 +224,14 @@ class Config():
         """
         self._stimulus_generator = stimulus_generator
         self._fixation_phase = fixation_phase
-        self._prey_opacity = prey_opacity
         self._static_prey = static_prey
         self._static_agent = static_agent
+        self._prey_opacity_staircase = prey_opacity_staircase
+
+        if self._prey_opacity_staircase is not None:
+            self._prey_opacity = self._prey_opacity_staircase.opacity
+        else:
+            self._prey_opacity = prey_opacity
 
         # How close to center joystick must be to count as joystick centering
         self._joystick_center_threshold = 0.05
@@ -206,7 +242,7 @@ class Config():
 
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in,
-            static_prey=static_prey, static_agent=static_agent)
+            static_prey=static_prey, static_agent=static_agent, prey_opacity_staircase=self._prey_opacity_staircase)
 
         # Create renderer
         self._observer = observers.PILRenderer(
@@ -239,7 +275,8 @@ class Config():
              half_width=40,  # given 60 Hz, 666*2/2 ms
              maximum=1,
              prey_speed=self._prey_speed,
-             max_rewarding_dist = _MAX_REWARDING_DIST
+             max_rewarding_dist = _MAX_REWARDING_DIST,
+             prey_opacity_staircase = self._prey_opacity_staircase,
         )
 
         # joystick_center_task = tasks_custom.BeginPhase('fixation')
@@ -273,17 +310,11 @@ class Config():
         def _make_transparent(s):
             s.opacity = 0
 
-        def _make_prey_transparent(s):
-            s.opacity = self._prey_opacity
+        def _set_prey_opacity(s):
+            s.opacity = self._prey_opacity_staircase.opacity # self._prey_opacity
 
         def _make_opaque(s):
             s.opacity=255
-
-        def _increase_opacity(s):
-            s.opacity=min(255,s.opacity+_STEP_OPACITY)
-
-        def _decrease_opacity(s):
-            s.opacity=max(0,s.opacity-_STEP_OPACITY)
 
         def _make_green(s):
             s.c0 = 32
@@ -462,9 +493,7 @@ class Config():
         )
 
         # 6. Invisible motion phase
-        set_prey_opacity = gr.ModifySprites('prey', _make_prey_transparent)
-        # hide_prey = gr.ModifySprites('prey', _make_prey_transparent)
-        # _increase_opacity
+        set_prey_opacity = gr.ModifySprites('prey', _set_prey_opacity)  # self._prey_opacity
         def _update_ts(meta_state):
             meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed
         update_ts = gr.ModifyMetaState(_update_ts)
@@ -478,7 +507,7 @@ class Config():
             return id_response or id_late
 
         phase_motion_invisible = gr.Phase(
-            one_time_rules=[,update_ts],  # hide_prey
+            one_time_rules=[set_prey_opacity,update_ts],
             continual_rules=[update_motion_steps,increase_tp],
             end_condition=_end_motion_phase,
             name='motion_invisible',

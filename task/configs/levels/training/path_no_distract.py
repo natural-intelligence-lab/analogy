@@ -23,6 +23,20 @@ def path_no_distract_uniform_num_turns(**kwargs):
     stimulus_generator = samplers.MixtureSampler(*num_turns_samplers)
     return config.Config(stimulus_generator, **kwargs)
 
+def path_no_distract_uniform_num_turns_staircase(**kwargs):
+    stim_dir = os.path.join(get_stimuli_dir.stimuli_dir(), 'random/PathNoDistract')
+    num_turns_samplers = [
+        samplers.Sampler(
+            stimuli_dir=stim_dir,
+            length=100,
+            filter_fn=lambda f: f['num_turns'] == i,
+        )
+        for i in range(min_num_turns, max_num_turns+1, step_num_turns)
+    ]
+    stimulus_generator = samplers.MixtureSampler(*num_turns_samplers)
+    staircase = config.PreyOpacityStaircase()
+    return config.Config(stimulus_generator, prey_opacity_staircase=staircase, **kwargs)
+
 def path_no_distract(**kwargs):
     stimulus_generator = samplers.Sampler(
         stimuli_dir=os.path.join(

@@ -145,6 +145,8 @@ var RT_offline = 0
 var tp = 0
 var ts = 0
 
+var prey_opacity=255
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Shared Task Protocol Body
@@ -338,6 +340,12 @@ protocol 'path_no_distract' {
 protocol 'path_no_distract_uniform_num_turns' {
     run_python_string (
         't = TaskManager(level="training.path_no_distract.path_no_distract_uniform_num_turns", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
+    run_task ()
+}
+
+protocol 'path_no_distract_uniform_num_turns_staircase' {
+    run_python_string (
+        't = TaskManager(level="training.path_no_distract.path_no_distract_uniform_num_turns_staircase", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
     run_task ()
 }
 

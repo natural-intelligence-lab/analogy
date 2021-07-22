@@ -1,5 +1,13 @@
 """Common grid_chase task config.
 
+present offline+online but online reward not contingent on offline
+to go back to offline only, comment ###
+
+TO DO:
+1) implement direction only
+2) to make easy joystick control, initial paddle position not always 0.5?
+3) to make easy joystick control, joystick threshold?
+
 """
 
 import abc
@@ -30,10 +38,13 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 
-_MAX_REWARDING_DIST=0.1
+_MAX_REWARDING_DIST=0.2
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 
 _IMAGE_SIZE = [24]  # [8, 16, 24]
+
+_MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
+
 
 class TrialInitialization():
 
@@ -128,6 +139,7 @@ class TrialInitialization():
             'stimulus_features': stimulus['features'],
             'prey_path': prey_path,
             'prey_speed': 0,
+            'prey_opacity': 255,
             'maze_width': maze_width,
             'maze_height': maze_height,
             'image_size': image_size,
@@ -136,6 +148,7 @@ class TrialInitialization():
             'tp': 0,
             'ts': 0,
             'max_rewarding_dist': _MAX_REWARDING_DIST,
+            'joystick_fixation_postoffline': 0
         }
 
         return state
@@ -190,7 +203,7 @@ class Config():
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / refresh
-        self._prey_lead_in = 0.08
+        self._prey_lead_in = 0.15  # 0.08
 
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in,
@@ -223,12 +236,13 @@ class Config():
     def _construct_task(self):
         """Construct task."""
 
-        # prey_task = tasks_custom.TimeErrorReward(
-        #      half_width=40,  # given 60 Hz, 666*2/2 ms
-        #      maximum=1,
-        #      prey_speed=self._prey_speed,
-        #      max_rewarding_dist = _MAX_REWARDING_DIST
-        # )
+        ###
+        prey_task = tasks_custom.TimeErrorReward(
+             half_width=40,  # given 60 Hz, 666*2/2 ms
+             maximum=1,
+             prey_speed=self._prey_speed,
+             max_rewarding_dist = 1 #  _MAX_REWARDING_DIST
+        )
 
         # joystick_center_task = tasks_custom.BeginPhase('fixation')
 
@@ -243,7 +257,7 @@ class Config():
             # joystick_center_task,
             offline_task,
             timeout_task,
-            # prey_task,
+            prey_task, ###
         )
 
     def _construct_action_space(self):
@@ -267,9 +281,20 @@ class Config():
         def _make_opaque(s):
             s.opacity=255
 
+        def _increase_opacity(s):
+            s.opacity=min(255,s.opacity+_STEP_OPACITY)
+
+        def _decrease_opacity(s):
+            s.opacity=max(0,s.opacity-_STEP_OPACITY)
+
         def _make_green(s):
             s.c0 = 32
             s.c1 = 128
+            s.c2 = 32
+
+        def _make_red(s):
+            s.c0 = 128
+            s.c1 = 32
             s.c2 = 32
 
         # 1. ITI phase
@@ -389,13 +414,23 @@ class Config():
             rules=gr.ModifyMetaState(_increase_RT_offline)
         )
         # end_condition
-        def _end_offline_phase(state):
+        def _should_increase_joystick_fixation_dur(state,meta_state):
+            if len(state['agent']) > 0:
+                agent = state['agent'][0]
+                return (meta_state['phase'] == 'offline' and agent.metadata['moved'] and np.all(agent.velocity == 0))
+        def _increase_joystick_fixation_dur(meta_state):
+            meta_state['joystick_fixation_postoffline'] += 1
+        update_joystick_fixation_dur = gr.ConditionalRule(
+            condition=_should_increase_joystick_fixation_dur,
+            rules=gr.ModifyMetaState(_increase_joystick_fixation_dur)
+        )
+        def _end_offline_phase(state,meta_state):
             agent = state['agent'][0]
-            return (agent.metadata['moved'] and np.all(agent.velocity == 0))
+            return agent.metadata['moved'] and meta_state['joystick_fixation_postoffline']>_JOYSTICK_FIXATION_POSTOFFLINE # np.all(agent.velocity == 0) #
 
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen, create_agent],
-            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color],  # update_agent_color
+            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color,update_joystick_fixation_dur],  # update_agent_color
             name='offline',
             end_condition=_end_offline_phase,  #  duration=10,
         )
@@ -408,6 +443,8 @@ class Config():
         unglue = gr.ModifyMetaState(_unglue)
 
         glue_agent = custom_game_rules.GlueAgent()
+        make_agent_red = gr.ModifySprites('agent', _make_red)
+
 
         def _update_motion_steps(meta_state):
             meta_state['motion_steps'] += 1
@@ -420,7 +457,7 @@ class Config():
             return False
 
         phase_motion_visible = gr.Phase(
-            one_time_rules=[unglue,glue_agent],
+            one_time_rules=[unglue,glue_agent,make_agent_red],
             continual_rules=update_motion_steps,
             end_condition=_end_vis_motion_phase,  # duration=10,
             name='motion_visible',
@@ -435,8 +472,12 @@ class Config():
         def _increase_tp(meta_state):
             meta_state['tp'] += 1
         increase_tp = gr.ModifyMetaState(_increase_tp)
-        def _end_motion_phase(state):
-            return state['agent'][0].metadata['response']
+
+        def _end_motion_phase(state,meta_state):
+            id_response = state['agent'][0].metadata['response']
+            id_late = meta_state['tp'] > _MAX_WAIT_TIME_GAIN*meta_state['ts']
+            return id_response or id_late
+
         phase_motion_invisible = gr.Phase(
             one_time_rules=[hide_prey,update_ts],
             continual_rules=[update_motion_steps,increase_tp],
@@ -461,8 +502,8 @@ class Config():
             phase_joystick_center,
             phase_fixation,
             phase_offline,
-            # phase_motion_visible,
-            # phase_motion_invisible,
+            phase_motion_visible, ###
+            phase_motion_invisible, ###
             phase_reward,
             meta_state_phase_name_key='phase',
         )

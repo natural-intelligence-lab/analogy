@@ -20,6 +20,7 @@ class TimeErrorReward(tasks.AbstractTask):
                  maximum,
                  prey_speed,
                  max_rewarding_dist,
+                 prey_opacity_staircase,
                  response_layer='agent',
                  prey_layer='prey'):
         """Constructor.
@@ -40,6 +41,7 @@ class TimeErrorReward(tasks.AbstractTask):
         self._max_rewarding_dist = max_rewarding_dist
         self._response_layer = response_layer
         self._prey_layer = prey_layer
+        self._prey_opacity_staircase = prey_opacity_staircase
 
     def reset(self, state, meta_state):
         del state
@@ -70,6 +72,9 @@ class TimeErrorReward(tasks.AbstractTask):
                 # Agent is too far away from prey exit in the x axis
                 reward = 0
             self._reward_given = True
+
+            if self._prey_opacity_staircase is not None:
+                self._prey_opacity_staircase.step(reward)
         else:
             reward = 0
 

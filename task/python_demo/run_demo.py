@@ -22,13 +22,14 @@ from utils import logger_env_wrapper
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('level',
-                    # 'training.path_no_distract.path_no_distract_uniform_num_turns'
+                    'training.path_no_distract.path_no_distract_uniform_num_turns_staircase',
                     # 'random.random_12.random_12_uniform_num_turns',
                     # 'random.random_12.random_12',
                     # 'random.vertical_random_height.vertical_random_height',
                     # 'random.vertical_random_height.vertical_random_height_center',
                     # 'training.vertical_timing.vertical_timing_center',
-                    'training.vertical_timing.vertical_timing_random_x',
+                    # 'training.vertical_timing.vertical_timing_random_x',
+                    # 'training.vertical_timing_g.vertical_timing_random_x',
                     'Level.')
 flags.DEFINE_integer('render_size', 512,
                      'Height and width of the output image.')

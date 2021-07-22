@@ -92,6 +92,10 @@ class TaskManager:
         )
         config['observers'] = {'image': renderer}
 
+        # staircase
+        if getvar('platform') == 'monkey_ephys':
+            self._prey_opacity_staircase = config_class._prey_opacity_staircase
+
         # Create environment
         log_dir = os.path.join(_PWD, 'logs')
         self.env = logger_env_wrapper.MazeSetGoLoggingEnvironment(
@@ -159,6 +163,9 @@ class TaskManager:
         self.flag4 = True
         self.flag5 = True
         self.flag6 = True
+
+        if getvar('platform') == 'monkey_ephys':
+            setvar('prey_opacity',self._prey_opacity_staircase.opacity)
 
         # TBD: debug - how to change _MAX_REWARDING_DIST during task running?
         # max_rewarding_dist = getvar('max_rewarding_dist')

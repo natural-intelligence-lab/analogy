@@ -314,6 +314,12 @@ protocol 'path_no_distract_uniform_num_turns' {
     run_task ()
 }
 
+protocol 'path_no_distract_uniform_num_turns_staircase' {
+    run_python_string (
+        't = TaskManager(level="training.path_no_distract.path_no_distract_uniform_num_turns_staircase", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
+    run_task ()
+}
+
 protocol 'timing, displaced_g' {
     run_python_string (
         't = TaskManager(level="training.vertical_timing_g.vertical_timing_random_x", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
