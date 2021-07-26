@@ -7,6 +7,6 @@
 **.idea**
 **logs**
 **.mp4
-behavior_analysis/data**
+# behavior_analysis/data**
 behavior_analysis/gifs**
 task/stimulus_plotting/plots**
