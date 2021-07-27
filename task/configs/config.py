@@ -44,8 +44,8 @@ _JOYSTICK_FIXATION_POSTOFFLINE = 18 # 300
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
 # _STEP_OPACITY = 40  # [0 255]
-_STEP_OPACITY_UP = 10  # [0 255]
-_STEP_OPACITY_DOWN = 40  # [0 255]
+_STEP_OPACITY_UP = 5 # 10  # [0 255]
+_STEP_OPACITY_DOWN = 30 # 40  # [0 255]
 
 class PreyOpacityStaircase():
 

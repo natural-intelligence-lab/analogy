@@ -178,7 +178,7 @@ class MazeSetGoLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
         """Serialized a state."""
         serialized_state = [
             [k, [self._serialize_sprite_full(s) for s in self.state[k] or []]]
-            for k in self.state
+            for k in self.state or []
         ]
         return serialized_state
 
