@@ -177,7 +177,7 @@ class MazeSetGoLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
     def _serialized_state_full(self):
         """Serialized a state."""
         serialized_state = [
-            [k, [self._serialize_sprite_full(s) for s in self.state[k]]]
+            [k, [self._serialize_sprite_full(s) for s in self.state[k] or []]]
             for k in self.state
         ]
         return serialized_state
@@ -195,7 +195,7 @@ class MazeSetGoLoggingEnvironment(env_wrappers.AbstractEnvironmentWrapper):
             return x
 
         serialize_layers = ['agent', 'prey', 'eye']
-        serialized_state = [_serialize_state(k) for k in serialize_layers]
+        serialized_state = [_serialize_state(k) for k in serialize_layers or []]
 
         return serialized_state
 

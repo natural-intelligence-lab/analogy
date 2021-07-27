@@ -39,18 +39,20 @@ _MAX_REWARDING_DIST=0.1
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 
 _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
-_JOYSTICK_FIXATION_POSTOFFLINE = 12 # 200
+_JOYSTICK_FIXATION_POSTOFFLINE = 18 # 300
 
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
-_STEP_OPACITY = 40  # [0 255]
+# _STEP_OPACITY = 40  # [0 255]
+_STEP_OPACITY_UP = 10  # [0 255]
+_STEP_OPACITY_DOWN = 40  # [0 255]
 
 class PreyOpacityStaircase():
 
     def __init__(self,
                  init_value=255,
-                 success_delta=_STEP_OPACITY,
-                 failure_delta=_STEP_OPACITY,
+                 success_delta=_STEP_OPACITY_DOWN,
+                 failure_delta=_STEP_OPACITY_UP,
                  minval=0,
                  maxval=255):
         self._opacity = init_value
