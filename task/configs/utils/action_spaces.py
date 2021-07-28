@@ -148,24 +148,29 @@ class JoystickColor(action_spaces.AbstractActionSpace):
             sprite.position = 0.4 * action + 0.5
 
         # Project to cardinal directions
-        if np.all(action == 0):
+        if np.all(action == 0): # no action
             action_index = 4
-        else:
+        else: # max a direction
             dots = [np.dot(action, d) for d in JoystickColor.DIRECTIONS]
             action_index = np.argmax(dots)
-        action = self._scaling_factor * np.linalg.norm(action) * (
+        action = self._scaling_factor * np.linalg.norm(action) * (  # non-max direction also contribute to max direction
             JoystickColor.DIRECTIONS[action_index])
 
         # Move the sprite
         for sprite in state[self._action_layer]:
-            if action_index == 0 and not sprite.metadata['response']:
+            if action_index == 0 and not sprite.metadata['response_up'] and not np.isfinite(sprite.mass): # up
                 sprite.c0 = self._up_color[0]
                 sprite.c1 = self._up_color[1]
                 sprite.c2 = self._up_color[2]
-                sprite.metadata['response'] = True
-            if np.isfinite(sprite.mass) and action_index in (2, 3):
-                sprite.velocity = action / sprite.mass
-            else:
+                sprite.metadata['response_up'] = True
+
+            if np.isfinite(sprite.mass):
+                if action_index in (2, 3): # left/right
+                    sprite.velocity = action / sprite.mass
+                else: # when max direction is either up/down
+                    sprite.velocity = np.zeros(2) # action / sprite.mass
+                    sprite.metadata['y_speed'] = action[1] / sprite.mass
+            else: # glued
                 sprite.velocity = np.zeros(2)
 
     def random_action(self):

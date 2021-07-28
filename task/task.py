@@ -242,11 +242,11 @@ class TaskManager:
             setvar('end_trial', True)
             self.complete = True
 
-            RT_offline=self.env.meta_state['RT_offline']*60  # [ms]
+            RT_offline=self.env.meta_state['RT_offline']/60  # [ms]
             setvar('RT_offline',RT_offline)
-            ts = self.env.meta_state['ts']*60
+            ts = self.env.meta_state['ts']/60
             setvar('ts', ts)
-            tp = self.env.meta_state['tp']*60
+            tp = self.env.meta_state['tp']/60
             setvar('tp', tp)
 
 
@@ -260,7 +260,7 @@ class TaskManager:
         agent = self.env.state['agent']
         if self.env.meta_state['phase'] == 'offline' and self.flag3:
             if len(agent) > 0:
-                if agent[0].metadata['moved']:
+                if agent[0].metadata['moved_h']:
                     setvar('tOfflineRT',time.time())
                     self.flag3 = False
         if self.env.meta_state['phase'] == 'motion_visible' and self.flag4:

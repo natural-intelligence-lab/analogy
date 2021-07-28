@@ -110,7 +110,7 @@ class OfflineReward(tasks.AbstractTask):
             agent = state['agent'][0]
             if (meta_state['phase'] == self._phase and
                     not self._reward_given and
-                    agent.metadata['moved'] and
+                    agent.metadata['moved_h'] and
                     np.all(state['agent'][0].velocity == 0)):
                 prey_exit_x = meta_state['prey_path'][-1][0]
                 agent_prey_dist = np.abs(agent.x - prey_exit_x)
