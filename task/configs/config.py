@@ -35,7 +35,7 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 
-_MAX_REWARDING_DIST=0.1
+_MAX_REWARDING_DIST=0.15
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 
 _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
@@ -44,8 +44,8 @@ _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
 # _STEP_OPACITY = 40  # [0 255]
-_STEP_OPACITY_UP = 1 # 3 # 10  # [0 255]
-_STEP_OPACITY_DOWN = 10 # 30 # 40  # [0 255]
+_STEP_OPACITY_UP = 2 # 3 # 10  # [0 255]
+_STEP_OPACITY_DOWN = 5 # 30 # 40  # [0 255]
 
 _REWARD = 6 # 100 ms # post zero prey_distance
 _TOOTH_HALF_WIDTH = 40
@@ -53,7 +53,7 @@ _TOOTH_HALF_WIDTH = 40
 class PreyOpacityStaircase():
 
     def __init__(self,
-                 init_value=100,
+                 init_value=10,
                  success_delta=_STEP_OPACITY_DOWN,
                  failure_delta=_STEP_OPACITY_UP,
                  minval=0,
@@ -354,9 +354,13 @@ class Config():
             ['joystick_fixation', 'joystick'], _make_opaque)
 
         def _should_end_joystick_fixation(state):
-            joystick_pos = state['joystick'][0].position
-            dist_from_center = np.linalg.norm(joystick_pos - 0.5 * np.ones(2))
-            return dist_from_center < self._joystick_center_threshold
+            if state is not None:
+                if state['joystick'] is not None:
+                    joystick_pos = state['joystick'][0].position
+                    dist_from_center = np.linalg.norm(joystick_pos - 0.5 * np.ones(2))
+                    return dist_from_center < self._joystick_center_threshold
+            else:
+                return false
 
         phase_joystick_center = gr.Phase(
             one_time_rules=appear_joystick,
@@ -504,7 +508,7 @@ class Config():
         # 6. Invisible motion phase
         set_prey_opacity = gr.ModifySprites('prey', _set_prey_opacity)  # self._prey_opacity
         def _update_ts(meta_state):
-            meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed
+            meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed # [Hz]
         update_ts = gr.ModifyMetaState(_update_ts)
         def _increase_tp(meta_state):
             meta_state['tp'] += 1

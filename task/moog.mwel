@@ -121,7 +121,7 @@ var default_iti = 0s
 var eye_to_frame_coeffs = [[0, 0], [0, 0]]
 var eye_to_frame_intercept = [0, 0]
 
-var reward_gain = 18000
+var reward_gain = 60000
 var max_rewarding_dist=0.1
 
 var num_trials = 0
@@ -147,6 +147,8 @@ var ts = 0
 
 var prey_opacity=255
 
+var sync = 0
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Shared Task Protocol Body
@@ -163,10 +165,14 @@ var prey_opacity=255
         task {
             state 'Begin trial' {
                 report('****  BEGINNING TRIAL  $(num_trials) ****')
+                // for matlab
+                sync=0
+                sync=1
+
                 run_python_string ('t.reset()')
 
                 reward_duration = 0
-
+                
                 // It's not strictly necessary to start and stop the I/O devices
                 // every trial (i.e. you could just start them once at the
                 // beginning of the protocol), but doing so ensures that the

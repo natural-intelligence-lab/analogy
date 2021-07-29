@@ -171,6 +171,8 @@ class TaskManager:
         # max_rewarding_dist = getvar('max_rewarding_dist')
         # self.env.meta_state['max_rewarding_dist'] = max_rewarding_dist
 
+        setvar('prey_opacity',self.env.meta_state['prey_opacity']) ## updated in task.reward
+
     def _register_event_callback(self, varname):
         self.events[varname] = []
         def cb(evt):
@@ -242,12 +244,12 @@ class TaskManager:
             setvar('end_trial', True)
             self.complete = True
 
-            RT_offline=self.env.meta_state['RT_offline']/60  # [ms]
+            RT_offline=self.env.meta_state['RT_offline']/60  # [s]
             setvar('RT_offline',RT_offline)
-            ts = self.env.meta_state['ts']/60
+            ts = self.env.meta_state['ts']/60 # [s]
             setvar('ts', ts)
-            tp = self.env.meta_state['tp']/60
-            setvar('tp', tp)
+            # tp = self.env.meta_state['tp']/60
+            # setvar('tp', tp)
 
 
         if self.env.meta_state['phase'] == 'fixation' and self.flag1:
@@ -267,11 +269,17 @@ class TaskManager:
             setvar('tVisMotion',time.time())
             self.flag4 = False
         if self.env.meta_state['phase'] == 'motion_invisible' and self.flag5:
-            setvar('tInvMotion',time.time())
+            tInvMotion = time.time()
+            setvar('tInvMotion',tInvMotion)
             self.flag5 = False
+            
         if self.env.meta_state['phase'] == 'reward' and self.flag6:
-            setvar('tRew',time.time())
+            tRew = time.time()
+            setvar('tRew',tRew)
             self.flag6 = False
+            tInvMotion = getvar('tInvMotion')
+            setvar('tp',tRew-tInvMotion)
+            
 
 
         # MWorks' Python image stimulus requires a contiguous buffer, so we use
