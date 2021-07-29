@@ -36,6 +36,12 @@ def _get_segment_length(trial_path):
     segment_length = segment_length/cell_size
     return segment_length
 
+def _get_prey_path(trial_path):
+    trial = json.load(open(trial_path))
+    maze_matrix = trial[1]  # W, H, prey_path,stimulus_features
+    prey_path = maze_matrix['prey_path']
+    return prey_path
+
 def get_trial_paths(data_path):
 
     # Chronological trial paths
@@ -50,8 +56,11 @@ def get_trial_paths(data_path):
     # segment_length
     segment_length = [_get_segment_length(x) for x in trial_paths]
 
+    # prey path
+    prey_path = [_get_prey_path(x) for x in trial_paths]
+
     # Print number of trials and unique stimulus names
     num_trials = len(trial_paths)
     print(f'Number of trials:  {num_trials}')
 
-    return trial_paths, stimulus_features, segment_length
+    return trial_paths, stimulus_features, segment_length, prey_path
