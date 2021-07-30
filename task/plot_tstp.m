@@ -70,7 +70,7 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3})
 %     if nargin==1
         % plot T vs t
         Ttmp=values{1}(end); ttmp=values{2}(end); 
-        disp((values{3}));
+        % disp((values{3}));
         if length(values{3})>=2
             opacity=values{3}(end-1);
             else

@@ -29,6 +29,7 @@ def path_no_distract_uniform_num_turns_staircase(**kwargs):
         samplers.Sampler(
             stimuli_dir=stim_dir,
             length=100,
+            num_passes=100,
             filter_fn=lambda f: f['num_turns'] == i,
         )
         for i in range(min_num_turns, max_num_turns+1, step_num_turns)

@@ -360,7 +360,7 @@ class Config():
                     dist_from_center = np.linalg.norm(joystick_pos - 0.5 * np.ones(2))
                     return dist_from_center < self._joystick_center_threshold
             else:
-                return false
+                return False
 
         phase_joystick_center = gr.Phase(
             one_time_rules=appear_joystick,
