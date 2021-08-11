@@ -243,17 +243,14 @@ class TaskManager:
         if timestep.last():
             setvar('end_trial', True)
             self.complete = True
-
             RT_offline=self.env.meta_state['RT_offline']/60  # [s]
             setvar('RT_offline',RT_offline)
-            ts = self.env.meta_state['ts']/60 # [s]
-            setvar('ts', ts)
             # tp = self.env.meta_state['tp']/60
             # setvar('tp', tp)
 
-
         if self.env.meta_state['phase'] == 'fixation' and self.flag1:
             setvar('tFix',time.time())
+            setvar('prey_distance_invisible',self.env.meta_state['prey_distance_invisible'])
             self.flag1 = False
         if self.env.meta_state['phase'] == 'offline' and self.flag2:
             setvar('tOffline',time.time())
@@ -272,6 +269,10 @@ class TaskManager:
             tInvMotion = time.time()
             setvar('tInvMotion',tInvMotion)
             self.flag5 = False
+        if self.env.meta_state['phase'] == 'motion_invisible':
+            if getvar('platform') == 'monkey_ephys':
+                setvar('slope_opacity',self.env.meta_state['slope_opacity'])
+                setvar('prey_opacity',self.env.state['prey'][0].opacity) # not working
             
         if self.env.meta_state['phase'] == 'reward' and self.flag6:
             tRew = time.time()
@@ -279,6 +280,10 @@ class TaskManager:
             self.flag6 = False
             tInvMotion = getvar('tInvMotion')
             setvar('tp',tRew-tInvMotion)
+            ts = self.env.meta_state['ts']/60 # [s]
+            setvar('ts', ts)
+
+            
             
 
 

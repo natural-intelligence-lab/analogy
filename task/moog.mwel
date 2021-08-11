@@ -147,6 +147,9 @@ var ts = 0
 
 var prey_opacity=255
 
+var prey_distance_invisible = 0
+var slope_opacity = 0
+
 var sync = 0
 
 ///////////////////////////////////////////////////////////////////////////////

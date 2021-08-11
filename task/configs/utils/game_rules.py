@@ -55,13 +55,13 @@ class DimPrey(game_rules.AbstractRule):
         """Apply rule to state."""
         # del meta_state
         
-        # sprites_to_modify = [s for k in (self._layers or []) for s in (state[k] or [])]
-        sprites_to_modify=[]
-        if self._layers is not None:
-            for k in self._layers:
-                if state is not None:
-                    for s in state[k]:
-                            sprites_to_modify.append(s)
+        sprites_to_modify = [s for k in (self._layers or []) for s in (state[k] or [])]
+        # sprites_to_modify=[]
+        # if self._layers is not None:
+        #     for k in self._layers:
+        #         if state is not None:
+        #             for s in state[k]:
+        #                     sprites_to_modify.append(s)
                 
 
         if self._filter_fn:

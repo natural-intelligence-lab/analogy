@@ -46,6 +46,8 @@ _IMAGE_SIZE = [24]  # [8, 16, 24]
 # _STEP_OPACITY = 40  # [0 255]
 _STEP_OPACITY_UP = 1 # 2 # 3 # 10  # [0 255]
 _STEP_OPACITY_DOWN = 5 # 30 # 40  # [0 255]
+_OPACITY_INIT = 10
+_DIM_DURATION = 2 # [sec]
 
 _REWARD = 6 # 100 ms # post zero prey_distance
 _TOOTH_HALF_WIDTH = 60 # 40 # 666ms
@@ -53,7 +55,7 @@ _TOOTH_HALF_WIDTH = 60 # 40 # 666ms
 class PreyOpacityStaircase():
 
     def __init__(self,
-                 init_value=100,
+                 init_value=_OPACITY_INIT,
                  success_delta=_STEP_OPACITY_DOWN,
                  failure_delta=_STEP_OPACITY_UP,
                  minval=0,
@@ -179,6 +181,8 @@ class TrialInitialization():
             'maze_height': maze_height,
             'image_size': image_size,
             'prey_distance_remaining': prey_distance_remaining,
+            'prey_distance_invisible': cell_size * len(prey_path) + _MAZE_Y - _AGENT_Y,
+            'slope_opacity': 0,
             'RT_offline': 0,
             'tp': 0,
             'ts': 0,
@@ -489,12 +493,12 @@ class Config():
 
 
         def _update_motion_steps(meta_state):
-            meta_state['motion_steps'] += 1 # [frames]?
+            meta_state['motion_steps'] += 1 # [frames]? clock?
             meta_state['prey_distance_remaining'] -= self._prey_speed
         update_motion_steps = gr.ModifyMetaState(_update_motion_steps)
 
         def _end_vis_motion_phase(state,meta_state):
-            if meta_state['motion_steps'] > (self._prey_lead_in / self._prey_speed): # [frames]?
+            if meta_state['motion_steps'] > (self._prey_lead_in / self._prey_speed): # [frames]? clock?
                 return True
             return False
 
@@ -512,8 +516,16 @@ class Config():
         update_ts = gr.ModifyMetaState(_update_ts)
 
         def _decrease_prey_opacity(s,meta_state):
-            slope_opacity = self._prey_opacity_staircase.opacity/meta_state['ts']
-            s.opacity = np.int_(np.round(s.opacity - slope_opacity))
+            if meta_state['prey_distance_remaining'] < meta_state['prey_distance_invisible']/2:
+                s.opacity=0
+            # ts_tmp = meta_state['prey_distance_invisible'] / self._prey_speed
+            # meta_state['slope_opacity'] = self._prey_opacity_staircase.opacity/(_DIM_DURATION*60) # ts_tmp # (500*60) 
+            # # issue with  meta_state['ts'] for 2 turn maze: updating is slower?
+            # tmp_opacity = np.int_(np.round(s.opacity - meta_state['slope_opacity']))
+            # if tmp_opacity <= 0:
+            #     s.opacity = 0
+            # else:
+            #     s.opacity = tmp_opacity                
         dim_prey = custom_game_rules.DimPrey('prey',_decrease_prey_opacity)
 
         def _increase_tp(meta_state):
