@@ -85,7 +85,7 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3})
 
         %if opacity<1e-2
             fprintf(1, 'ts vs tp: %d vs %d , alpha: %d\n', [Ttmp; ttmp; opacity]);
-            plot(Ttmp,ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',4); drawnow; hold on;
+            plot(Ttmp+0.2*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',4); drawnow; hold on;
 %             plot(Ttmp,ttmp,'o','color',[0 0 0],'markerfacecolor',[1 1 1]*alpha/256,'markersize',8); drawnow; hold on; % facecolor black for invisible
         %end
         plotIdentity(gca); plotWeberLine(gca,winF);

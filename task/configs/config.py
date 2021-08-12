@@ -516,7 +516,7 @@ class Config():
         update_ts = gr.ModifyMetaState(_update_ts)
 
         def _decrease_prey_opacity(s,meta_state):
-            if meta_state['prey_distance_remaining'] < meta_state['prey_distance_invisible']/2:
+            if meta_state['prey_distance_remaining'] < meta_state['prey_distance_invisible']/3:
                 s.opacity=0
             # ts_tmp = meta_state['prey_distance_invisible'] / self._prey_speed
             # meta_state['slope_opacity'] = self._prey_opacity_staircase.opacity/(_DIM_DURATION*60) # ts_tmp # (500*60) 

@@ -272,7 +272,7 @@ class TaskManager:
         if self.env.meta_state['phase'] == 'motion_invisible':
             if getvar('platform') == 'monkey_ephys':
                 setvar('slope_opacity',self.env.meta_state['slope_opacity'])
-                setvar('prey_opacity',self.env.state['prey'][0].opacity) # not working
+                # setvar('prey_opacity',self.env.state['prey'][0].opacity) 
             
         if self.env.meta_state['phase'] == 'reward' and self.flag6:
             tRew = time.time()
