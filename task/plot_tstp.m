@@ -1,6 +1,6 @@
 function [retval] = plot_tstp(data, values)
 % click events/check variables (Interval/productionInterval)
-name={'ts','tp','prey_opacity'}; % ballAlphaProd
+name={'ts','tp','prey_opacity','num_turns'}; % ballAlphaProd
 
 %% getting codec and events
 nParam=length(name); % ts, tp for now
@@ -41,7 +41,7 @@ end
 winF=0.2;
 
 % disp([length(locFixY) length(values{1})]);
-if ~isempty(values{1}) && ~isempty(values{2}) && ~isempty(values{3})
+if ~isempty(values{1}) && ~isempty(values{2}) && ~isempty(values{3}) && ~isempty(values{4})
 %     fprintf(1, 'ts vs tp: %d vs %d\n', [values{1}(end); round(values{2}(end))]);
 %    fprintf(1, ', alpha: %d\n', values{3}(end));
 end
@@ -66,7 +66,7 @@ if length(values{1})~=length(values{2}) & ~isempty(values{1}) & ~isempty(values{
     values{1}=values{1}(end-minN+1:end);
     values{2}=values{2}(end-minN+1:end);
 end
-if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3})
+if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4})
 %     if nargin==1
         % plot T vs t
         Ttmp=values{1}(end); ttmp=values{2}(end); 
@@ -76,11 +76,23 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3})
             else
             opacity=values{3}(end);
         end
+        if length(values{4})>=2
+            nTurn=values{4}(end); % -1);
+            else
+            nTurn=values{4}(end);
+        end
         figure(1); set(gcf,'position',[0 615 560 420],'color','w','resize','off'); hold on;
-        if opacity<1e-2
-            cmap = 'k';
-        else
-            cmap = [.7 .7 .7];
+        %if opacity<1e-2
+        %    cmap = 'k';
+        %else
+        %    cmap = [.7 .7 .7];
+        %end
+        if nTurn==0
+            cmap='r';
+        elseif nTurn==2
+            cmap='g';
+        elseif nTurn==4
+            cmap='b';
         end
 
         %if opacity<1e-2
@@ -88,6 +100,16 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3})
             plot(Ttmp+0.2*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',4); drawnow; hold on;
 %             plot(Ttmp,ttmp,'o','color',[0 0 0],'markerfacecolor',[1 1 1]*alpha/256,'markersize',8); drawnow; hold on; % facecolor black for invisible
         %end
+
+    %    % plot regression for 0 opacity & 2-turn
+    %    ts2turn=3.5;
+    %    disp([size(values{3}) size(values{1})]);
+    %    tmpId=values{3}(:)==0 & values{1}(:) > ts2turn;        
+    %    B=regress(values{2}(tmpId),[values{1}(tmpId) ones(nnz(tmpId),1)]);
+    %    tmpX=xlim;
+    %    tmpY=[tmpX; ones(1,2)]*B;
+    %    plot(tmpX,tmpY,'r-','linewidth',2);
+
         plotIdentity(gca); plotWeberLine(gca,winF);
         drawnow; hold on;
         xlabel('t_s (s)'); ylabel('t_p (s)');

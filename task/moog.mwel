@@ -150,6 +150,8 @@ var prey_opacity=255
 var prey_distance_invisible = 0
 var slope_opacity = 0
 
+var num_turns = 0
+
 var sync = 0
 
 ///////////////////////////////////////////////////////////////////////////////

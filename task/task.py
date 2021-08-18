@@ -48,7 +48,8 @@ elif getvar('platform') == 'psychophysics':
 elif getvar('platform') == 'monkey_ephys':
     from configs import config as config_lib
 elif getvar('platform') == 'monkey_train':
-    from configs import config_online as config_lib
+    from configs import config as config_lib
+    # from configs import config_online as config_lib
     # from configs import config_g as config_lib
     
 
@@ -93,7 +94,7 @@ class TaskManager:
         config['observers'] = {'image': renderer}
 
         # staircase
-        if getvar('platform') == 'monkey_ephys':
+        if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
             self._prey_opacity_staircase = config_class._prey_opacity_staircase
 
         # Create environment
@@ -164,7 +165,7 @@ class TaskManager:
         self.flag5 = True
         self.flag6 = True
 
-        if getvar('platform') == 'monkey_ephys':
+        if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
             setvar('prey_opacity',self._prey_opacity_staircase.opacity)
 
         # TBD: debug - how to change _MAX_REWARDING_DIST during task running?
@@ -255,6 +256,8 @@ class TaskManager:
         if self.env.meta_state['phase'] == 'offline' and self.flag2:
             setvar('tOffline',time.time())
             self.flag2 = False
+            setvar('num_turns',self.env.meta_state['num_turns'])
+
 
         agent = self.env.state['agent']
         if self.env.meta_state['phase'] == 'offline' and self.flag3:
@@ -270,7 +273,7 @@ class TaskManager:
             setvar('tInvMotion',tInvMotion)
             self.flag5 = False
         if self.env.meta_state['phase'] == 'motion_invisible':
-            if getvar('platform') == 'monkey_ephys':
+            if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
                 setvar('slope_opacity',self.env.meta_state['slope_opacity'])
                 # setvar('prey_opacity',self.env.state['prey'][0].opacity) 
             

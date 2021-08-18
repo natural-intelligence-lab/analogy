@@ -241,7 +241,7 @@ class Config():
              half_width=40,  # given 60 Hz, 666*2/2 ms
              maximum=1,
              prey_speed=self._prey_speed,
-             max_rewarding_dist = 1 #  _MAX_REWARDING_DIST
+             max_rewarding_dist = _MAX_REWARDING_DIST # 1 #  _MAX_REWARDING_DIST
         )
 
         # joystick_center_task = tasks_custom.BeginPhase('fixation')

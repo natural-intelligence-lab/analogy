@@ -44,7 +44,7 @@ _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
 # _STEP_OPACITY = 40  # [0 255]
-_STEP_OPACITY_UP = 1 # 2 # 3 # 10  # [0 255]
+_STEP_OPACITY_UP = 0 # 1 # 2 # 3 # 10  # [0 255]
 _STEP_OPACITY_DOWN = 5 # 30 # 40  # [0 255]
 _OPACITY_INIT = 10
 _DIM_DURATION = 2 # [sec]
@@ -103,6 +103,7 @@ class TrialInitialization():
         maze_height = stimulus['maze_height']
         prey_path = stimulus['prey_path']
         maze_walls = stimulus['maze_walls']
+        num_turns = stimulus['features']['num_turns']
         maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
         cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
@@ -187,7 +188,8 @@ class TrialInitialization():
             'tp': 0,
             'ts': 0,
             'max_rewarding_dist': _MAX_REWARDING_DIST,
-            'joystick_fixation_postoffline': 0
+            'joystick_fixation_postoffline': 0,
+            'num_turns': num_turns
         }
 
         return state
@@ -516,7 +518,7 @@ class Config():
         update_ts = gr.ModifyMetaState(_update_ts)
 
         def _decrease_prey_opacity(s,meta_state):
-            if meta_state['prey_distance_remaining'] < meta_state['prey_distance_invisible']/3:
+            if meta_state['prey_distance_remaining'] < meta_state['prey_distance_invisible']/3*2:
                 s.opacity=0
             # ts_tmp = meta_state['prey_distance_invisible'] / self._prey_speed
             # meta_state['slope_opacity'] = self._prey_opacity_staircase.opacity/(_DIM_DURATION*60) # ts_tmp # (500*60) 

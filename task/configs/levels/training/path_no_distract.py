@@ -7,7 +7,7 @@ from configs import samplers
 from configs.levels import get_stimuli_dir
 
 min_num_turns = 0
-max_num_turns = 2
+max_num_turns = 4 # 2 # 2021/8/18
 step_num_turns = 2
 
 def path_no_distract_uniform_num_turns(**kwargs):
