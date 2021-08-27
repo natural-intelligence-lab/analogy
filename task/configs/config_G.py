@@ -1,12 +1,9 @@
 """Common grid_chase task config.
 
-present offline+online but online reward not contingent on offline
-to go back to offline only, comment ###
-
 TO DO:
-1) implement direction only
-2) to make easy joystick control, initial paddle position not always 0.5?
-3) to make easy joystick control, joystick threshold?
+1) for offline+online (H), no online if no offline reward
+2) how to change _MAX_REWARDING_DIST during task running? _MAX_REWARDING_DIST
+3) change initial agent position? configs/levels/training/vertical_timing.py
 
 """
 
@@ -38,23 +35,57 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 
-_MAX_REWARDING_DIST=0.2
+_MAX_REWARDING_DIST=0.15
 _EPSILON=1e-4 # FOR REWARD FUNCTION
+
+_MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
+_JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
-_MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
+# _STEP_OPACITY = 40  # [0 255]
+_STEP_OPACITY_UP = 10 # G     0 # 1 # 2 # 3 # 10  # [0 255]
+_STEP_OPACITY_DOWN = 40 # G      5 # 30 # 40  # [0 255]
+_OPACITY_INIT = 255 # G      10
+_DIM_DURATION = 2 # [sec]
 
+_REWARD = 6 # 100 ms # post zero prey_distance
+_TOOTH_HALF_WIDTH = 60 # 40 # 666ms
+
+class PreyOpacityStaircase():
+
+    def __init__(self,
+                 init_value=_OPACITY_INIT,
+                 success_delta=_STEP_OPACITY_DOWN,
+                 failure_delta=_STEP_OPACITY_UP,
+                 minval=0,
+                 maxval=255):
+        self._opacity = init_value
+        self._success_delta = success_delta
+        self._failure_delta = failure_delta
+        self._minval = minval
+        self._maxval = maxval
+
+    def step(self, reward):
+        if reward > 0:
+            self._opacity = max(self._opacity - self._success_delta, self._minval)
+        elif reward <= 0:
+            self._opacity = min(self._opacity + self._failure_delta, self._maxval)
+
+    @property
+    def opacity(self):
+        return self._opacity
 
 class TrialInitialization():
 
-    def __init__(self, stimulus_generator, prey_lead_in, static_prey=False,
-                 static_agent=False):
+    def __init__(self, stimulus_generator, prey_lead_in, prey_speed, static_prey=False,
+                 static_agent=False,prey_opacity_staircase=None):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
+        self._prey_speed = prey_speed
         self._static_prey = static_prey
         self._static_agent = static_agent
-
+        self._prey_opacity_staircase=prey_opacity_staircase
         self._prey_factors = dict(
             shape='circle', scale=0.015, c0=0, c1=255, c2=0)
         self._fixation_shape = 0.2 * np.array([
@@ -72,6 +103,7 @@ class TrialInitialization():
         maze_height = stimulus['maze_height']
         prey_path = stimulus['prey_path']
         maze_walls = stimulus['maze_walls']
+        num_turns = stimulus['features']['num_turns']
         maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
         cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
@@ -131,6 +163,11 @@ class TrialInitialization():
         # randomly choose image size across trials
         image_size = np.random.choice(_IMAGE_SIZE)
 
+        if self._prey_opacity_staircase is None:
+            self._prey_opacity = 255
+        else:
+            self._prey_opacity = self._prey_opacity_staircase.opacity
+
         self._meta_state = {
             'fixation_duration': 0,
             'motion_steps': 0,
@@ -138,17 +175,21 @@ class TrialInitialization():
             'trial_name': '',
             'stimulus_features': stimulus['features'],
             'prey_path': prey_path,
-            'prey_speed': 0,
-            'prey_opacity': 255,
+            'prey_speed': self._prey_speed,
+            'prey_opacity': self._prey_opacity,
+            'half_width' : _TOOTH_HALF_WIDTH,
             'maze_width': maze_width,
             'maze_height': maze_height,
             'image_size': image_size,
             'prey_distance_remaining': prey_distance_remaining,
+            'prey_distance_invisible': cell_size * len(prey_path) + _MAZE_Y - _AGENT_Y,
+            'slope_opacity': 0,
             'RT_offline': 0,
             'tp': 0,
             'ts': 0,
             'max_rewarding_dist': _MAX_REWARDING_DIST,
-            'joystick_fixation_postoffline': 0
+            'joystick_fixation_postoffline': 0,
+            'num_turns': num_turns
         }
 
         return state
@@ -156,7 +197,7 @@ class TrialInitialization():
     def create_agent(self, state):
         agent = sprite.Sprite(
             x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.3, scale=0.05,
-            c0=128, c1=32, c2=32, metadata={'response': False, 'moved': False},
+            c0=128, c1=32, c2=32, metadata={'response_up': False, 'moved_h': False,'y_speed':0},
         )
         if self._static_agent:
             agent.mass = np.inf
@@ -176,11 +217,13 @@ class Config():
 
     def __init__(self,
                  stimulus_generator,
+                 prey_opacity_staircase=None,
                  fixation_phase=True,
                  prey_opacity=0,
                  static_prey=False,
                  static_agent=False,
-                 ms_per_unit=2000):
+                 ms_per_unit=2000,
+                 ):
         """Constructor.
         
         Args:
@@ -194,9 +237,14 @@ class Config():
         """
         self._stimulus_generator = stimulus_generator
         self._fixation_phase = fixation_phase
-        self._prey_opacity = prey_opacity
         self._static_prey = static_prey
         self._static_agent = static_agent
+        self._prey_opacity_staircase = prey_opacity_staircase
+
+        if self._prey_opacity_staircase is not None:
+            self._prey_opacity = self._prey_opacity_staircase.opacity
+        else:
+            self._prey_opacity = prey_opacity
 
         # How close to center joystick must be to count as joystick centering
         self._joystick_center_threshold = 0.05
@@ -206,8 +254,8 @@ class Config():
         self._prey_lead_in = 0.15  # 0.08
 
         self._trial_init = TrialInitialization(
-            stimulus_generator, prey_lead_in=self._prey_lead_in,
-            static_prey=static_prey, static_agent=static_agent)
+            stimulus_generator, prey_lead_in=self._prey_lead_in, prey_speed=self._prey_speed,
+            static_prey=static_prey, static_agent=static_agent, prey_opacity_staircase=self._prey_opacity_staircase)
 
         # Create renderer
         self._observer = observers.PILRenderer(
@@ -236,12 +284,12 @@ class Config():
     def _construct_task(self):
         """Construct task."""
 
-        ###
         prey_task = tasks_custom.TimeErrorReward(
-             half_width=40,  # given 60 Hz, 666*2/2 ms
+             half_width=_TOOTH_HALF_WIDTH, # 40,  # given 60 Hz, 666*2/2 ms
              maximum=1,
              prey_speed=self._prey_speed,
-             max_rewarding_dist = _MAX_REWARDING_DIST # 1 #  _MAX_REWARDING_DIST
+             max_rewarding_dist = _MAX_REWARDING_DIST,
+             prey_opacity_staircase = self._prey_opacity_staircase,
         )
 
         # joystick_center_task = tasks_custom.BeginPhase('fixation')
@@ -250,14 +298,15 @@ class Config():
             'offline', max_rewarding_dist=_MAX_REWARDING_DIST)  # 0.1
 
         timeout_task = tasks.Reset(
-            condition=lambda _, meta_state: meta_state['phase'] == 'reward',
-            steps_after_condition=15,
+            condition=lambda _, meta_state: meta_state['phase'] == 'reward' 
+            and meta_state['prey_distance_remaining']<0, # to prevent abort for H
+            steps_after_condition=_REWARD,
         )
         self._task = tasks.CompositeTask(
             # joystick_center_task,
             offline_task,
             timeout_task,
-            prey_task, ###
+            prey_task,
         )
 
     def _construct_action_space(self):
@@ -275,17 +324,11 @@ class Config():
         def _make_transparent(s):
             s.opacity = 0
 
-        def _make_prey_transparent(s):
-            s.opacity = self._prey_opacity
+        def _set_prey_opacity(s):
+            s.opacity = self._prey_opacity_staircase.opacity # self._prey_opacity
 
         def _make_opaque(s):
             s.opacity=255
-
-        def _increase_opacity(s):
-            s.opacity=min(255,s.opacity+_STEP_OPACITY)
-
-        def _decrease_opacity(s):
-            s.opacity=max(0,s.opacity-_STEP_OPACITY)
 
         def _make_green(s):
             s.c0 = 32
@@ -317,9 +360,13 @@ class Config():
             ['joystick_fixation', 'joystick'], _make_opaque)
 
         def _should_end_joystick_fixation(state):
-            joystick_pos = state['joystick'][0].position
-            dist_from_center = np.linalg.norm(joystick_pos - 0.5 * np.ones(2))
-            return dist_from_center < self._joystick_center_threshold
+            if state is not None:
+                if state['joystick'] is not None:
+                    joystick_pos = state['joystick'][0].position
+                    dist_from_center = np.linalg.norm(joystick_pos - 0.5 * np.ones(2))
+                    return dist_from_center < self._joystick_center_threshold
+            else:
+                return False
 
         phase_joystick_center = gr.Phase(
             one_time_rules=appear_joystick,
@@ -383,8 +430,8 @@ class Config():
             if len(state['agent']) > 0:
                 agent = state['agent'][0]
                 if (meta_state['phase'] == 'offline' and
-                        agent.metadata['moved'] and
-                        np.all(state['agent'][0].velocity == 0)):
+                        agent.metadata['moved_h'] and
+                        np.all(state['agent'][0].velocity == 0)): ##
                     prey_exit_x = meta_state['prey_path'][-1][0]
                     reward = max(0, 1 - np.abs(agent.x - prey_exit_x) / (_MAX_REWARDING_DIST + _EPSILON))
                 else:
@@ -399,14 +446,14 @@ class Config():
             rules=gr.ModifySprites('agent', _make_green)
         )
 
-        def _track_moved(s):
-            if not np.all(s.velocity == 0):
-                s.metadata['moved'] = True
-        update_agent_metadata = gr.ModifySprites('agent', _track_moved)
+        def _track_moved_h(s):
+            if not np.all(s.velocity[0] == 0): ##
+                s.metadata['moved_h'] = True
+        update_agent_metadata = gr.ModifySprites('agent', _track_moved_h)
 
         def _should_increase_RT_offline(state, meta_state):
             agent = state['agent'][0]
-            return not agent.metadata['moved']
+            return not agent.metadata['moved_h']
         def _increase_RT_offline(meta_state):
             meta_state['RT_offline'] += 1
         update_RT_offline = gr.ConditionalRule(
@@ -414,23 +461,24 @@ class Config():
             rules=gr.ModifyMetaState(_increase_RT_offline)
         )
         # end_condition
-        def _should_increase_joystick_fixation_dur(state,meta_state):
-            if len(state['agent']) > 0:
-                agent = state['agent'][0]
-                return (meta_state['phase'] == 'offline' and agent.metadata['moved'] and np.all(agent.velocity == 0))
-        def _increase_joystick_fixation_dur(meta_state):
-            meta_state['joystick_fixation_postoffline'] += 1
-        update_joystick_fixation_dur = gr.ConditionalRule(
-            condition=_should_increase_joystick_fixation_dur,
-            rules=gr.ModifyMetaState(_increase_joystick_fixation_dur)
-        )
+        # def _should_increase_joystick_fixation_dur(state,meta_state):
+        #     if len(state['agent']) > 0:
+        #         agent = state['agent'][0]
+        #         return (meta_state['phase'] == 'offline' and agent.metadata['moved_h'] and np.all(agent.velocity == 0))
+        # def _increase_joystick_fixation_dur(meta_state):
+        #     meta_state['joystick_fixation_postoffline'] += 1
+        # update_joystick_fixation_dur = gr.ConditionalRule(
+        #     condition=_should_increase_joystick_fixation_dur,
+        #     rules=gr.ModifyMetaState(_increase_joystick_fixation_dur)
+        # )
         def _end_offline_phase(state,meta_state):
             agent = state['agent'][0]
-            return agent.metadata['moved'] and meta_state['joystick_fixation_postoffline']>_JOYSTICK_FIXATION_POSTOFFLINE # np.all(agent.velocity == 0) #
+            return agent.metadata['moved_h'] and np.all(agent.velocity == 0) and agent.metadata['y_speed'] == 0 ##
+            # meta_state['joystick_fixation_postoffline']>_JOYSTICK_FIXATION_POSTOFFLINE # np.all(agent.velocity == 0) # 
 
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen, create_agent],
-            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color,update_joystick_fixation_dur],  # update_agent_color
+            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color], # ,update_joystick_fixation_dur],  # update_agent_color 
             name='offline',
             end_condition=_end_offline_phase,  #  duration=10,
         )
@@ -447,12 +495,12 @@ class Config():
 
 
         def _update_motion_steps(meta_state):
-            meta_state['motion_steps'] += 1
+            meta_state['motion_steps'] += 1 # [frames]? clock?
             meta_state['prey_distance_remaining'] -= self._prey_speed
         update_motion_steps = gr.ModifyMetaState(_update_motion_steps)
 
         def _end_vis_motion_phase(state,meta_state):
-            if meta_state['motion_steps'] > (self._prey_lead_in / self._prey_speed):
+            if meta_state['motion_steps'] > (self._prey_lead_in / self._prey_speed): # [frames]? clock?
                 return True
             return False
 
@@ -464,23 +512,36 @@ class Config():
         )
 
         # 6. Invisible motion phase
-
-        hide_prey = gr.ModifySprites('prey', _make_prey_transparent)
+        set_prey_opacity = gr.ModifySprites('prey', _set_prey_opacity)  # self._prey_opacity
         def _update_ts(meta_state):
-            meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed
+            meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed # [frames]
         update_ts = gr.ModifyMetaState(_update_ts)
+
+        def _decrease_prey_opacity(s,meta_state):
+            if meta_state['prey_distance_remaining'] < meta_state['prey_distance_invisible']/3*2:
+                s.opacity=0
+            # ts_tmp = meta_state['prey_distance_invisible'] / self._prey_speed
+            # meta_state['slope_opacity'] = self._prey_opacity_staircase.opacity/(_DIM_DURATION*60) # ts_tmp # (500*60) 
+            # # issue with  meta_state['ts'] for 2 turn maze: updating is slower?
+            # tmp_opacity = np.int_(np.round(s.opacity - meta_state['slope_opacity']))
+            # if tmp_opacity <= 0:
+            #     s.opacity = 0
+            # else:
+            #     s.opacity = tmp_opacity                
+        dim_prey = custom_game_rules.DimPrey('prey',_decrease_prey_opacity)
+
         def _increase_tp(meta_state):
             meta_state['tp'] += 1
         increase_tp = gr.ModifyMetaState(_increase_tp)
 
         def _end_motion_phase(state,meta_state):
-            id_response = state['agent'][0].metadata['response']
+            id_response_up = state['agent'][0].metadata['response_up']
             id_late = meta_state['tp'] > _MAX_WAIT_TIME_GAIN*meta_state['ts']
-            return id_response or id_late
+            return id_response_up or id_late
 
         phase_motion_invisible = gr.Phase(
-            one_time_rules=[hide_prey,update_ts],
-            continual_rules=[update_motion_steps,increase_tp],
+            one_time_rules=[set_prey_opacity,update_ts],
+            continual_rules=[update_motion_steps,increase_tp,dim_prey],
             end_condition=_end_motion_phase,
             name='motion_invisible',
         )
@@ -490,8 +551,18 @@ class Config():
         reveal_prey = gr.ModifySprites('prey', _make_opaque)
         make_agent_green = gr.ModifySprites('agent', _make_green)
 
+        def _id_time_reward(state,meta_state):
+            time_remaining = meta_state['prey_distance_remaining'] / meta_state['prey_speed']
+            time_error = np.abs(time_remaining)
+            return time_error > meta_state['half_width']
+            
+        update_prey_color = gr.ConditionalRule(
+            condition=lambda state, x: _id_time_reward(state, x),
+            rules=gr.ModifySprites('prey', _make_red)
+        )
+
         phase_reward = gr.Phase(
-            one_time_rules=[reveal_prey,make_agent_green],
+            one_time_rules=[reveal_prey,make_agent_green,update_prey_color],
             continual_rules=update_motion_steps,
             name='reward',
         )
@@ -502,8 +573,8 @@ class Config():
             phase_joystick_center,
             phase_fixation,
             phase_offline,
-            phase_motion_visible, ###
-            phase_motion_invisible, ###
+            phase_motion_visible,
+            phase_motion_invisible,
             phase_reward,
             meta_state_phase_name_key='phase',
         )

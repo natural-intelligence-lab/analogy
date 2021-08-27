@@ -356,7 +356,13 @@ protocol 'path_no_distract_uniform_num_turns' {
 
 protocol 'path_no_distract_uniform_num_turns_staircase' {
     run_python_string (
-        't = TaskManager(level="training.path_no_distract.path_no_distract_uniform_num_turns_staircase", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)')
+        't = TaskManager(level="training.path_no_distract.path_no_distract_uniform_num_turns_staircase", fixation_phase=False, prey_opacity=255, ms_per_unit=4000)') // for G // 3000)') // 4000
+    run_task ()
+}
+
+protocol 'path_no_distract_even_odd_num_turns_staircase' {
+    run_python_string (
+        't = TaskManager(level="training.path_no_distract.path_no_distract_even_odd_num_turns_staircase", fixation_phase=False, prey_opacity=0, ms_per_unit=3000)') // 4000
     run_task ()
 }
 
