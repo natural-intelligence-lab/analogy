@@ -91,6 +91,10 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
             cmap='r';
         elseif nTurn==2
             cmap='g';
+        elseif nTurn==1
+            cmap='m';
+        elseif nTurn==3
+            cmap='c';
         elseif nTurn==4
             cmap='b';
         end

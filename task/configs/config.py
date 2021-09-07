@@ -44,13 +44,14 @@ _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 
 # _STEP_OPACITY = 40  # [0 255]
-_STEP_OPACITY_UP = 0 # 1 # 2 # 3 # 10  # [0 255]
+_STEP_OPACITY_UP = 0 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255]
 _STEP_OPACITY_DOWN = 5 # 30 # 40  # [0 255]
-_OPACITY_INIT = 10
+_OPACITY_INIT = 10 # 100 # 10
+_P_DIM_DISTANCE = 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 _REWARD = 6 # 100 ms # post zero prey_distance
-_TOOTH_HALF_WIDTH = 60 # 40 # 666ms
+_TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 
 class PreyOpacityStaircase():
 
@@ -518,7 +519,7 @@ class Config():
         update_ts = gr.ModifyMetaState(_update_ts)
 
         def _decrease_prey_opacity(s,meta_state):
-            if meta_state['prey_distance_remaining'] < meta_state['prey_distance_invisible']/3*2:
+            if meta_state['prey_distance_remaining'] < meta_state['prey_distance_invisible']*_P_DIM_DISTANCE:
                 s.opacity=0
             # ts_tmp = meta_state['prey_distance_invisible'] / self._prey_speed
             # meta_state['slope_opacity'] = self._prey_opacity_staircase.opacity/(_DIM_DURATION*60) # ts_tmp # (500*60) 

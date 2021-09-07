@@ -6,8 +6,8 @@ from configs import config
 from configs import samplers
 from configs.levels import get_stimuli_dir
 
-min_num_turns = 0
-max_num_turns = 4 # 2 # 2021/8/18
+min_num_turns = 0 # 1 # 2021/9/3
+max_num_turns = 4 # 1 # 2021/9/3 # 4 # 2 # 2021/8/18
 step_num_turns = 2
 
 max_num_turns_g = 2 # for G, 2021/8/27
