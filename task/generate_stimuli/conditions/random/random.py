@@ -196,6 +196,7 @@ class Random12Square():
             distractor_path = self._prey_path_generator()
             maze.set_distractor_path(distractor_path=distractor_path)
         # maze.sample_distractors() # 2021/9/8
+        maze.no_distractors() # 2021/9/8
 
         maze_walls = maze.walls
 

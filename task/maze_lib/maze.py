@@ -154,7 +154,15 @@ class Maze():
             wall_index = np.random.randint(len(self._walls_temporary))
             wall_to_remove = self._walls_temporary[wall_index]
             self._remove_wall(wall_to_remove)
+    
+    def no_distractors(self):
+        """Sample the maze outside of the prey path.
 
+        Iteratively removes walls until no more temporary walls are left to
+        remove.
+        """
+        for i in self._walls_temporary:
+            self._remove_wall(i)
 
     def sample_distractor_exit(self,prey_path=()):
         """Sample distractor exit points at South side
