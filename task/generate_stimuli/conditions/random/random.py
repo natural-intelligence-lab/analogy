@@ -9,7 +9,7 @@ _MAZE_SIZE = 12
 
 # zero turn parameters
 _MIN_LENGTH_ZEROTURN = 6
-_MAX_LENGTH_ZEROTURN = 18+1
+_MAX_LENGTH_ZEROTURN = 12 # 18+1 # 2021/9/8
 _N_LENGTH_ZEROTURN = 6
 
 _NUM_ZEROTURN = int(30*2) # 30 trials/condition * 3 vertical height * 2 rep.
@@ -195,7 +195,7 @@ class Random12Square():
         for i in range(_NUM_DISTRACTOR_SAMPLE):
             distractor_path = self._prey_path_generator()
             maze.set_distractor_path(distractor_path=distractor_path)
-        maze.sample_distractors()
+        # maze.sample_distractors() # 2021/9/8
 
         maze_walls = maze.walls
 

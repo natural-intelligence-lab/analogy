@@ -372,6 +372,12 @@ protocol 'timing, displaced_g' {
     run_task ()
 }
 
+protocol 'random_12_staircase' {
+    run_python_string (
+        't = TaskManager(level="random.random_12.random_12_staircase", fixation_phase=False, ms_per_unit=3000)') //_uniform_num_turns
+    run_task ()
+}
+
 protocol 'random_12' {
     run_python_string (
         't = TaskManager(level="random.random_12.random_12", fixation_phase=False, ms_per_unit=2000)') //_uniform_num_turns
