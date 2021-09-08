@@ -1,5 +1,5 @@
 """Maze."""
-
+import pdb
 import copy
 from moog import sprite
 import numpy as np
@@ -317,12 +317,17 @@ class Maze():
                     walls_to_freeze.remove(wall)
                 if wall[0][1]==wall[1][1]: # horizontal
                     if wall[0][1]==0 or wall[0][1]==self._height: # bottom or top
-                        walls_to_freeze.remove(wall)
+                        # pdb.set_trace()
+                        if wall in walls_to_freeze:
+                            walls_to_freeze.remove(wall)
                 if wall[0][0] == wall[1][0]:  # vertical
                     if wall[0][0] == 0 or wall[1][0] == self._width:  # bottom or top
-                        walls_to_freeze.remove(wall)
+                        # pdb.set_trace()
+                        if wall in walls_to_freeze:
+                            walls_to_freeze.remove(wall)
                 if wall[0]==0 or wall[0]==self._width: # left or right
-                    walls_to_freeze.remove(wall)
+                    if wall in walls_to_freeze:
+                        walls_to_freeze.remove(wall)
                 if np.array_equal(cell, prey_path[0]):
                     self._entry_wall = wall
                 else:
