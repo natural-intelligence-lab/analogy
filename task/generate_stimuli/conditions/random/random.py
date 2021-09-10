@@ -17,7 +17,7 @@ _NUM_CONDITIONS = int(1e3) # assuming 500 trial for 50 min (6 sec/trial)
 
 _NUM_DISTRACTOR_SAMPLE = 5
 
-_P_DISTRACT=0.2 # proportion of distractor walls 2021/09/10
+_P_DISTRACT=0.1 # proportion of distractor walls 2021/09/10
 
 _DIRECTIONS_NAMED = {
     'N': (0, 1),
@@ -332,7 +332,7 @@ class PathPartialDistract():
         prey_path = self._prey_path_generator()
         maze = maze_lib.Maze(
             width=self._maze_size, height=self._maze_size, prey_path=prey_path,
-            all_walls=None, prey_path_only=1,p_distract=_P_DISTRACT)
+            all_walls=None, prey_path_only=None,p_distract=_P_DISTRACT)
 
         # maze.sample_distractor_entry(prey_path=prey_path) # backed up for later
         # maze.sample_distractor_exit(prey_path=prey_path)

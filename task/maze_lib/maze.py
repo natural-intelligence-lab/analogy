@@ -63,10 +63,11 @@ class Maze():
                 left_vertex = (i, j)
                 right_vertex = (i + 1, j)
                 if 0 < j < self._height:
-                    if np.random.rand < p_distract:
+                    if np.random.rand() < p_distract:
                         h_walls_temp.append((left_vertex, right_vertex))
                 else: # maze boundary
-                    h_walls_frozen.append((left_vertex, right_vertex))
+                    if np.random.rand() < p_distract:
+                        h_walls_frozen.append((left_vertex, right_vertex))
 
         # Vertical walls
         v_walls_temp = []
@@ -76,10 +77,11 @@ class Maze():
                 bottom_vertex = (i, j)
                 top_vertex = (i, j + 1)
                 if 0 < i < self._width:
-                    if np.random.rand < p_distract:
+                    if np.random.rand() < p_distract:
                         v_walls_temp.append((bottom_vertex, top_vertex))
                 else: # maze boundary
-                    v_walls_frozen.append((bottom_vertex, top_vertex))
+                    if np.random.rand() < p_distract:
+                        v_walls_frozen.append((bottom_vertex, top_vertex))
 
         self._walls_temporary = h_walls_temp + v_walls_temp
         self._walls_frozen = h_walls_frozen + v_walls_frozen
