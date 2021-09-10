@@ -15,7 +15,7 @@ _DIRECTIONS = [np.array(x) for x in list(_DIRECTIONS_NAMED.values())]
 class Maze():
     """Maze class."""
 
-    def __init__(self, width, height, prey_path=(), all_walls=None, prey_path_only=None):
+    def __init__(self, width, height, prey_path=(), all_walls=None, prey_path_only=None, p_distract=1):
         """Constructor.
         
         Maze is a grid with walls between some of the cells.
@@ -29,14 +29,18 @@ class Maze():
             height: Int. Height of the grid of maze cells.
             prey_path: Iterable of int 2-tuples, which are indices of cells in
                 the prey path.
+            all_walls: if true, entire maze has been specified and just pass walls to frozen
+            prey_path_only: if true, not _construct_walls & _construct_connected_components and
+                walls_temporary & wall_frazen are empty
+            p_distract: PathPartialDistract
         """
         self._width = width
         self._height = height
 
-        if all_walls is None:
+        if all_walls is None: # for pathNoDistract
             # Must randomly generate the maze
             if prey_path_only is None:
-                self._construct_walls()
+                self._construct_walls(p_distract)
                 self._construct_connected_components()
                 self._set_prey_path(prey_path)
             else:
@@ -49,7 +53,7 @@ class Maze():
             self._walls_frozen = all_walls
             self._walls_temporary = []
 
-    def _construct_walls(self):
+    def _construct_walls(self,p_distract):
         """Construct self._walls_frozen and self._walls_temporary."""
         # Horizontal walls
         h_walls_temp = []
@@ -59,8 +63,9 @@ class Maze():
                 left_vertex = (i, j)
                 right_vertex = (i + 1, j)
                 if 0 < j < self._height:
-                    h_walls_temp.append((left_vertex, right_vertex))
-                else:
+                    if np.random.rand < p_distract:
+                        h_walls_temp.append((left_vertex, right_vertex))
+                else: # maze boundary
                     h_walls_frozen.append((left_vertex, right_vertex))
 
         # Vertical walls
@@ -71,8 +76,9 @@ class Maze():
                 bottom_vertex = (i, j)
                 top_vertex = (i, j + 1)
                 if 0 < i < self._width:
-                    v_walls_temp.append((bottom_vertex, top_vertex))
-                else:
+                    if np.random.rand < p_distract:
+                        v_walls_temp.append((bottom_vertex, top_vertex))
+                else: # maze boundary
                     v_walls_frozen.append((bottom_vertex, top_vertex))
 
         self._walls_temporary = h_walls_temp + v_walls_temp
@@ -154,15 +160,6 @@ class Maze():
             wall_index = np.random.randint(len(self._walls_temporary))
             wall_to_remove = self._walls_temporary[wall_index]
             self._remove_wall(wall_to_remove)
-    
-    def no_distractors(self):
-        """Sample the maze outside of the prey path.
-
-        Iteratively removes walls until no more temporary walls are left to
-        remove.
-        """
-        for i in self._walls_temporary:
-            self._remove_wall(i)
 
     def sample_distractor_exit(self,prey_path=()):
         """Sample distractor exit points at South side

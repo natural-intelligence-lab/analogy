@@ -61,3 +61,18 @@ def path_no_distract(**kwargs):
             get_stimuli_dir.stimuli_dir(), 'random/PathNoDistract'),
     )
     return config.Config(stimulus_generator, **kwargs)
+
+def path_partial_distract_even_odd_num_turns_staircase(**kwargs):
+    stim_dir = os.path.join(get_stimuli_dir.stimuli_dir(), 'random/PathPartialDistract')
+    num_turns_samplers = [
+        samplers.Sampler(
+            stimuli_dir=stim_dir,
+            length=100,
+            num_passes=100,
+            filter_fn=lambda f: f['num_turns'] == i,
+        )
+        for i in range(min_num_turns, max_num_turns+1, 1) # step_num_turns)
+    ]
+    stimulus_generator = samplers.MixtureSampler(*num_turns_samplers)
+    staircase = config.PreyOpacityStaircase()
+    return config.Config(stimulus_generator, prey_opacity_staircase=staircase, **kwargs)
