@@ -1,6 +1,6 @@
 function [retval] = plot_tstp(data, values)
 % click events/check variables (Interval/productionInterval)
-name={'ts','tp','prey_opacity','num_turns'}; % ballAlphaProd
+name={'ts','tp','prey_opacity','num_turns','RT_offline'}; % ballAlphaProd
 
 %% getting codec and events
 nParam=length(name); % ts, tp for now
@@ -41,7 +41,7 @@ end
 winF=0.2;
 
 % disp([length(locFixY) length(values{1})]);
-if ~isempty(values{1}) && ~isempty(values{2}) && ~isempty(values{3}) && ~isempty(values{4})
+if ~isempty(values{1}) && ~isempty(values{2}) && ~isempty(values{3}) && ~isempty(values{4}) && ~isempty(values{5})
 %     fprintf(1, 'ts vs tp: %d vs %d\n', [values{1}(end); round(values{2}(end))]);
 %    fprintf(1, ', alpha: %d\n', values{3}(end));
 end
@@ -66,10 +66,10 @@ if length(values{1})~=length(values{2}) & ~isempty(values{1}) & ~isempty(values{
     values{1}=values{1}(end-minN+1:end);
     values{2}=values{2}(end-minN+1:end);
 end
-if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4})
+if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4}) & ~isempty(values{5})
 %     if nargin==1
         % plot T vs t
-        Ttmp=values{1}(end); ttmp=values{2}(end); 
+        Ttmp=values{1}(end); ttmp=values{2}(end); RT_offline=values{5}(end); 
         % disp((values{3}));
         if length(values{3})>=2
             opacity=values{3}(end-1);
@@ -101,9 +101,11 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
 
         %if opacity<1e-2
             fprintf(1, 'ts vs tp: %d vs %d , alpha: %d\n', [Ttmp; ttmp; opacity]);
-            plot(Ttmp+0.2*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',4); drawnow; hold on;
+            plot(Ttmp+0.2*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
 %             plot(Ttmp,ttmp,'o','color',[0 0 0],'markerfacecolor',[1 1 1]*alpha/256,'markersize',8); drawnow; hold on; % facecolor black for invisible
         %end
+
+
 
     %    % plot regression for 0 opacity & 2-turn
     %    ts2turn=3.5;
@@ -119,6 +121,10 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
         xlabel('t_s (s)'); ylabel('t_p (s)');
         %         figure(2); set(gcf,'position',[0 0 560 420],'color','w','resize','off'); % ballAlpha staircase
         
+        figure(2); set(gcf,'position',[560 615 560 420],'color','w','resize','off'); hold on;
+plot(Ttmp+0.2*(rand(1,1)-0.5),RT_offline,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
+xlabel('t_s (s)'); ylabel('RT (offline) (s)');
+
 %     end
     %     iTMSmat=unique(values{9});
     %     nTMS=nnz(iTMSmat);

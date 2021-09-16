@@ -17,7 +17,7 @@ _NUM_CONDITIONS = int(1e3) # assuming 500 trial for 50 min (6 sec/trial)
 
 _NUM_DISTRACTOR_SAMPLE = 5
 
-_P_DISTRACT=0.1 # proportion of distractor walls 2021/09/10
+_P_DISTRACT=0.4 # 0.3 # 0.1 # 0.2 # 2021/9.13 # 0.1 # proportion of distractor walls 2021/09/10
 
 _DIRECTIONS_NAMED = {
     'N': (0, 1),

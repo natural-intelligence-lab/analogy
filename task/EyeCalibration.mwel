@@ -154,7 +154,7 @@ circular_fixation_point fixation_point (
 // Protocols
 ///////////////
 
-protocol {
+protocol 'eyelink' {
     eyelink_tracker_setup (
         device = eye_tracker
         calibration_type = HV13
