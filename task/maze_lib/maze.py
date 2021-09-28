@@ -277,7 +277,73 @@ class Maze():
 
             if (wall not in self._walls_frozen) and (wall in self._walls_temporary):
                 self._remove_wall(wall)
+    
+    def add_distractor_path(self, distractor_path,prey_path):
+        """
+        TBD: debug (stimuli contains white boxes)
 
+        add the distractor path.
+
+        adds walls on the boundary of the distractor path to self._walls_frozen
+        if on prey path, no addition
+
+        Args:
+            distractor_path: Iterable of int 2-tuples, indexes of cells comprising the
+                prey path. Should be ordered, so the first and last elements are
+                on the maze periphery.
+            prey_path: Iterable of int 2-tuples, indexes of cells comprising the
+                prey path. Should be ordered, so the first and last elements are
+                on the maze periphery.
+            
+        """
+        walls_to_freeze = []
+        
+        # First, add all cell boundary walls to walls_to_freeze
+        for cell in distractor_path:
+            walls_to_freeze.extend(self._cell_to_walls(cell))
+        walls_to_freeze = list(set(walls_to_freeze))
+
+        # Now, remove border walls between consecutive cells
+        for cell_0, cell_1 in zip(distractor_path[:-1], distractor_path[1:]):
+            if cell_0[0] == cell_1[0]:  # Cells are vertically adjacent
+                vertex_left = (cell_0[0], max(cell_0[1], cell_1[1]))
+                vertex_right = (vertex_left[0] + 1, vertex_left[1])
+                wall = (vertex_left, vertex_right)
+            else:  # Cells are horizontally adjacent
+                vertex_bottom = (max(cell_0[0], cell_1[0]), cell_0[1])
+                vertex_top = (max(cell_0[0], cell_1[0]), cell_0[1] + 1)
+                wall = (vertex_bottom, vertex_top)      
+
+            walls_to_freeze.remove(wall)
+
+        # Finally, remove the maze periphery walls touching the first and last cell
+        for cell in [distractor_path[0], distractor_path[-1]]:
+            for wall in self._cell_to_walls(cell):
+                if wall[0][1]==wall[1][1]: # horizontal
+                    if wall[0][1]==0 or wall[0][1]==self._height: # bottom or top
+                        # pdb.set_trace()
+                        if wall in walls_to_freeze:
+                            walls_to_freeze.remove(wall)
+                if wall[0][0] == wall[1][0]:  # vertical
+                    if wall[0][0] == 0 or wall[1][0] == self._width:  # bottom or top
+                        # pdb.set_trace()
+                        if wall in walls_to_freeze:
+                            walls_to_freeze.remove(wall)
+                if wall[0]==0 or wall[0]==self._width: # left or right
+                    if wall in walls_to_freeze:
+                        walls_to_freeze.remove(wall)
+
+        # get all cell boundary of prey path
+        prey_walls=[]
+        for cell in prey_path:
+            prey_walls.extend(self._cell_to_walls(cell))
+        prey_walls = list(set(prey_walls))
+
+        # add to walls_frozen if not on prey path
+        for wall in walls_to_freeze:
+            # if wall not in prey_walls:
+            self._walls_frozen.extend(wall)
+                
     def _set_prey_path(self, prey_path):
         """Set the prey path.
         
