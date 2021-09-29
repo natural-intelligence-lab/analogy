@@ -341,8 +341,8 @@ class Maze():
 
         # add to walls_frozen if not on prey path
         for wall in walls_to_freeze:
-            # if wall not in prey_walls:
-            self._walls_frozen.extend(wall)
+            if wall not in prey_walls:
+                self._walls_frozen.append(wall)
                 
     def _set_prey_path(self, prey_path):
         """Set the prey path.
