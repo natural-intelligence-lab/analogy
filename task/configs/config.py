@@ -197,7 +197,7 @@ class TrialInitialization():
 
     def create_agent(self, state):
         agent = sprite.Sprite(
-            x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.3, scale=0.05,
+            x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.15, scale=0.1, # aspect_ratio=0.3, scale=0.05,
             c0=128, c1=32, c2=32, metadata={'response_up': False, 'moved_h': False,'y_speed':0},
         )
         if self._static_agent:
