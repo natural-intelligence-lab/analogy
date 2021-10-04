@@ -69,8 +69,7 @@ def path_partial_distract_even_odd_num_turns_staircase(**kwargs):
             stimuli_dir=stim_dir,
             length=100,
             num_passes=100,
-            filter_fn=lambda f: f['num_turns'] == i,
-            filter_fn=lambda f: f['num_turns_distract'] == i,
+            filter_fn=lambda f: f['num_turns'] == i,            
         )
         for i in range(min_num_turns, max_num_turns+1, 1) # step_num_turns)
     ]
@@ -88,7 +87,7 @@ def path_distract_path_even_odd_num_turns_staircase(**kwargs):
             stimuli_dir=stim_dir,
             length=100,
             num_passes=100,
-            filter_fn=lambda f: f['num_turns'] == i,
+            filter_fn=lambda f: (f['num_turns'] == i and f['num_turns_distract'] == i),
         )
         for i in range(min_num_turns, max_num_turns+1, 1) # step_num_turns)
     ]
