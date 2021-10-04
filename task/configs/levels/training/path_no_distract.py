@@ -7,7 +7,7 @@ from configs import samplers
 from configs.levels import get_stimuli_dir
 
 min_num_turns = 0 # 1 # 2021/9/3
-max_num_turns = 4 # 1 # 2021/9/3 # 4 # 2 # 2021/8/18
+max_num_turns = 0 # 2021/10/4 # 4 # 1 # 2021/9/3 # 4 # 2 # 2021/8/18
 step_num_turns = 2
 
 max_num_turns_g = 2 # for G, 2021/8/27
@@ -70,6 +70,7 @@ def path_partial_distract_even_odd_num_turns_staircase(**kwargs):
             length=100,
             num_passes=100,
             filter_fn=lambda f: f['num_turns'] == i,
+            filter_fn=lambda f: f['num_turns_distract'] == i,
         )
         for i in range(min_num_turns, max_num_turns+1, 1) # step_num_turns)
     ]

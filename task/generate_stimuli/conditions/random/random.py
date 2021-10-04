@@ -13,7 +13,7 @@ _MAX_LENGTH_ZEROTURN = 12 # 18+1 # 2021/9/8
 _N_LENGTH_ZEROTURN = 6
 
 _NUM_ZEROTURN = int(30*2) # 30 trials/condition * 3 vertical height * 2 rep.
-_NUM_CONDITIONS = int(1e3) # assuming 500 trial for 50 min (6 sec/trial)
+_NUM_CONDITIONS = int(1e4) # 2021/10/4 # int(1e3) # assuming 500 trial for 50 min (6 sec/trial)
 
 _NUM_DISTRACTOR_SAMPLE = 1 # 2021/9/28 for PathDistractPath # 5
 
@@ -395,6 +395,8 @@ class PathDistractPath():
         for i in range(_NUM_DISTRACTOR_SAMPLE):
             distractor_path = self._prey_path_generator()
             maze.add_distractor_path(distractor_path=distractor_path,prey_path=prey_path)
+            segments = _prey_path_to_segments(distractor_path)
+            num_turns_distract = len(segments) - 1
         # maze.sample_distractors()
 
         maze_walls = maze.walls
@@ -409,6 +411,7 @@ class PathDistractPath():
             'start_x': start_x,
             'num_turns': num_turns,
             'path_length': path_length,
+            'num_turns_distract': num_turns_distract,
         }
         maze_width = self._maze_size
         maze_height = self._maze_size
