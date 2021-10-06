@@ -257,7 +257,8 @@ class TaskManager:
             setvar('tOffline',time.time())
             self.flag2 = False
             setvar('num_turns',self.env.meta_state['num_turns'])
-
+            setvar('end_x_prey',self.env.meta_state['prey_path'][-1][0])
+            setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
 
         agent = self.env.state['agent']
         if self.env.meta_state['phase'] == 'offline' and self.flag3:
@@ -267,6 +268,7 @@ class TaskManager:
                     self.flag3 = False
         if self.env.meta_state['phase'] == 'motion_visible' and self.flag4:
             setvar('tVisMotion',time.time())
+            setvar('end_x_agent',self.env.meta_state['end_x_agent'])
             self.flag4 = False
         if self.env.meta_state['phase'] == 'motion_invisible' and self.flag5:
             tInvMotion = time.time()

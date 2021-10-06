@@ -1,6 +1,6 @@
 function [retval] = plot_tstp(data, values)
 % click events/check variables (Interval/productionInterval)
-name={'ts','tp','prey_opacity','num_turns','RT_offline'}; % ballAlphaProd
+name={'ts','tp','prey_opacity','num_turns','RT_offline','end_x_prey','end_x_agent','end_x_distract'}; % ballAlphaProd
 
 %% getting codec and events
 nParam=length(name); % ts, tp for now
@@ -29,22 +29,21 @@ end
 % finding values
 for iP=1:nParam
     indices = ([all_events(:).event_code] == event_code(iP));
-    %     disp(name{iP});
+    
     events = all_events(indices);
     tmpValues=cast([events(:).data], 'double'); tmpValues=tmpValues(:);
-    %         disp(size(values{iP}));
-    %     disp(size(tmpValues));
     values{iP} =[values{iP}(:); tmpValues];
 end
 
 %%
 winF=0.2;
 
-% disp([length(locFixY) length(values{1})]);
-if ~isempty(values{1}) && ~isempty(values{2}) && ~isempty(values{3}) && ~isempty(values{4}) && ~isempty(values{5})
-%     fprintf(1, 'ts vs tp: %d vs %d\n', [values{1}(end); round(values{2}(end))]);
-%    fprintf(1, ', alpha: %d\n', values{3}(end));
-end
+% debug
+% if ~isempty(values{1}) && ~isempty(values{2}) && ~isempty(values{3}) && ~isempty(values{4}) && ~isempty(values{5}) &&...
+%         ~isempty(values{6}) && ~isempty(values{7}) && ~isempty(values{8})
+%     %     fprintf(1, 'ts vs tp: %d vs %d\n', [values{1}(end); round(values{2}(end))]);
+%     %    fprintf(1, ', alpha: %d\n', values{3}(end));
+% end
 
 %% plot
 cmap=[    1.0000         0         0;...
@@ -66,154 +65,78 @@ if length(values{1})~=length(values{2}) & ~isempty(values{1}) & ~isempty(values{
     values{1}=values{1}(end-minN+1:end);
     values{2}=values{2}(end-minN+1:end);
 end
-if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4}) & ~isempty(values{5})
-%     if nargin==1
-        % plot T vs t
-        Ttmp=values{1}(end); ttmp=values{2}(end); RT_offline=values{5}(end); 
-        % disp((values{3}));
-        if length(values{3})>=2
-            opacity=values{3}(end-1);
-            else
-            opacity=values{3}(end);
-        end
-        if length(values{4})>=2
-            nTurn=values{4}(end); % -1);
-            else
-            nTurn=values{4}(end);
-        end
-        figure(1); set(gcf,'position',[0 615 560 420],'color','w','resize','off'); hold on;
-        %if opacity<1e-2
-        %    cmap = 'k';
-        %else
-        %    cmap = [.7 .7 .7];
-        %end
-        if nTurn==0
-            cmap='r';
-        elseif nTurn==2
-            cmap='g';
-        elseif nTurn==1
-            cmap='m';
-        elseif nTurn==3
-            cmap='c';
-        elseif nTurn==4
-            cmap='b';
-        end
 
-        %if opacity<1e-2
-            fprintf(1, 'ts vs tp: %d vs %d , alpha: %d\n', [Ttmp; ttmp; opacity]);
-            plot(Ttmp+0.2*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
-%             plot(Ttmp,ttmp,'o','color',[0 0 0],'markerfacecolor',[1 1 1]*alpha/256,'markersize',8); drawnow; hold on; % facecolor black for invisible
-        %end
+%% MAIN
+if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4}) & ~isempty(values{5}) &...
+        ~isempty(values{6}) & ~isempty(values{7}) & ~isempty(values{8})
+    %     if nargin==1
+    %% plot T vs t
+    Ttmp=values{1}(end); ttmp=values{2}(end); RT_offline=values{5}(end);
+    % disp((values{3}));
+    if length(values{3})>=2
+        opacity=values{3}(end-1);
+    else
+        opacity=values{3}(end);
+    end
+    if length(values{4})>=2
+        nTurn=values{4}(end); % -1);
+    else
+        nTurn=values{4}(end);
+    end
+    figure(1); set(gcf,'position',[0 615 560 420],'color','w','resize','off'); hold on;
+    if nTurn==0
+        cmap='r';
+    elseif nTurn==2
+        cmap='g';
+    elseif nTurn==1
+        cmap='m';
+    elseif nTurn==3
+        cmap='c';
+    elseif nTurn==4
+        cmap='b';
+    end
+    
+    % plot
+    fprintf(1, 'ts vs tp: %d vs %d , alpha: %d\n', [Ttmp; ttmp; opacity]);
+    plot(Ttmp+0.2*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
 
-
-
+    % TBD: debug
     %    % plot regression for 0 opacity & 2-turn
     %    ts2turn=3.5;
     %    disp([size(values{3}) size(values{1})]);
-    %    tmpId=values{3}(:)==0 & values{1}(:) > ts2turn;        
+    %    tmpId=values{3}(:)==0 & values{1}(:) > ts2turn;
     %    B=regress(values{2}(tmpId),[values{1}(tmpId) ones(nnz(tmpId),1)]);
     %    tmpX=xlim;
     %    tmpY=[tmpX; ones(1,2)]*B;
     %    plot(tmpX,tmpY,'r-','linewidth',2);
-
-        plotIdentity(gca); plotWeberLine(gca,winF);
-        drawnow; hold on;
-        xlabel('t_s (s)'); ylabel('t_p (s)');
-        %         figure(2); set(gcf,'position',[0 0 560 420],'color','w','resize','off'); % ballAlpha staircase
-        
-        figure(2); set(gcf,'position',[560 615 560 420],'color','w','resize','off'); hold on;
-plot(Ttmp+0.2*(rand(1,1)-0.5),RT_offline,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
-xlabel('t_s (s)'); ylabel('RT (offline) (s)');
-
-%     end
-    %     iTMSmat=unique(values{9});
-    %     nTMS=nnz(iTMSmat);
-    %     Tmat=cell(nTMS,1);
-    %     mut=cell(nTMS,1);
-    %     sdt=cell(nTMS,1);
-    %     nt=cell(nTMS,1);
-    %     numT=length(values{1});
-    %     for iTMS=1:nTMS
-    %         Tmat{iTMS}=unique(values{1}(iTMSmat(iTMS)==values{9}));
-    %         nT=length(Tmat{iTMS});
-    %         mut{iTMS}=zeros(nT,1);
-    %         sdt{iTMS}=zeros(nT,1);
-    %         nt{iTMS}=zeros(nT,1);
-    %
-    %         for i=1:nT
-    %             id=values{1}==Tmat{iTMS}(i) & iTMSmat(iTMS)==values{9};
-    %
-    %             t=values{2}(id);
-    %             tClean=removeOutlier(t(t>0),10); % 3); % no outlier removal
-    %             [mut{iTMS}(i),sdt{iTMS}(i),nt{iTMS}(i)]=meanSDwoNeg(tClean);
-    %         end
-    % %         idShort=Tmat<tcrit;
+    
+    plotIdentity(gca); plotWeberLine(gca,winF);
+    drawnow; hold on;
+    xlabel('t_s (s)'); ylabel('t_p (s)');
+    %         figure(2); set(gcf,'position',[0 0 560 420],'color','w','resize','off'); % ballAlpha staircase
+    
+    %% offline error
+    end_x_prey=values{6}(end); end_x_agent=values{7}(end); end_x_distract=values{8}(end);
+    figure(2); set(gcf,'position',[560 615 560 420],'color','w','resize','off'); hold on;
+    plot(end_x_prey-end_x_agent,end_x_distract-end_x_agent,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
+    xlabel('prey_x - agent_x'); ylabel('distract_x - agent_x');
+    
+    %% RT offline
+    %        figure(2); set(gcf,'position',[560 615 560 420],'color','w','resize','off'); hold on;
+    %plot(Ttmp+0.2*(rand(1,1)-0.5),RT_offline,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
+    %xlabel('t_s (s)'); ylabel('RT (offline) (s)');
+    
+    
+    %     % simple linear regression as a model-free check of prior effect (slope<1 & intercept>0)
+    %     if length(mut(idShort))>1 && length(sdt(idShort))>1
+    %         stats=regstats(mut(idShort),Tmat(idShort),'linear',{'tstat'}); % beta yhat r mse rsquare tstat
+    %         fprintf(1, 'intercept: %d (p=%d), slope: %d (p=%d)\n',[stats.tsat.beta(1) stats.tsat.pval(1) stats.tsat.beta(2) stats.tsat.pval(2)]);
+    %     end
+    %     if length(mut(~idShort))>1 && length(sdt(~idShort))>1
+    %         stats=regstats(mut(~idShort),Tmat(~idShort),'linear',{'tstat'}); % beta yhat r mse rsquare tstat
+    %         fprintf(1, 'intercept: %d (p=%d), slope: %d (p=%d)\n',[stats.tsat.beta(1) stats.tsat.pval(1) stats.tsat.beta(2) stats.tsat.pval(2)]);
     %     end
     
-%     for iTMS=1:nTMS
-%         errorbar(Tmat{iTMS},mut{iTMS},sdt{iTMS},'-','color',cmap(iTMS,:)); hold on;
-%     end
-%     
-%     if ~isempty(values{9})
-%         plot(Ttmp,ttmp,'o','color',cmap(find(iTMSmat==values{9}(end)),:),'markerfacecolor','w','markersize',8); drawnow; hold on; % on
-%     end
-%     set(gca,'ylim',[400 1600]); plotIdentity(gca); plotWeberLine(gca,winF);
-%     drawnow; hold off;
-%     xlabel('t_s (ms)'); ylabel('t_p (ms)');
-    
-%     figure(2); set(gcf,'position',[0 0 560 420],'color','w','resize','off'); % normalized bias time course
-%     plotHorizon(gca);
-%     plot(numT,(ttmp-Ttmp)/Ttmp,'.','color',cmap(find(iTMSmat==values{9}(end)),:),'markersize',11); hold all;
-%     if nback~=0 & numT>nback % plot all previous
-%         set(gca,'xlim',[max([1 numT-nback+1]) numT]);
-%     else
-%         axis tight;
-%     end
-%     xlabel('trials'); ylabel('(t_p-t_s)/t_s');
-    
-%     % saving data if experiment ends
-%     if values{10}(end)==values{12}(end)
-%         save tmp.mat values name
-%     end
-    
-%     numTrialBlock=values{11}(end);
-%     xMax=max(get(gca,'xlim')); set(gca,'xtick',0:numTrialBlock:xMax);
-    
-%     % ballAlpha staircase (3 for b/t ready and set; 7 for production)
-%     figure(2);set(gcf,'position',[0 0 560 420],'color','w','resize','off');
-%     if nback~=0
-%         set(gca,'xlim',[max([1 length(values{7})-nback+1]) length(values{7})]);
-%     else
-%         axis tight;
-%     end 
-%     if ~isempty(values{7})
-%         plot(length(values{7}),values{7}(end),'.','color',cmap,'markersize',11); hold all;
-%     end
-%     plot(length(values{3}),values{3}(end),'.','color',cmap2,'markersize',11); hold all;
-%     legend('flash radius','ball alpha (measure)'); % ball alpha (produce)
-%     xlabel('trials'); ylabel('ball alpha');
-    
-    %%
-%     % check scalar property
-%     if length(mut(idShort))>1 && length(sdt(idShort))>1
-%         [r,p]=corr(mut(idShort),sdt(idShort));
-%         fprintf(1, 'meanWF: %d (p=%d)\n',[mean(sdt(idShort)./mut(idShort)); p]);
-%     end
-%     if length(mut(~idShort))>1 && length(sdt(~idShort))>1
-%         [r,p]=corr(mut(~idShort),sdt(~idShort));
-%         fprintf(1, 'meanWF: %d (p=%d)\n',[mean(sdt(~idShort)./mut(~idShort)); p]);
-%     end
-    
-%     % simple linear regression as a model-free check of prior effect (slope<1 & intercept>0)
-%     if length(mut(idShort))>1 && length(sdt(idShort))>1
-%         stats=regstats(mut(idShort),Tmat(idShort),'linear',{'tstat'}); % beta yhat r mse rsquare tstat
-%         fprintf(1, 'intercept: %d (p=%d), slope: %d (p=%d)\n',[stats.tsat.beta(1) stats.tsat.pval(1) stats.tsat.beta(2) stats.tsat.pval(2)]);
-%     end
-%     if length(mut(~idShort))>1 && length(sdt(~idShort))>1
-%         stats=regstats(mut(~idShort),Tmat(~idShort),'linear',{'tstat'}); % beta yhat r mse rsquare tstat
-%         fprintf(1, 'intercept: %d (p=%d), slope: %d (p=%d)\n',[stats.tsat.beta(1) stats.tsat.pval(1) stats.tsat.beta(2) stats.tsat.pval(2)]);
-%     end
-   
 else
     fprintf(1, 'number of physical intervals does not equal number of production intervals! or empty')
 end

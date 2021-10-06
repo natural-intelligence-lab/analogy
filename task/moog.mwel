@@ -133,6 +133,11 @@ var num_completeTrials_left = 0
 var num_trials_right = 0
 var num_completeTrials_right = 0
 
+// offline behavior
+var end_x_prey = 0
+var end_x_agent = 0
+var end_x_distract = 0
+
 //time stamps for eye movement analysis
 var tFix = 0
 var tOffline = 0

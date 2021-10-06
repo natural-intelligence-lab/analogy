@@ -114,6 +114,7 @@ class OfflineReward(tasks.AbstractTask):
                     np.all(state['agent'][0].velocity == 0)):
                 prey_exit_x = meta_state['prey_path'][-1][0]
                 agent_prey_dist = np.abs(agent.x - prey_exit_x)
+                meta_state['end_x_agent'] = agent.x
                 reward = max(0, 1 - agent_prey_dist / (self._max_rewarding_dist + _EPSILON))
                 self._reward_given = True
             else:

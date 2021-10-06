@@ -412,6 +412,7 @@ class PathDistractPath():
             'num_turns': num_turns,
             'path_length': path_length,
             'num_turns_distract': num_turns_distract,
+            'distractor_path': distractor_path, # for now, only one distractor
         }
         maze_width = self._maze_size
         maze_height = self._maze_size

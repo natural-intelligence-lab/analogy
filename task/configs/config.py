@@ -35,7 +35,7 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 
-_MAX_REWARDING_DIST=0.15
+_MAX_REWARDING_DIST=0.15 # also scale of agent sprite
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 
 _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
@@ -118,6 +118,11 @@ class TrialInitialization():
         total_width = cell_size * maze_width
         prey_path += np.array([[0.5 * (1 - total_width), _MAZE_Y]])
 
+        # Compute scaled and translated distractor path
+        distractor_path = 0.5 + np.array(stimulus['features']['distractor_path'])
+        distractor_path *= cell_size
+        distractor_path += np.array([[0.5 * (1 - total_width), _MAZE_Y]])
+
         prey = sprite.Sprite(**self._prey_factors)
 
         if self._static_prey:
@@ -190,14 +195,16 @@ class TrialInitialization():
             'ts': 0,
             'max_rewarding_dist': _MAX_REWARDING_DIST,
             'joystick_fixation_postoffline': 0,
-            'num_turns': num_turns
+            'num_turns': num_turns,
+            'end_x_agent': 0,
+            'distractor_path': distractor_path
         }
 
         return state
 
     def create_agent(self, state):
         agent = sprite.Sprite(
-            x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.15, scale=0.1, # aspect_ratio=0.3, scale=0.05,
+            x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.1, scale=_MAX_REWARDING_DIST, # 0.1, # aspect_ratio=0.3, scale=0.05,
             c0=128, c1=32, c2=32, metadata={'response_up': False, 'moved_h': False,'y_speed':0},
         )
         if self._static_agent:
