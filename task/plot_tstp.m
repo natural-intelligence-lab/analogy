@@ -120,6 +120,12 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
     figure(2); set(gcf,'position',[560 615 560 420],'color','w','resize','off'); hold on;
     plot(end_x_prey-end_x_agent,end_x_distract-end_x_agent,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
     xlabel('prey_x - agent_x'); ylabel('distract_x - agent_x');
+
+    % print statistics
+    minSize=min([length(values{6}) length(values{7}) length(values{8})]);
+    end_x_prey=values{6}((end-minSize+1):end); end_x_agent=values{7}((end-minSize+1):end); end_x_distract=values{8}((end-minSize+1):end);
+    errorMetric=abs(end_x_prey-end_x_agent)./abs(end_x_distract-end_x_agent); % better if closer to 0
+    disp([mean(errorMetric) std(errorMetric)]);
     
     %% RT offline
     %        figure(2); set(gcf,'position',[560 615 560 420],'color','w','resize','off'); hold on;
