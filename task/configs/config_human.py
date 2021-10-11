@@ -1,4 +1,16 @@
-"""Common grid_chase task config."""
+"""Common grid_chase task config.
+
+2021/10/10: test cue-combination
+- with FP(500+exp(500)) vs no FP
+- Block design (num_trials_block; 100): ABABA...
+- 20 grid, # turns:[0 2 4 6], for 0 turn, [10 15 20] grids
+- no joystick, just keyboard
+- initial eye position for offline: present ball first
+ TO DO
+- orthogonalize # turns & path length?
+- repeat the same trials?
+
+"""
 
 import abc
 import collections
@@ -284,24 +296,7 @@ class Config():
             name='iti',
         )
 
-        # 2. Joystick centering phase
-
-        appear_joystick = gr.ModifySprites(
-            ['joystick_fixation', 'joystick'], _make_opaque)
-
-        def _should_end_joystick_fixation(state):
-            joystick_pos = state['joystick'][0].position
-            dist_from_center = np.linalg.norm(joystick_pos - 0.5 * np.ones(2))
-            joystick_v = state['joystick'][0].velocity
-            return (dist_from_center < self._joystick_center_threshold) & np.all(joystick_v == 0)
-
-        phase_joystick_center = gr.Phase(
-            one_time_rules=appear_joystick,
-            end_condition=_should_end_joystick_fixation,
-            name='joystick_fixation',
-        )
-
-        # 3. Fixation phase
+        # 2. Fixation phase
 
         disappear_joystick = gr.ModifySprites(
             ['joystick_fixation', 'joystick'], _make_transparent)
@@ -342,41 +337,17 @@ class Config():
             name='fixation',
         )
 
-        # 4. Offline phase
+        # 3. Offline phase
 
         # one_time_rules
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
         create_agent = custom_game_rules.CreateAgent(self._trial_init)
 
-        # # continual_rules
-        # #   change agent color if offline reward
-        # def _reward(state, meta_state):
-        #     if len(state['agent']) > 0:
-        #         agent = state['agent'][0]
-        #         if (meta_state['phase'] == 'offline' and
-        #                 agent.metadata['moved'] and
-        #                 np.all(state['agent'][0].velocity == 0)):
-        #             prey = state['prey'][0]
-        #             prey_exit_x = meta_state['prey_path'][-1][0]
-        #             agent_prey_dist = np.abs(agent.x - prey_exit_x)
-        #             reward = max(0, 1 - agent_prey_dist / (_MAX_REWARDING_DIST + _EPSILON))
-        #         else:
-        #             reward = 0.
-        #     else:
-        #         reward = 0.
-        #     return reward
-        # def _offline_reward(state, meta_state):
-        #     return _reward(state, meta_state) > 0
-
         def _track_moved(s):
             if not np.all(s.velocity == 0):
                 s.metadata['moved'] = True
         update_agent_metadata = gr.ModifySprites('agent', _track_moved)
-        # update_agent_color = gr.ConditionalRule(
-        #     condition=lambda state, x: _offline_reward(state, x) > 0,
-        #     rules=gr.ModifySprites('agent', _make_green)
-        # )
 
         def _should_increase_RT_offline(state, meta_state):
             agent = state['agent'][0]
@@ -400,7 +371,7 @@ class Config():
             end_condition=_end_offline_phase,  # duration=10,
         )
 
-        # 5. Visible motion phase
+        # 4. Visible motion phase
 
         def _unglue(meta_state):
             self._maze_walk.speed = self._prey_speed
@@ -427,7 +398,7 @@ class Config():
             name='motion_visible',
         )
 
-        # 6. Invisible motion phase
+        # 5. Invisible motion phase
 
         def _end_motion_phase(state):
             return state['agent'][0].metadata['response']
@@ -449,7 +420,7 @@ class Config():
             name='motion_invisible',
         )
 
-        # 7. Reward Phase
+        # 6. Reward Phase
 
         reveal_prey = gr.ModifySprites('prey', _make_opaque)
 
@@ -462,7 +433,6 @@ class Config():
         # Final rules
         phase_sequence = gr.PhaseSequence(
             phase_iti,
-            phase_joystick_center,
             phase_fixation,
             phase_offline,
             phase_motion_visible,

@@ -14,8 +14,8 @@
 
 // Include one of the following eye interfaces
 
-%include 'eye_interfaces/mouse'
-// %include 'eye_interfaces/eyelink'
+// %include 'eye_interfaces/mouse'
+%include 'eye_interfaces/eyelink'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -23,9 +23,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 // var platform = 'monkey'
-// var platform = 'psychophysics'
+var platform = 'psychophysics'
 // var platform = 'laptop'
-var platform = 'desktop'
+// var platform = 'desktop'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -341,5 +341,11 @@ protocol 'random_12_uniform_num_turns' {
 protocol 'Vertical prey, random height' {
     run_python_string (
         't = TaskManager(level="random.vertical_random_height.vertical_random_height", fixation_phase=False, ms_per_unit=2000)')
+    run_task ()
+}
+
+protocol 'random_20_uniform_num_turns' {
+    run_python_string (
+        't = TaskManager(level="random.random_12.random_20_uniform_num_turns", fixation_phase=False, ms_per_unit=1000)') //2000
     run_task ()
 }

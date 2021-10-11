@@ -11,7 +11,8 @@ sys.path.append('..')
 import conditions
 import generator
 
-_CONDITION = 'random.PathDistractPath' # 2021/9/28
+_CONDITION = 'random.Random20Square' # 2021/10/9
+# _CONDITION = 'random.PathDistractPath' # 2021/9/28
 # _CONDITION = 'random.PathPartialDistract'
 # _CONDITION = 'random.Random12Square' # 2021/9/8
 # _CONDITION = 'random.PathNoDistract'

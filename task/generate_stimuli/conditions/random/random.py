@@ -5,17 +5,17 @@ import maze_lib
 
 _MAX_TRIES = int(1e4)
 _MIN_SEGMENT_LENGTH = 3
-_MAZE_SIZE = 12
+_MAZE_SIZE = 20 # 12
 
 # zero turn parameters
-_MIN_LENGTH_ZEROTURN = 6
-_MAX_LENGTH_ZEROTURN = 12 # 18+1 # 2021/9/8
-_N_LENGTH_ZEROTURN = 6
+_MIN_LENGTH_ZEROTURN = 10 #      6
+_MAX_LENGTH_ZEROTURN = 20 #      12 # 18+1 # 2021/9/8
+_N_LENGTH_ZEROTURN = 5 #        6
 
-_NUM_ZEROTURN = int(30*2) # 30 trials/condition * 3 vertical height * 2 rep.
-_NUM_CONDITIONS = int(1e4) # 2021/10/4 # int(1e3) # assuming 500 trial for 50 min (6 sec/trial)
+_NUM_ZEROTURN = int(30*2*10) # int(30*2) # 30 trials/condition * 3 vertical height * 2 rep.
+_NUM_CONDITIONS = int(1e4) # int(1e4) # 2021/10/4 # int(1e3) # assuming 500 trial for 50 min (6 sec/trial)
 
-_NUM_DISTRACTOR_SAMPLE = 1 # 2021/9/28 for PathDistractPath # 5
+_NUM_DISTRACTOR_SAMPLE = 5 # 1 # 2021/9/28 for PathDistractPath # 5
 
 _P_DISTRACT=0.4 # 0.3 # 0.1 # 0.2 # 2021/9.13 # 0.1 # proportion of distractor walls 2021/09/10
 
@@ -231,6 +231,89 @@ class Random12Square():
         all_conditions = rng.permutation(all_conditions,axis=0)
         return all_conditions
 
+class Random20Square():
+
+    def __init__(self):
+        self._maze_size = _MAZE_SIZE
+        self._prey_path_generator = PreyPathGenerator(
+            maze_height=self._maze_size, maze_width=self._maze_size,
+            min_segment_length=_MIN_SEGMENT_LENGTH)
+
+        self._maze_heights = range(_MIN_LENGTH_ZEROTURN, _MAX_LENGTH_ZEROTURN, _N_LENGTH_ZEROTURN)  # for 0 turn mazes
+        self._maze_width = _MAZE_SIZE
+
+    def _sample_condition(self):
+        prey_path = self._prey_path_generator()
+        maze = maze_lib.Maze(
+            width=self._maze_size, height=self._maze_size, prey_path=prey_path)
+        maze.sample_distractor_entry(prey_path=prey_path)
+        maze.sample_distractor_exit(prey_path=prey_path)
+        for i in range(_NUM_DISTRACTOR_SAMPLE):
+            distractor_path = self._prey_path_generator()
+            maze.set_distractor_path(distractor_path=distractor_path)
+        maze.sample_distractors()
+
+        maze_walls = maze.walls
+
+        start_x = prey_path[0][0]
+        segments = _prey_path_to_segments(prey_path)
+        num_turns = len(segments) - 1
+        path_length = sum(len(x) for x in segments)
+
+        features = {
+            'name': 'Random20',
+            'start_x': start_x,
+            'num_turns': num_turns,
+            'path_length': path_length,
+        }
+        maze_width = self._maze_size
+        maze_height = self._maze_size
+        condition = [maze_width, maze_height, prey_path, maze_walls, features]
+        return condition
+
+    def _sample_condition_zeroturn(self, height):
+        x = int(np.random.randint(0, self._maze_width))
+        prey_path = [[x, i] for i in range(height - 1, -1, -1)]
+        maze = maze_lib.Maze(
+            width=self._maze_size, height=height, prey_path=prey_path)
+        maze.sample_distractor_entry(prey_path=prey_path)
+        maze.sample_distractor_exit(prey_path=prey_path)
+        for i in range(_NUM_DISTRACTOR_SAMPLE):
+            distractor_path = self._prey_path_generator()
+            maze.set_distractor_path(distractor_path=distractor_path)
+        maze.sample_distractors() # 2021/9/8
+        # maze.no_distractors() # 2021/9/8
+
+        maze_walls = maze.walls
+
+        start_x = prey_path[0][0]
+        num_turns = 0
+        path_length = height
+
+        features = {
+            'name': 'Random12',
+            'start_x': start_x,
+            'num_turns': num_turns,
+            'path_length': path_length,
+        }
+
+        condition = [self._maze_width, height, prey_path, maze_walls, features]
+        return condition
+
+    def __call__(self):
+        conditions = [
+            self._sample_condition()
+            for _ in range(_NUM_CONDITIONS)
+        ]
+        conditions_zeroturn = [
+            self._sample_condition_zeroturn(height)
+            for _ in range(_NUM_ZEROTURN)
+            for height in self._maze_heights
+        ]
+        all_conditions = np.concatenate((conditions, conditions_zeroturn), axis=0)
+        rng = np.random.default_rng()
+        all_conditions = rng.permutation(all_conditions,axis=0)
+        return all_conditions
 
 class VerticalPreyRandomHeight():
 
