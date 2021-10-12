@@ -35,6 +35,8 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 
+_FOREPERIOD_DURATION=60 # 1s
+
 _MAX_REWARDING_DIST=0.15 # also scale of agent sprite
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 
@@ -425,12 +427,22 @@ class Config():
             name='fixation',
         )
 
+        # 3-2. foreperiod without agent
+        # one_time_rules
+        disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
+        disappear_screen = gr.ModifySprites('screen', _make_transparent)
+
+        phase_foreperiod = gr.Phase(
+            one_time_rules=[disappear_fixation, disappear_screen],
+            duration=_FOREPERIOD_DURATION,
+            name='foreperiod',
+            # end_condition=_end_foreperiod_phase,  
+        )
+
         # 4. Offline phase
 
         # one_time_rules
         create_agent = custom_game_rules.CreateAgent(self._trial_init)
-        disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
-        disappear_screen = gr.ModifySprites('screen', _make_transparent)
 
         # continual_rules
         # change agent color if offline reward
@@ -485,7 +497,7 @@ class Config():
             # meta_state['joystick_fixation_postoffline']>_JOYSTICK_FIXATION_POSTOFFLINE # np.all(agent.velocity == 0) # 
 
         phase_offline = gr.Phase(
-            one_time_rules=[disappear_fixation, disappear_screen, create_agent],
+            one_time_rules=[create_agent], # [disappear_fixation, disappear_screen, create_agent],
             continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color], # ,update_joystick_fixation_dur],  # update_agent_color 
             name='offline',
             end_condition=_end_offline_phase,  #  duration=10,
@@ -580,6 +592,7 @@ class Config():
             phase_iti,
             phase_joystick_center,
             phase_fixation,
+            phase_foreperiod, # without agent
             phase_offline,
             phase_motion_visible,
             phase_motion_invisible,
