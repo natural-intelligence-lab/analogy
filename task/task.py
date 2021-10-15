@@ -97,6 +97,10 @@ class TaskManager:
         if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
             self._prey_opacity_staircase = config_class._prey_opacity_staircase
 
+        # i_trial dynamics
+        if getvar('platform') == 'laptop' or getvar('platform') == 'psychophysics':
+            self._i_trial_ = config_class._i_trial_
+
         # Create environment
         log_dir = os.path.join(_PWD, 'logs')
         self.env = logger_env_wrapper.MazeSetGoLoggingEnvironment(
@@ -173,6 +177,12 @@ class TaskManager:
         # self.env.meta_state['max_rewarding_dist'] = max_rewarding_dist
 
         setvar('prey_opacity',self.env.meta_state['prey_opacity']) ## updated in task.reward
+
+        # set trial & block
+        setvar('num_completeTrials',self.env.meta_state['i_trial'])
+        setvar('id_block', self.env.meta_state['id_block']) # true/1 for odd (with FP), false/0 for even (no FP)
+        setvar('num_trials_block', self.env.meta_state['num_trial_block'])
+
 
     def _register_event_callback(self, varname):
         self.events[varname] = []
@@ -258,7 +268,8 @@ class TaskManager:
             self.flag2 = False
             setvar('num_turns',self.env.meta_state['num_turns'])
             setvar('end_x_prey',self.env.meta_state['prey_path'][-1][0])
-            setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
+            if self.env.meta_state['distractor_path'] is not None:
+                setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
 
         agent = self.env.state['agent']
         if self.env.meta_state['phase'] == 'offline' and self.flag3:
@@ -269,6 +280,10 @@ class TaskManager:
         if self.env.meta_state['phase'] == 'motion_visible' and self.flag4:
             setvar('tVisMotion',time.time())
             setvar('end_x_agent',self.env.meta_state['end_x_agent'])
+
+            # SET foreperiod
+            setvar('foreperiod',self.env.meta_state['RT_offline'])
+
             self.flag4 = False
         if self.env.meta_state['phase'] == 'motion_invisible' and self.flag5:
             tInvMotion = time.time()

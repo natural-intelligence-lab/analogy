@@ -12,8 +12,8 @@ _MIN_LENGTH_ZEROTURN = 10 #      6
 _MAX_LENGTH_ZEROTURN = 20 #      12 # 18+1 # 2021/9/8
 _N_LENGTH_ZEROTURN = 5 #        6
 
-_NUM_ZEROTURN = int(30*2*10) # int(30*2) # 30 trials/condition * 3 vertical height * 2 rep.
-_NUM_CONDITIONS = int(1e4) # int(1e4) # 2021/10/4 # int(1e3) # assuming 500 trial for 50 min (6 sec/trial)
+_NUM_ZEROTURN = int(30*10) # int(30*2) # 30 trials/condition *10 rep.  # in par with others
+_NUM_CONDITIONS = 3*int(1e3) # int(1e4) # 2021/10/4 # int(1e3) # assuming 500 trial for 50 min (6 sec/trial)
 
 _NUM_DISTRACTOR_SAMPLE = 5 # 1 # 2021/9/28 for PathDistractPath # 5
 
@@ -239,7 +239,7 @@ class Random20Square():
             maze_height=self._maze_size, maze_width=self._maze_size,
             min_segment_length=_MIN_SEGMENT_LENGTH)
 
-        self._maze_heights = range(_MIN_LENGTH_ZEROTURN, _MAX_LENGTH_ZEROTURN, _N_LENGTH_ZEROTURN)  # for 0 turn mazes
+        self._maze_heights = range(_MIN_LENGTH_ZEROTURN, _MAX_LENGTH_ZEROTURN+1, _N_LENGTH_ZEROTURN)  # for 0 turn mazes
         self._maze_width = _MAZE_SIZE
 
     def _sample_condition(self):
@@ -291,7 +291,7 @@ class Random20Square():
         path_length = height
 
         features = {
-            'name': 'Random12',
+            'name': 'Random20',
             'start_x': start_x,
             'num_turns': num_turns,
             'path_length': path_length,
@@ -301,16 +301,16 @@ class Random20Square():
         return condition
 
     def __call__(self):
-        conditions = [
+        all_conditions = [
             self._sample_condition()
             for _ in range(_NUM_CONDITIONS)
         ]
-        conditions_zeroturn = [
-            self._sample_condition_zeroturn(height)
-            for _ in range(_NUM_ZEROTURN)
-            for height in self._maze_heights
-        ]
-        all_conditions = np.concatenate((conditions, conditions_zeroturn), axis=0)
+        # conditions_zeroturn = [
+        #     self._sample_condition_zeroturn(height)
+        #     for _ in range(_NUM_ZEROTURN)
+        #     for height in self._maze_heights
+        # ]
+        # all_conditions = np.concatenate((all_conditions, conditions_zeroturn), axis=0)
         rng = np.random.default_rng()
         all_conditions = rng.permutation(all_conditions,axis=0)
         return all_conditions

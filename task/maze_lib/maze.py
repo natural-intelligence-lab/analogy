@@ -3,6 +3,7 @@ import pdb
 import copy
 from moog import sprite
 import numpy as np
+from matplotlib import pyplot as plt
 
 _DIRECTIONS_NAMED = {
     'N': (0, 1),
@@ -414,6 +415,24 @@ class Maze():
                 self._walls_frozen.remove(wall)
         
         self._walls_frozen.extend(walls_to_freeze)
+
+
+    def plot(self):
+        """
+
+        """
+        maze_walls = self.walls
+
+        plt.figure()
+        for i in range(len(maze_walls)):
+            wall = maze_walls[i]
+            x = [wall[0][0], wall[1][0]]
+            y = [wall[0][1], wall[1][1]]
+            plt.plot(x,y,'k-')
+
+        plt.show()
+
+
 
     def to_sprites(self,
                    wall_width,

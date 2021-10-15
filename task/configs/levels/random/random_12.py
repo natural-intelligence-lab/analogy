@@ -2,8 +2,18 @@
 
 import os
 
-from configs import config # 2021/9/8
-# from configs import config_human as config
+
+# if getvar('platform') == 'laptop':
+from configs import config_human as config
+# elif getvar('platform') == 'desktop':
+#     from configs import config_human as config
+# elif getvar('platform') == 'psychophysics':
+#     from configs import config_human as config
+# elif getvar('platform') == 'monkey_ephys':
+#     from configs import config as config
+# elif getvar('platform') == 'monkey_train':
+#     from configs import config_g as config
+
 from configs import samplers
 from configs.levels import get_stimuli_dir
 
@@ -39,12 +49,12 @@ def random_12_uniform_num_turns(**kwargs):
     return config.Config(stimulus_generator, **kwargs)
 
 def random_20_uniform_num_turns(**kwargs):
-    stim_dir = os.path.join(get_stimuli_dir.stimuli_dir(), 'random/Random20')
+    stim_dir = os.path.join(get_stimuli_dir.stimuli_dir(), 'random/Random20Square')
     num_turns_samplers = [
         samplers.Sampler(
             stimuli_dir=stim_dir,
-            length=100,
-            num_passes=100,
+            length=200,  # 10,
+            num_passes=1,  # 20,
             filter_fn=lambda f: f['num_turns'] == i,
         )
         for i in range(min_num_turns_human, max_num_turns_human+1, step_num_turns_human)
