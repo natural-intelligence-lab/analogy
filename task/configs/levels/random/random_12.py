@@ -60,7 +60,8 @@ def random_20_uniform_num_turns(**kwargs):
         for i in range(min_num_turns_human, max_num_turns_human+1, step_num_turns_human)
     ]
     stimulus_generator = samplers.MixtureSampler(*num_turns_samplers)
-    return config.Config(stimulus_generator, **kwargs)
+    staircase = config.IdTrialStaircase()
+    return config.Config(stimulus_generator,id_trial_staircase=staircase, **kwargs)
 
 # 2021/9/8
 def random_12_staircase(**kwargs):

@@ -24,8 +24,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // var platform = 'monkey'
 // var platform = 'psychophysics'
-var platform = 'laptop'
-// var platform = 'desktop'
+// var platform = 'laptop'
+var platform = 'desktop'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -226,7 +226,7 @@ var tRew = 0
                 // num_completeTrials = num_completeTrials+1
 
                 goto (
-                    target = 'Pause'
+                    target = 'End protocol' // 'Pause'
                     when = (num_completeTrials % num_trials_block == 0)
 
                 )

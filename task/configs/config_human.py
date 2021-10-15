@@ -33,29 +33,35 @@ from configs.utils import tasks as tasks_custom
 from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
-_FIXATION_THRESHOLD = 0.4
-_ITI = 6  #  100 ms
-_FIXATION_STEPS = 12 # 6  #  100 ms
-_REWARD = 6 # 100 ms
+# stimulus
+_IMAGE_SIZE = [20] # [16]  # [8, 16, 24]
+_WALL_WIDTH = 0.05 # WAS 0.05 for 12 bin maze
 _AGENT_Y = 0.05
 _MAZE_Y = 0.1
 _MAZE_WIDTH = 0.7  # 0.55
 
+# trial
+_NUM_TRIAL_BLOCK = 100
+_ID_BLOCK = False # False  # True # true/1 for odd (with FP), false/0 for even (no FP)
+
+# time
+_REFRESH_RATE = 60/1000 # /ms
+_MEAN_EXP = 500*_REFRESH_RATE # 8.3
+_MIN_EXP = 1000*_REFRESH_RATE  # 500/_REFRESH_RATE
+_MAX_EXP = _MEAN_EXP*2
+_FIXATION_STEPS = 12 # 6  #  100 ms
+_REWARD = 6 # 100 ms
+_ITI = 6  #  100 ms
+
+# fixation
+_FIXATION_THRESHOLD = 0.4
+
+# reward
 _MAX_REWARDING_DIST = 0.2
 _EPSILON = 1e-4  # FOR REWARD FUNCTION
 
-_IMAGE_SIZE = [20] # [16]  # [8, 16, 24]
-_WALL_WIDTH = 0.05 # WAS 0.05 for 12 bin maze
 
-_NUM_TRIAL_BLOCK = 5 # 100
-
-_REFRESH_RATE = 60
-_MEAN_EXP = 500/_REFRESH_RATE # 8.3
-_MIN_EXP = 1000/_REFRESH_RATE  # 500/_REFRESH_RATE
-_MAX_EXP = _MEAN_EXP*2
-
-
-class ITrial():
+class IdTrialStaircase():
 
     def __init__(self,init_value = 1):
         self._i_trial = init_value
@@ -70,13 +76,13 @@ class ITrial():
 class TrialInitialization():
 
     def __init__(self, stimulus_generator, prey_lead_in, static_prey=False,
-                 static_agent=False,prey_opacity_staircase=None,i_trial_=None):
+                 static_agent=False,prey_opacity_staircase=None,id_trial_staircase=None):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
         self._static_prey = static_prey
         self._static_agent = static_agent
         self._prey_opacity_staircase = prey_opacity_staircase
-        self._i_trial_ = i_trial_
+        self._id_trial_staircase = id_trial_staircase
         self._prey_factors = dict(
             shape='circle', scale=0.015, c0=0, c1=255, c2=0)
         self._fixation_shape = 0.2 * np.array([
@@ -161,10 +167,10 @@ class TrialInitialization():
         else:
             self._prey_opacity = self._prey_opacity_staircase.opacity
 
-        if self._i_trial_ is None:
+        if self._id_trial_staircase is None:
             self._i_trial = 1
         else:
-            self._i_trial = self._i_trial_._i_trial
+            self._i_trial = self._id_trial_staircase._i_trial
 
         self._meta_state = {
             'fixation_duration': 0,
@@ -187,7 +193,7 @@ class TrialInitialization():
             'tp': 0,
             'ts': 0,
             'num_turns': num_turns,
-            'id_block': bool(True),  # true/1 for odd (with FP), false/0 for even (no FP)
+            'id_block': bool(_ID_BLOCK),  # true/1 for odd (with FP), false/0 for even (no FP)
             'num_trial_block': _NUM_TRIAL_BLOCK,
             'i_trial': self._i_trial,
             't_offline' : 0,
@@ -221,7 +227,7 @@ class Config():
                  fixation_phase=True,
                  prey_opacity=0,
                  i_trial=1,
-                 i_trial_=None,
+                 id_trial_staircase=None,
                  static_prey=False,
                  static_agent=False,
                  ms_per_unit=2000):
@@ -241,10 +247,10 @@ class Config():
         self._prey_opacity = prey_opacity
         self._static_prey = static_prey
         self._static_agent = static_agent
-        self._i_trial_ = i_trial_
+        self._id_trial_staircase = id_trial_staircase
 
-        if self._i_trial_ is not None:
-            self._i_trial = self._i_trial_._i_trial
+        if self._id_trial_staircase is not None:
+            self._i_trial = self._id_trial_staircase._i_trial
         else:
             self._i_trial = i_trial
 
@@ -258,7 +264,7 @@ class Config():
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in,
             static_prey=static_prey, static_agent=static_agent,
-            i_trial_=self._i_trial_)
+            id_trial_staircase=self._id_trial_staircase)
 
         # Create renderer
         self._observer = observers.PILRenderer(
@@ -322,9 +328,6 @@ class Config():
 
     def _construct_game_rules(self):
         """Construct game rules."""
-
-        def _set_i_trial(s):
-            s.opacity = self._prey_opacity_staircase.opacity # self._prey_opacity
 
         def _make_transparent(s):
             s.opacity = 0
@@ -477,8 +480,8 @@ class Config():
         opaque_agent = gr.ModifySprites('agent', _make_opaque)
 
         def _set_id_block(meta_state):
-            if self._i_trial_ is not None:
-                self._i_trial_.step()
+            if self._id_trial_staircase is not None:
+                self._id_trial_staircase.step()
             meta_state['i_trial'] = self._i_trial
             i_block = np.floor_divide(meta_state['i_trial'],_NUM_TRIAL_BLOCK) # 1234...
             meta_state['id_block'] = bool((i_block % 2) == 0) # true for odd (with FP), false for even

@@ -41,7 +41,7 @@ if getvar('platform') == 'laptop':
     from configs import config_human as config_lib
 elif getvar('platform') == 'desktop':
     # from configs import config_g as config_lib
-    from configs import config as config_lib
+    from configs import config_human as config_lib
     # from configs import config_human as config_lib
 elif getvar('platform') == 'psychophysics':
     from configs import config_human as config_lib
@@ -98,8 +98,8 @@ class TaskManager:
             self._prey_opacity_staircase = config_class._prey_opacity_staircase
 
         # i_trial dynamics
-        if getvar('platform') == 'laptop' or getvar('platform') == 'psychophysics':
-            self._i_trial_ = config_class._i_trial_
+        if getvar('platform') == 'laptop' or getvar('platform') == 'psychophysics' or getvar('platform') == 'desktop':
+            self._id_trial_staircase = config_class._id_trial_staircase
 
         # Create environment
         log_dir = os.path.join(_PWD, 'logs')
@@ -179,10 +179,11 @@ class TaskManager:
         setvar('prey_opacity',self.env.meta_state['prey_opacity']) ## updated in task.reward
 
         # set trial & block
-        setvar('num_completeTrials',self.env.meta_state['i_trial'])
-        setvar('id_block', self.env.meta_state['id_block']) # true/1 for odd (with FP), false/0 for even (no FP)
-        setvar('num_trials_block', self.env.meta_state['num_trial_block'])
-
+        # i_trial dynamics
+        if getvar('platform') == 'laptop' or getvar('platform') == 'psychophysics' or getvar('platform') == 'desktop':
+            setvar('num_completeTrials',self.env.meta_state['i_trial'])
+            setvar('id_block', self.env.meta_state['id_block']) # true/1 for odd (with FP), false/0 for even (no FP)
+            setvar('num_trials_block', self.env.meta_state['num_trial_block'])
 
     def _register_event_callback(self, varname):
         self.events[varname] = []
@@ -282,7 +283,8 @@ class TaskManager:
             setvar('end_x_agent',self.env.meta_state['end_x_agent'])
 
             # SET foreperiod
-            setvar('foreperiod',self.env.meta_state['RT_offline'])
+            if getvar('platform') == 'laptop' or getvar('platform') == 'psychophysics' or getvar('platform') == 'desktop':
+                setvar('foreperiod',self.env.meta_state['RT_offline'])
 
             self.flag4 = False
         if self.env.meta_state['phase'] == 'motion_invisible' and self.flag5:
