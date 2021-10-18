@@ -37,9 +37,9 @@ group 'Keyboard variables' {
     iodevice/usbhid_generic (
         usage_page = 1
         usage = 6
-        preferred_location_id = 344011264  // Hansem?
+        // preferred_location_id = 344011264  // Hansem?
         // preferred_location_id = 4245815296  // Psychophysics rig?
-        // preferred_location_id = 2152726528  // Nick laptop
+        preferred_location_id = 2152726528  // Nick laptop
         // log_all_input_values = true
         )
 %end
