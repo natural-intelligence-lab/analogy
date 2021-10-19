@@ -5,6 +5,7 @@
 - insert buffer fixation after offline
 - feedback: yellow for early, red for late
  TO DO
+- fix some trials with broken walls for prey_path
 - automization of block switch
 - eye movement
 
@@ -47,7 +48,7 @@ _WALL_WIDTH = 0.05 # WAS 0.05 for 12 bin maze
 _AGENT_Y = 0.05
 _MAZE_Y = 0.1
 _MAZE_WIDTH = 0.7  # 0.55
-_FEEDBACK_DY = 0.01
+_FEEDBACK_DY = 0.03
 
 # trial
 _NUM_TRIAL_BLOCK = 100
@@ -61,6 +62,7 @@ _MAX_EXP = _MEAN_EXP*2
 _FIXATION_STEPS = 12 # 200 ms
 _REWARD = 6 # 100 ms
 _ITI = 6  #  100 ms
+_FEEDBACK = 6  #  100 ms
 
 # fixation
 _FIXATION_THRESHOLD = 0.4
@@ -152,8 +154,11 @@ class TrialInitialization():
         )
 
         # feedback sprite (initially invisible)
-        feedback = sprite.Sprite(
-            x=prey_path[-1][0], y=_AGENT_Y, shape='circle', scale=0.015, c0=129, c1=32, c2=32, opacity=0,
+        early_feedback = sprite.Sprite(
+            x=prey_path[-1][0], y=_AGENT_Y+_FEEDBACK_DY, shape='circle', scale=0.015, c0=129, c1=32, c2=32, opacity=0,
+        )
+        late_feedback = sprite.Sprite(
+            x=prey_path[-1][0], y=_AGENT_Y-_FEEDBACK_DY, shape='circle', scale=0.015, c0=129, c1=32, c2=32, opacity=0,
         )
         state = collections.OrderedDict([
             ('agent', []),
@@ -162,7 +167,8 @@ class TrialInitialization():
             ('screen', [screen]),
             # ('joystick_fixation', [joystick_fixation]),
             # ('joystick', [joystick]),
-            ('feedback',[feedback])
+            ('early_feedback',[early_feedback]),
+            ('late_feedback', [late_feedback]),
             ('fixation', [fixation]),
             ('eye', [eye]),
         ])
@@ -337,7 +343,7 @@ class Config():
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
             hand=action_spaces_custom.JoystickColor(
                 up_color=(32, 128, 32), # green
-                scaling_factor=0.01),
+                scaling_factor=0.0001),
         )
 
     def _construct_game_rules(self):
@@ -528,27 +534,24 @@ class Config():
 
         # one_time_rules
         # reveal_prey = gr.ModifySprites('prey', _make_opaque)
-        # opaque_agent = gr.ModifySprites('agent', _make_opaque)
+        opaque_agent = gr.ModifySprites('agent', _make_opaque)
 
         # feedback for early
-        def _sign_error(state, meta_state):
-            return meta_state['prey_distance_remaining'] > 0
-        def _update_agent(s):
-            s.y = s.y + _FEEDBACK_DY
+        def _sign_error(state,meta_state):
+            early_error = meta_state['prey_distance_remaining'] > 0
+            return early_error
         update_agent_y = gr.ConditionalRule(
             condition=_sign_error,
-            rules=gr.ModifySprites('agent', _update_agent)
+            rules=gr.ModifySprites('early_feedback', _make_opaque)
         )
         # feedback for late
-        def _sign_error2(state, meta_state):
-            return meta_state['prey_distance_remaining'] <= 0
-        def _update_agent2(s):
-            s.y = s.y - _FEEDBACK_DY
+        def _sign_error2(state,meta_state):
+            late_error = meta_state['prey_distance_remaining'] <= 0
+            return late_error
         update_agent_y2 = gr.ConditionalRule(
             condition=_sign_error2,
-            rules=gr.ModifySprites('agent', _update_agent2)
+            rules=gr.ModifySprites('late_feedback', _make_opaque)
         )
-        update_agent_color = gr.ModifySprites(_make_opaque)
 
         def _set_id_block(meta_state):
             if self._id_trial_staircase is not None:
@@ -559,8 +562,9 @@ class Config():
         set_id_block = gr.ModifyMetaState(_set_id_block)
 
         phase_reward = gr.Phase(
-            one_time_rules=[set_id_block,update_agent_color],  #   reveal_prey,opaque_agent],
-            continual_rules=[update_motion_steps,update_agent_y,update_agent_y2],
+            one_time_rules=[set_id_block,opaque_agent,update_agent_y,update_agent_y2],  #   reveal_prey],
+            continual_rules=[update_motion_steps],
+            duration=_FEEDBACK,
             name='reward',
         )
 
