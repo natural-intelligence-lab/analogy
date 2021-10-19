@@ -1,5 +1,9 @@
 """Common grid_chase task config.
 
+2021/10/18
+- self-paced: press spacebar when ready
+- eye movement
+
 2021/10/10: test cue-combination
 - with FP(500+exp(500)) vs no FP
 - Block design (num_trials_block; 100): ABABA...
