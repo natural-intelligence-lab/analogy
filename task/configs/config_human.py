@@ -52,7 +52,7 @@ _FEEDBACK_DY = 0.03
 
 # trial
 _NUM_TRIAL_BLOCK = 100
-_ID_BLOCK = False # False  # True # true/1 for odd (with FP), false/0 for even (no FP)
+_ID_BLOCK = False  # False  # True # true/1 for odd (with FP), false/0 for even (no FP)
 
 # time
 _REFRESH_RATE = 60/1000 # /ms
@@ -458,7 +458,11 @@ class Config():
         )
         def _end_offline_phase(state,meta_state):
             agent = state['agent'][0]
-            return agent.metadata['moved_h']
+            if _ID_BLOCK:  # true
+                tmp_output = agent.metadata['moved_h']
+            else:
+                tmp_output = True
+            return tmp_output
 
         ## for externally controled foreperiod
         # def _increase_t_offline(meta_state):
@@ -475,9 +479,13 @@ class Config():
         )
 
         # 3-2. buffer fixation
+        if _ID_BLOCK:  # true
+            buffer_fixation_duration = fixation_duration
+        else:
+            buffer_fixation_duration = 0
         phase_fixation2 = gr.Phase(
             one_time_rules=[appear_fixation],  # ,sample_foreperiod],
-            duration=fixation_duration,
+            duration=buffer_fixation_duration,
             name='fixation2',
         )
 
