@@ -14,10 +14,16 @@ class CreateAgent(game_rules.AbstractRule):
         del meta_state
         self._trial_init.create_agent(state)
 
+class UnglueAgent(game_rules.AbstractRule):
+    """unglue agent."""
 
+    def step(self, state, meta_state):
+        del meta_state
+        agent = state['agent'][0]
+        agent.mass = 1
 
 class GlueAgent(game_rules.AbstractRule):
-    """Create agent."""
+    """glue agent."""
 
     def step(self, state, meta_state):
         del meta_state

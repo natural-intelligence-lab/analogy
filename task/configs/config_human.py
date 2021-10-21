@@ -1,9 +1,9 @@
 """Common grid_chase task config.
 
 2021/10/18
-- self-paced: press spacebar when ready
+- self-paced: press left arrow when ready [block design]
 - insert buffer fixation after offline
-- feedback: yellow for early, red for late
+- feedback: up for early, down for late (no meaning about distance)
 - automization of block switch
  TO DO
 - fix some trials with broken walls for prey_path
@@ -51,8 +51,8 @@ _MAZE_WIDTH = 0.7  # 0.55
 _FEEDBACK_DY = 0.03
 
 # trial
-_NUM_TRIAL_BLOCK = 3  # 100
-_ID_BLOCK = True  # False  # True # true/1 for odd (with FP), false/0 for even (no FP)
+_NUM_TRIAL_BLOCK = 100  #  3  # 100
+_ID_BLOCK = True  # only for manual block switch   # False  # True # true/1 for odd (with FP), false/0 for even (no FP)
 
 # time
 _REFRESH_RATE = 60/1000 # /ms
@@ -63,6 +63,7 @@ _FIXATION_STEPS = 12 # 200 ms
 _REWARD = 6 # 100 ms
 _ITI = 6  #  100 ms
 _FEEDBACK = 6  #  100 ms
+_AFTERBREAK = 1
 
 # fixation
 _FIXATION_THRESHOLD = 0.4
@@ -327,8 +328,8 @@ class Config():
         #     'offline', max_rewarding_dist=_MAX_REWARDING_DIST)
         #
         timeout_task = tasks.Reset(
-            condition=lambda _, meta_state: meta_state['phase'] == 'reward',
-            steps_after_condition=_REWARD,
+            condition=lambda _, meta_state: meta_state['phase'] == 'afterbreak',
+            steps_after_condition=_AFTERBREAK,
         )
         self._task = tasks.CompositeTask(
             prey_task,
@@ -381,8 +382,17 @@ class Config():
 
         reset_physics = gr.ModifyMetaState(_reset_physics)
 
+        def _set_id_block(meta_state):
+            if self._id_trial_staircase is not None:
+                meta_state['i_trial'] = self._id_trial_staircase._i_trial
+            i_block = np.floor_divide(meta_state['i_trial']-1, _NUM_TRIAL_BLOCK)  # 01234...
+            meta_state['id_block'] = bool((i_block % 2) == 0)  # true for odd (with FP), false for even
+            print([meta_state['i_trial'],i_block,meta_state['id_block']])
+
+        set_id_block = gr.ModifyMetaState(_set_id_block)
+
         phase_iti = gr.Phase(
-            one_time_rules=reset_physics,
+            one_time_rules=[reset_physics,set_id_block],
             duration=_ITI,  # 6 frames: 100ms
             name='iti',
         )
@@ -458,7 +468,7 @@ class Config():
         )
         def _end_offline_phase(state,meta_state):
             agent = state['agent'][0]
-            if _ID_BLOCK:  # true
+            if meta_state['id_block']:  # true if odd (with FP)
                 tmp_output = agent.metadata['moved_h']
             else:
                 tmp_output = True
@@ -479,13 +489,23 @@ class Config():
         )
 
         # 3-2. buffer fixation
-        if _ID_BLOCK:  # true
-            buffer_fixation_duration = fixation_duration
-        else:
-            buffer_fixation_duration = 0
+        def return_not_id_block(state,meta_state):
+            id_block = not (meta_state['id_block'])  # true if odd (with FP)
+            return id_block
+
+        def return_id_block(state,meta_state):
+            id_block = (meta_state['id_block'])  # true if odd (with FP)
+            return id_block
+
+        appear_fixation2 = gr.ConditionalRule(
+            condition=return_id_block,
+            rules=gr.ModifySprites('fixation', _make_opaque)
+        )
+
         phase_fixation2 = gr.Phase(
-            one_time_rules=[appear_fixation],  # ,sample_foreperiod],
-            duration=buffer_fixation_duration,
+            one_time_rules=[appear_fixation2],  # ,sample_foreperiod],
+            duration=fixation_duration,
+            end_condition=return_not_id_block,
             name='fixation2',
         )
 
@@ -561,16 +581,8 @@ class Config():
             rules=gr.ModifySprites('late_feedback', _make_opaque)
         )
 
-        def _set_id_block(meta_state):
-            if self._id_trial_staircase is not None:
-                self._id_trial_staircase.step()
-            meta_state['i_trial'] = self._id_trial_staircase._i_trial
-            i_block = np.floor_divide(meta_state['i_trial'],_NUM_TRIAL_BLOCK) # 1234...
-            meta_state['id_block'] = bool((i_block % 2) == 0) # true for odd (with FP), false for even
-        set_id_block = gr.ModifyMetaState(_set_id_block)
-
         phase_reward = gr.Phase(
-            one_time_rules=[set_id_block,opaque_agent,update_agent_y,update_agent_y2],  #   reveal_prey],
+            one_time_rules=[opaque_agent,update_agent_y,update_agent_y2],  #   reveal_prey],
             continual_rules=[update_motion_steps],
             duration=_FEEDBACK,
             name='reward',
@@ -580,23 +592,41 @@ class Config():
 
         # one-time
         appear_screen = gr.ModifySprites('screen', _make_opaque)
+        opaque_early_feedback = gr.ModifySprites('early_feedback', _make_transparent)
+        opaque_late_feedback = gr.ModifySprites('late_feedback', _make_transparent)
+
+        unglue_agent = custom_game_rules.UnglueAgent()
 
         # end condition
         def _end_break(state,meta_state):
 
             not_break_trial = (meta_state['i_trial'] % _NUM_TRIAL_BLOCK != 0)
             if len(state['agent']) > 0:
-                break_break = state['agent'][0].velocity != 0
+                break_break = state['agent'][0].velocity[0] != 0
             else:
                 break_break = True
             end_break = not_break_trial or break_break
             return end_break
 
         phase_break = gr.Phase(
-            one_time_rules=[appear_screen],
-            duration=_FEEDBACK,
+            one_time_rules=[appear_screen,opaque_early_feedback,opaque_late_feedback,unglue_agent],
+            # duration=_FEEDBACK,
             end_condition=_end_break,
             name='break',
+        )
+
+        # 8. after-break
+
+        def _increase_trial(meta_state):
+            if self._id_trial_staircase is not None:
+                self._id_trial_staircase.step()
+
+        increase_trial = gr.ModifyMetaState(_increase_trial)
+
+        phase_afterbreak = gr.Phase(
+            one_time_rules=increase_trial,
+            duration=0,
+            name='afterbreak',
         )
 
 
@@ -610,6 +640,7 @@ class Config():
             phase_motion_invisible,
             phase_reward,
             phase_break,
+            phase_afterbreak,
             meta_state_phase_name_key='phase',
         )
         self._game_rules = (phase_sequence,)
