@@ -4,9 +4,9 @@
 - self-paced: press spacebar when ready
 - insert buffer fixation after offline
 - feedback: yellow for early, red for late
+- automization of block switch
  TO DO
 - fix some trials with broken walls for prey_path
-- automization of block switch
 - eye movement
 
 2021/10/10: test cue-combination
@@ -51,8 +51,8 @@ _MAZE_WIDTH = 0.7  # 0.55
 _FEEDBACK_DY = 0.03
 
 # trial
-_NUM_TRIAL_BLOCK = 100
-_ID_BLOCK = False  # False  # True # true/1 for odd (with FP), false/0 for even (no FP)
+_NUM_TRIAL_BLOCK = 3  # 100
+_ID_BLOCK = True  # False  # True # true/1 for odd (with FP), false/0 for even (no FP)
 
 # time
 _REFRESH_RATE = 60/1000 # /ms
@@ -564,7 +564,7 @@ class Config():
         def _set_id_block(meta_state):
             if self._id_trial_staircase is not None:
                 self._id_trial_staircase.step()
-            meta_state['i_trial'] = self._i_trial
+            meta_state['i_trial'] = self._id_trial_staircase._i_trial
             i_block = np.floor_divide(meta_state['i_trial'],_NUM_TRIAL_BLOCK) # 1234...
             meta_state['id_block'] = bool((i_block % 2) == 0) # true for odd (with FP), false for even
         set_id_block = gr.ModifyMetaState(_set_id_block)
@@ -576,6 +576,30 @@ class Config():
             name='reward',
         )
 
+        # 7. break
+
+        # one-time
+        appear_screen = gr.ModifySprites('screen', _make_opaque)
+
+        # end condition
+        def _end_break(state,meta_state):
+
+            not_break_trial = (meta_state['i_trial'] % _NUM_TRIAL_BLOCK != 0)
+            if len(state['agent']) > 0:
+                break_break = state['agent'][0].velocity != 0
+            else:
+                break_break = True
+            end_break = not_break_trial or break_break
+            return end_break
+
+        phase_break = gr.Phase(
+            one_time_rules=[appear_screen],
+            duration=_FEEDBACK,
+            end_condition=_end_break,
+            name='break',
+        )
+
+
         # Final rules
         phase_sequence = gr.PhaseSequence(
             phase_iti,
@@ -585,6 +609,7 @@ class Config():
             phase_motion_visible,
             phase_motion_invisible,
             phase_reward,
+            phase_break,
             meta_state_phase_name_key='phase',
         )
         self._game_rules = (phase_sequence,)

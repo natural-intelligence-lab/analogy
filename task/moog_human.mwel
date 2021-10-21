@@ -24,8 +24,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // var platform = 'monkey'
 // var platform = 'psychophysics'
-// var platform = 'laptop'
-var platform = 'desktop'
+var platform = 'laptop'
+// var platform = 'desktop'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -226,7 +226,7 @@ var tRew = 0
                 // num_completeTrials = num_completeTrials+1
 
                 goto (
-                    target = 'End protocol' // 'Pause'
+                    target = 'End trial' // 'Pause' // 'End protocol' //
                     when = (num_completeTrials % num_trials_block == 0)
 
                 )
@@ -237,8 +237,14 @@ var tRew = 0
             state 'Pause' {
                 // id_block = 1 - id_block
                 clear_display ()
-                pause_experiment ()
-                goto ('End trial')
+                // pause_experiment ()
+                // goto ('End trial')
+
+                goto (
+                    target = 'Begin trial' //
+                    when = right_pressed
+
+                )
             }
 
             state 'Failure' {
@@ -263,6 +269,13 @@ var tRew = 0
                     timer = timer
                     duration = inter_trial_interval_duration
                     )
+
+                //goto (
+                //    target = 'Pause'
+                //    when = (num_completeTrials % num_trials_block == 0)
+
+                //)
+
 
                 goto (
                     target = 'Begin trial'
