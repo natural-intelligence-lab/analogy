@@ -14,6 +14,7 @@ class MazeComposer():
                  num_layers,
                  pixels_per_square=4,
                  ball_path_top_bottom=True,
+                 ball_path_top=True,
                  max_num_turns=np.inf,
                  num_turns=None):
         """Constructor.
@@ -32,6 +33,7 @@ class MazeComposer():
         self._num_layers = num_layers
         self._pixels_per_square = pixels_per_square
         self._ball_path_top_bottom = ball_path_top_bottom
+        self._ball_path_top = ball_path_top
         self._max_num_turns = max_num_turns
         self._num_turns_specified = num_turns
 
@@ -62,6 +64,11 @@ class MazeComposer():
             end_bottom = maze[1][-1][0] == maze[0].shape[0] - 1
             if not (start_top and end_bottom):
                 return False
+        if self._ball_path_top:
+            start_top = maze[1][0][0] == 0
+            if not start_top:
+                return False
+
         if np.isfinite(self._max_num_turns):
             if num_turns > self._max_num_turns:
                 return False

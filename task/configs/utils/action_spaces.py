@@ -143,7 +143,7 @@ class JoystickColor(action_spaces.AbstractActionSpace):
             action: Numpy float array of size (2) in [-1, 1]. Force to apply.
         """
 
-        # Move joystick sprite
+        # Move joystick sprite  # for joystick fixation
         for sprite in state[self._joystick_layer]:
             sprite.position = 0.4 * action + 0.5
 
@@ -158,6 +158,7 @@ class JoystickColor(action_spaces.AbstractActionSpace):
 
         # Move the sprite
         for sprite in state[self._action_layer]:
+            # agent glued (set mass to inf) from visible motion phase
             if action_index == 0 and not sprite.metadata['response_up'] and not np.isfinite(sprite.mass): # up
                 sprite.c0 = self._up_color[0]
                 sprite.c1 = self._up_color[1]
@@ -168,7 +169,8 @@ class JoystickColor(action_spaces.AbstractActionSpace):
                 if action_index in (2, 3): # left/right
                     sprite.velocity = action / sprite.mass
                 else: # when max direction is either up/down
-                    sprite.velocity = np.zeros(2) # action / sprite.mass
+                    sprite.velocity = action / sprite.mass
+                    # sprite.velocity = np.zeros(2) # action / sprite.mass
                     sprite.metadata['y_speed'] = action[1] / sprite.mass
             else: # glued
                 sprite.velocity = np.zeros(2)

@@ -1,5 +1,9 @@
 """Common grid_chase task config.
 
+2022/2/21
+1) exit on left or right: glue_path_prey
+2) put paddle corners (allowing # turns to be 1 to 4)
+
 2022/1/21
 1) remove offline simuation period ("foreperiod") to measure RT
 
@@ -42,13 +46,14 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 _IMAGE_SIZE = [24]  # [8, 16, 24]
-_AGENT_SCALE = 0.10  # 0.15
+_AGENT_SCALE = 0.05 # 0.10  # 0.15
 _PREY_SCALE = 0.03
 _MIN_DIST_AGENT = 0.1/2  # minimum distance between initial agent position and target exit
 _MAX_DIST_AGENT = 0.5
 _P_PREY0 = 0 # 0.1  #  0.3 # 0.5   # 0.9  # prey's initial position as % of path
 _GAIN_PATH_PREY = 1  # 2.5 # 2 # 3  # 1  # speed gain for path prey
 _PATH_PREY_OPACITY = 120  # 50
+_ACTION_SCALING_FACTOR = 0.015 # 0.01
 
 # fixation
 _FIXATION_THRESHOLD = 0.4
@@ -72,14 +77,14 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
     # _STEP_OPACITY = 40  # [0 255]
 _STEP_OPACITY_UP = 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN = 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT = 20 # 20 # 100 #     10 # 100 # 10
+_OPACITY_INIT = 100 # 20 # 20 # 100 #     10 # 100 # 10
 _P_DIM_DISTANCE = 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
 _STEP_OPACITY_UP_ = 1  # 0 # 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN_ = 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT_ = 20  # 0 # 20 # 100 #     10 # 100 # 10
+_OPACITY_INIT_ = 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
 _P_DIM_DISTANCE_ = 0 # 2/3
 _DIM_DURATION_ = 2 # [sec]
 
@@ -212,9 +217,30 @@ class TrialInitialization():
         )
 
         # setting initial agent position
-        _agent_x0 = np.random.rand()
-        while np.abs(_agent_x0-prey_path[-1][0]) < _MIN_DIST_AGENT or np.abs(_agent_x0-prey_path[-1][0]) > _MAX_DIST_AGENT:
-            _agent_x0 = np.random.rand()  # if too close, resample
+        exit_x = stimulus['prey_path'][-1][0]  # in grid unit
+        exit_y = stimulus['prey_path'][-1][1]
+        gap_maze_agent = _MAZE_Y - _AGENT_Y  # 0.05
+        if exit_y == 0 and exit_x != 0 and exit_x != maze_width-1:  # exit @ bottom
+            correct_side = 0
+            _agent_x0 = (1-_AGENT_Y) - np.random.randint(2)*(_MAZE_WIDTH+2*gap_maze_agent)  # 0.1 or 0.9
+            _agent_y0 = _AGENT_Y
+        if exit_x == 0 and exit_y != 0 and exit_y != maze_height - 1:  # exit @ left
+            correct_side = 1
+            _agent_x0 = _AGENT_Y
+            _agent_y0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
+        if exit_x == maze_width-1 and exit_y != 0 and exit_y != maze_height - 1:  # exit @ right
+            correct_side = 3
+            _agent_x0 = (1 - _AGENT_Y)
+            _agent_y0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
+        if exit_y == maze_height-1 and exit_x != 0 and exit_x != maze_width - 1:  # exit @ top
+            correct_side = 2
+            _agent_x0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
+            _agent_y0 = (1 - _AGENT_Y)
+
+
+        # _agent_x0 = np.random.rand()
+        # while np.abs(_agent_x0-prey_path[-1][0]) < _MIN_DIST_AGENT or np.abs(_agent_x0-prey_path[-1][0]) > _MAX_DIST_AGENT:
+        #     _agent_x0 = np.random.rand()  # if too close, resample
 
         state = collections.OrderedDict([
             ('agent', []),
@@ -273,8 +299,11 @@ class TrialInitialization():
             'joystick_fixation_postoffline': 0,
             'num_turns': num_turns,
             'end_x_agent': prey_path[-1][0],
+            'end_y_agent': prey_path[-1][1],
+            'offline_error': 0,
             'distractor_path': distractor_path,
-            'agent_x0': _agent_x0,
+            'agent0': [_agent_x0,_agent_y0],
+            'correct_side': correct_side,
             'path_prey_speed': self._prey_speed*_GAIN_PATH_PREY,
             'motion_steps_path_prey':0,
             'prey_distance_remaining_path_prey':prey_distance_remaining,
@@ -284,10 +313,12 @@ class TrialInitialization():
         return state
 
     def create_agent(self, state):
-        agent_x0= self._meta_state['agent_x0']
+        agent0= self._meta_state['agent0']
         agent = sprite.Sprite(
-            x=agent_x0,  #  0.5,
-            y=_AGENT_Y, shape='square', aspect_ratio=0.2, scale=_AGENT_SCALE, # 0.1, # aspect_ratio=0.3, scale=0.05,
+            x=agent0[0],  # agent_x0,  #  0.5,
+            y=agent0[1], # _AGENT_Y,
+            shape='square', # , aspect_ratio=0.2,
+            scale=_AGENT_SCALE,  # 0.1, # aspect_ratio=0.3, scale=0.05,
             c0=128, c1=32, c2=32, metadata={'response_up': False, 'moved_h': False,'y_speed':0},
         )
         if self._static_agent:
@@ -446,7 +477,7 @@ class Config():
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
             hand=action_spaces_custom.JoystickColor(
                 up_color=(128, 32, 32),  # red # (32, 128, 32), # green
-                scaling_factor=0.01),
+                scaling_factor=_ACTION_SCALING_FACTOR),  # 0.01),
         )
 
     def _construct_game_rules(self):
@@ -614,8 +645,12 @@ class Config():
                 if (meta_state['phase'] == 'offline' and
                         agent.metadata['moved_h'] and
                         np.all(state['agent'][0].velocity == 0)): ##
+                    id_vertical=np.mod(meta_state['correct_side'],2)  # 0 for 0/2 (bottom/top)
                     prey_exit_x = meta_state['prey_path'][-1][0]
-                    reward = max(0, 1 - np.abs(agent.x - prey_exit_x) / (_MAX_REWARDING_DIST + _EPSILON))
+                    error_x = agent.x - prey_exit_x
+                    prey_exit_y = meta_state['prey_path'][-1][1]
+                    error_y = agent.y - prey_exit_y
+                    reward = max(0, 1 - np.abs((1-id_vertical)*error_x+id_vertical*error_y) / (_MAX_REWARDING_DIST + _EPSILON))
                 else:
                     reward = 0.
             else:
@@ -629,7 +664,7 @@ class Config():
         )
 
         def _track_moved_h(s):
-            if not np.all(s.velocity[0] == 0): ##
+            if not np.all(s.velocity == 0): ##  # if not np.all(s.velocity[0] == 0): ##
                 s.metadata['moved_h'] = True
         update_agent_metadata = gr.ModifySprites('agent', _track_moved_h)
 
@@ -646,7 +681,7 @@ class Config():
             # meta_state['joystick_fixation_postoffline']>_JOYSTICK_FIXATION_POSTOFFLINE # np.all(agent.velocity == 0) # 
 
         phase_offline = gr.Phase(
-            one_time_rules=[create_agent,set_path_prey_opacity],  # ,glue_path_prey],
+            one_time_rules=[create_agent,set_path_prey_opacity,glue_path_prey],  # ,glue_path_prey],
             # [disappear_screen,disappear_fake_prey,create_agent,set_path_prey_opacity,glue_path_prey], # [disappear_fixation, disappear_screen, create_agent],
             continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color], # ,update_joystick_fixation_dur],  # update_agent_color 
             name='offline',

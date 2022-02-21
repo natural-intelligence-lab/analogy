@@ -177,7 +177,8 @@ class LayeredMazeSampler(maze_composer.MazeComposer):
     def __init__(self,
                  path_dir,
                  num_layers,
-                 ball_path_top_bottom=True,
+                 ball_path_top_bottom=False,
+                 ball_path_top=True,
                  max_num_turns=np.inf,
                  num_turns=None):
         """Constructor.
@@ -189,6 +190,8 @@ class LayeredMazeSampler(maze_composer.MazeComposer):
                 Equivalently, one greater than number of distractor paths.
             ball_path_top_bottom: Bool. Whether the ball path should be forced
                 to enter from the top and exit from the bottom.
+            ball_path_top: Bool. Whether the ball path should be forced
+                to enter from the top.
             max_num_turns: Int. Maximum number of turns for the ball path.
             num_turns: Int. if not None, number of turns for the ball path.
         """
@@ -197,6 +200,7 @@ class LayeredMazeSampler(maze_composer.MazeComposer):
             num_layers=num_layers,
             pixels_per_square=2,
             ball_path_top_bottom=ball_path_top_bottom,
+            ball_path_top=ball_path_top,
             max_num_turns=max_num_turns,
             num_turns = num_turns,
         )

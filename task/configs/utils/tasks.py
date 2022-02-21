@@ -116,9 +116,15 @@ class OfflineReward(tasks.AbstractTask):
                     not self._reward_given and
                     agent.metadata['moved_h'] and
                     np.all(state['agent'][0].velocity == 0)):
+                id_vertical = np.mod(meta_state['correct_side'], 2)  # 0 for 0/2 (bottom/top)
                 prey_exit_x = meta_state['prey_path'][-1][0]
-                agent_prey_dist = np.abs(agent.x - prey_exit_x)
+                error_x = agent.x - prey_exit_x
+                prey_exit_y = meta_state['prey_path'][-1][1]
+                error_y = agent.y - prey_exit_y
+                agent_prey_dist = np.abs((1 - id_vertical) * error_x + id_vertical * error_y)
+                meta_state['offline_error'] = agent_prey_dist
                 meta_state['end_x_agent'] = agent.x
+                meta_state['end_y_agent'] = agent.y
                 reward = max(0, 1 - agent_prey_dist / (self._max_rewarding_dist + _EPSILON))
                 self._reward_given = True
 
