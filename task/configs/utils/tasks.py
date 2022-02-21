@@ -63,9 +63,14 @@ class TimeErrorReward(tasks.AbstractTask):
             # Update reward
 
             agent = state['agent'][0]
+            id_vertical = np.mod(meta_state['correct_side'], 2)  # 0 for 0/2 (bottom/top)
             prey_exit_x = meta_state['prey_path'][-1][0]
-            
-            if np.abs(agent.x - prey_exit_x) < self._max_rewarding_dist:
+            error_x = agent.x - prey_exit_x
+            prey_exit_y = meta_state['prey_path'][-1][1]
+            error_y = agent.y - prey_exit_y
+            agent_prey_dist = np.abs((1 - id_vertical) * error_x + id_vertical * error_y)
+
+            if agent_prey_dist < self._max_rewarding_dist:
                 reward = self._tooth_function(
                     self._prey_speed, meta_state['prey_distance_remaining'])
             else:

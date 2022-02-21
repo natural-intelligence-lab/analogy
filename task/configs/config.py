@@ -82,9 +82,9 @@ _P_DIM_DISTANCE = 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
-_STEP_OPACITY_UP_ = 1  # 0 # 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
+_STEP_OPACITY_UP_ = 10 # 1  # 0 # 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN_ = 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT_ = 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
+_OPACITY_INIT_ = 200 # 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
 _P_DIM_DISTANCE_ = 0 # 2/3
 _DIM_DURATION_ = 2 # [sec]
 
