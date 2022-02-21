@@ -2,9 +2,12 @@
 
 import copy
 import json
+from layered_maze_lib import maze_composer
+from layered_maze_lib import path_dataset
 import logging
 import numpy as np
 import os
+from scipy import signal as scipy_signal
 
 
 class Sampler():
@@ -102,10 +105,11 @@ class Sampler():
 
 class MixtureSampler():
 
-    def __init__(self, *samplers):
+    def __init__(self, *samplers, num_passes=1):
         
         self._samplers = samplers
-        
+        self._num_passes = num_passes
+
         # Create indices for which sampler to use at each trial
         sampler_inds = []
         for i, x in enumerate(samplers):
@@ -114,16 +118,35 @@ class MixtureSampler():
             sampler_inds[i] for i in np.random.permutation(len(sampler_inds))]
 
         self._count = 0
+        self._pass_num = -1
+
+    def _reset_cycle(self):
+        """Looped through all stimuli, so re-sampler ordering and loop again."""
+        self._pass_num += 1
+        # Create indices for which sampler to use at each trial
+        sampler_inds = []
+        for i, x in enumerate(samplers):
+            sampler_inds.extend(len(x) * [i])
+        self._sampler_inds = [
+            sampler_inds[i] for i in np.random.permutation(len(sampler_inds))]
 
     def __call__(self):
-        if self._count >= len(self._sampler_inds):
+        if self._pass_num == self._num_passes:
+            # Ran out of stimuli
             return None
+        
+        if self._count >= len(self._sampler_inds):
+            # Finished a cycle through all the stimuli, so begin another cycle
+            self._reset_cycle()
+            self._count = 0
+            # return None
+
         sampler_ind = self._sampler_inds[self._count]
         self._count += 1
         return self._samplers[sampler_ind]()
 
     def __len__(self):
-        return len(self._sampler_inds)
+        return self._num_passes * len(self._sampler_inds)
 
 
 class ChainedSampler():
@@ -146,3 +169,93 @@ class ChainedSampler():
 
     def __len__(self):
         return sum([len(x) for x in self._samplers])
+
+
+class LayeredMazeSampler(maze_composer.MazeComposer):
+    """Generates stimuli composed of overlaying paths."""
+
+    def __init__(self,
+                 path_dir,
+                 num_layers,
+                 ball_path_top_bottom=True,
+                 max_num_turns=np.inf,
+                 num_turns=None):
+        """Constructor.
+        
+        Args:
+            path_dir: String. Directory of path dataset to use for composing
+                mazes.
+            num_layers: Int. Number of paths to compose for each maze.
+                Equivalently, one greater than number of distractor paths.
+            ball_path_top_bottom: Bool. Whether the ball path should be forced
+                to enter from the top and exit from the bottom.
+            max_num_turns: Int. Maximum number of turns for the ball path.
+            num_turns: Int. if not None, number of turns for the ball path.
+        """
+        super(LayeredMazeSampler, self).__init__(
+            path_dir=path_dir,
+            num_layers=num_layers,
+            pixels_per_square=2,
+            ball_path_top_bottom=ball_path_top_bottom,
+            max_num_turns=max_num_turns,
+            num_turns = num_turns,
+        )
+
+    def _get_maze_walls(self, maze):
+        kernel_v = np.array([[1], [1], [1]])
+        kernel_h = np.array([[1, 1, 1]])
+        conv_v = scipy_signal.convolve2d(maze, kernel_v, mode='same', boundary='symm')
+        conv_h = scipy_signal.convolve2d(maze, kernel_h, mode='same', boundary='symm')
+        walls_v = conv_v[::2, 1::2] == 3.
+        walls_h = conv_h[1::2, ::2] == 3.
+
+        walls_v = [
+            (tuple(x + np.array([0, 1])), tuple(x + np.array([1, 1])))
+            for x in np.argwhere(walls_v)
+        ]
+        walls_h = [
+            (tuple(x + np.array([1, 0])), tuple(x + np.array([1, 1])))
+            for x in np.argwhere(walls_h)
+        ]
+        return walls_v + walls_h
+
+    def _num_turns_path(self, prey_path):
+         path_x = prey_path[:, 0]
+         path_x_diff = path_x[1:] - path_x[:-1]
+         num_turns = np.sum(
+             np.abs(np.convolve(path_x_diff, [-1, 1], mode='valid')))  # detect change point
+
+         return num_turns
+
+    def __call__(self):
+        maze, path = super(LayeredMazeSampler, self).__call__()
+
+        maze, path = path_dataset.rotate_maze_and_path_90(
+            maze, path, num_times=3)
+
+        maze_width = int((maze.shape[0] + 1) / 2)
+        maze_height = int((maze.shape[1] + 1) / 2)
+        maze_walls = self._get_maze_walls(maze)
+        prey_path = [tuple(x) for x in (path[::2] / 2).astype(int)]
+
+        num_turns = self._num_turns_path(path)
+
+        features = {
+            'name': 'LayeredMaze',
+            'start_x': prey_path[0][1],
+            'num_turns': num_turns,
+            'path_length': len(prey_path),
+        }
+
+        stimulus = dict(
+            maze_width=maze_width,
+            maze_height=maze_height,
+            prey_path=prey_path,
+            maze_walls=maze_walls,
+            features=features,
+        )
+
+        return stimulus
+
+    def __len__(self):
+        return self._num_mazes  # np.inf

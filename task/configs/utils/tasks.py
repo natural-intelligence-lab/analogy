@@ -86,7 +86,10 @@ class TimeErrorReward(tasks.AbstractTask):
 class OfflineReward(tasks.AbstractTask):
     """Give reward if agent stops at correct exit during offline phase."""
 
-    def __init__(self, phase, max_rewarding_dist=0.):
+    def __init__(self,
+                 phase,
+                 max_rewarding_dist=0.,
+                 path_prey_opacity_staircase=None):
         """Constructor.
         
         Args:
@@ -98,6 +101,7 @@ class OfflineReward(tasks.AbstractTask):
         """
         self._phase = phase
         self._max_rewarding_dist = max_rewarding_dist
+        self._path_prey_opacity_staircase = path_prey_opacity_staircase
 
     def reset(self, state, meta_state):
         del state
@@ -117,6 +121,9 @@ class OfflineReward(tasks.AbstractTask):
                 meta_state['end_x_agent'] = agent.x
                 reward = max(0, 1 - agent_prey_dist / (self._max_rewarding_dist + _EPSILON))
                 self._reward_given = True
+
+                if self._path_prey_opacity_staircase is not None:
+                    self._path_prey_opacity_staircase.step(reward)
             else:
                 reward = 0.
         else:
