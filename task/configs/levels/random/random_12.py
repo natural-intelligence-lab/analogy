@@ -4,7 +4,7 @@ import os
 
 
 # if getvar('platform') == 'laptop':
-from configs import config_human as config
+# from configs import config_human as config
 # elif getvar('platform') == 'desktop':
 #     from configs import config_human as config
 # elif getvar('platform') == 'psychophysics':
@@ -12,7 +12,7 @@ from configs import config_human as config
 # elif getvar('platform') == 'monkey_ephys':
 #     from configs import config as config
 # elif getvar('platform') == 'monkey_train':
-#     from configs import config_g as config
+from configs import config_g as config
 
 from configs import samplers
 from configs.levels import get_stimuli_dir
@@ -78,3 +78,21 @@ def random_12_staircase(**kwargs):
     stimulus_generator = samplers.MixtureSampler(*num_turns_samplers)
     staircase = config.PreyOpacityStaircase()
     return config.Config(stimulus_generator, prey_opacity_staircase=staircase, **kwargs)
+
+
+# 2021/12/15
+def random_12_staircase_both(**kwargs):
+    stim_dir = os.path.join(get_stimuli_dir.stimuli_dir(), 'random/Random12Square')
+    num_turns_samplers = [
+        samplers.Sampler(
+            stimuli_dir=stim_dir,
+            length=100,
+            num_passes=100,
+            filter_fn=lambda f: f['num_turns'] == i,
+        )
+        for i in range(min_num_turns, max_num_turns+1, step_num_turns)
+    ]
+    stimulus_generator = samplers.MixtureSampler(*num_turns_samplers)
+    staircase = config.PreyOpacityStaircase()
+    staircase_path = config.PathPreyOpacityStaircase()
+    return config.Config(stimulus_generator, prey_opacity_staircase=staircase, path_prey_opacity_staircase=staircase_path, **kwargs)

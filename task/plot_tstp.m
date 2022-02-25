@@ -1,6 +1,6 @@
 function [retval] = plot_tstp(data, values)
 % click events/check variables (Interval/productionInterval)
-name={'ts','tp','prey_opacity','num_turns','RT_offline','end_x_prey','end_x_agent','end_x_distract'}; % ballAlphaProd
+name={'ts','tp','prey_opacity','num_turns','RT_offline','end_x_prey','end_x_agent','end_x_distract','path_prey_opacity','num_trials'}; % ballAlphaProd
 
 %% getting codec and events
 nParam=length(name); % ts, tp for now
@@ -40,7 +40,7 @@ winF=0.2;
 
 % debug
 % if ~isempty(values{1}) && ~isempty(values{2}) && ~isempty(values{3}) && ~isempty(values{4}) && ~isempty(values{5}) &&...
-%         ~isempty(values{6}) && ~isempty(values{7}) && ~isempty(values{8})
+%         ~isempty(values{6}) && ~isempty(values{7}) && ~isempty(values{8}) && ~isempty(values{9}) && ~isempty(values{10})
 %     %     fprintf(1, 'ts vs tp: %d vs %d\n', [values{1}(end); round(values{2}(end))]);
 %     %    fprintf(1, ', alpha: %d\n', values{3}(end));
 % end
@@ -68,15 +68,19 @@ end
 
 %% MAIN
 if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4}) & ~isempty(values{5}) &...
-        ~isempty(values{6}) & ~isempty(values{7}) & ~isempty(values{8})
+        ~isempty(values{6}) & ~isempty(values{7}) & ~isempty(values{8}) & ~isempty(values{9}) & ~isempty(values{10})
     %     if nargin==1
     %% plot T vs t
     Ttmp=values{1}(end); ttmp=values{2}(end); RT_offline=values{5}(end);
     % disp((values{3}));
-    if length(values{3})>=2
+    if length(values{3})>=2 & length(values{9})>=2 &length(values{10})>=2
         opacity=values{3}(end-1);
+        path_opacity=values{9}(end-1);
+        num_trials=values{10}(end-1);
     else
         opacity=values{3}(end);
+        path_opacity=values{9}(end);
+        num_trials=values{10}(end);
     end
     if length(values{4})>=2
         nTurn=values{4}(end); % -1);
@@ -132,6 +136,11 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
     %plot(Ttmp+0.2*(rand(1,1)-0.5),RT_offline,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
     %xlabel('t_s (s)'); ylabel('RT (offline) (s)');
     
+    % staircase
+    figure(3); set(gcf,'position',[0 615 560 420],'color','w','resize','off'); hold on;
+    plot(num_trials,opacity,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
+    plot(num_trials,path_opacity,'o','markerfacecolor','g','color','g','linewidth',1,'markersize',3); drawnow; hold on;
+
     
     %     % simple linear regression as a model-free check of prior effect (slope<1 & intercept>0)
     %     if length(mut(idShort))>1 && length(sdt(idShort))>1

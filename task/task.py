@@ -96,6 +96,7 @@ class TaskManager:
         # staircase
         if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
             self._prey_opacity_staircase = config_class._prey_opacity_staircase
+            self._path_prey_opacity_staircase = config_class._path_prey_opacity_staircase
 
         # i_trial dynamics
         if getvar('platform') == 'laptop' or getvar('platform') == 'psychophysics' or getvar('platform') == 'desktop':
@@ -171,12 +172,14 @@ class TaskManager:
 
         if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
             setvar('prey_opacity',self._prey_opacity_staircase.opacity)
+            setvar('path_prey_opacity', self._path_prey_opacity_staircase.opacity)
 
         # TBD: debug - how to change _MAX_REWARDING_DIST during task running?
         # max_rewarding_dist = getvar('max_rewarding_dist')
         # self.env.meta_state['max_rewarding_dist'] = max_rewarding_dist
 
         setvar('prey_opacity',self.env.meta_state['prey_opacity']) ## updated in task.reward
+        setvar('path_prey_opacity', self.env.meta_state['path_prey_opacity'])  ## updated in task.reward
 
         # set trial & block
         # i_trial dynamics
@@ -270,7 +273,8 @@ class TaskManager:
             setvar('num_turns',self.env.meta_state['num_turns'])
             setvar('end_x_prey',self.env.meta_state['prey_path'][-1][0])
             if self.env.meta_state['distractor_path'] is not None:
-                setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
+                if not len(self.env.meta_state['distractor_path'])==0:
+                    setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
 
         agent = self.env.state['agent']
         if self.env.meta_state['phase'] == 'offline' and self.flag3:

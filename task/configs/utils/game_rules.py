@@ -14,21 +14,39 @@ class CreateAgent(game_rules.AbstractRule):
         del meta_state
         self._trial_init.create_agent(state)
 
-class UnglueAgent(game_rules.AbstractRule):
-    """unglue agent."""
+class CreateFakePrey(game_rules.AbstractRule):
+    """Create agent."""
+
+    def __init__(self, trial_init):
+        self._trial_init = trial_init
 
     def step(self, state, meta_state):
         del meta_state
-        agent = state['agent'][0]
-        agent.mass = 1
+        self._trial_init.create_fake_prey(state)
+
+class CreatePathPrey(game_rules.AbstractRule):
+    """Create agent."""
+
+    def __init__(self, trial_init):
+        self._trial_init = trial_init
+
+    def step(self, state, meta_state):
+        del meta_state
+        self._trial_init.create_path_prey(state)
 
 class GlueAgent(game_rules.AbstractRule):
-    """glue agent."""
 
     def step(self, state, meta_state):
         del meta_state
         agent = state['agent'][0]
         agent.mass = np.inf
+
+class GluePathPrey(game_rules.AbstractRule):
+
+    def step(self, state, meta_state):
+        del meta_state
+        path_prey = state['path_prey'][0]
+        path_prey.mass = np.inf
 
 class DimPrey(game_rules.AbstractRule):
     """Modify sprites in a layer or set of layers.

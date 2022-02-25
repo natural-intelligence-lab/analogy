@@ -14,21 +14,21 @@
 
 // Include one of the following eye interfaces
 
-// %include 'eye_interfaces/mouse'
-%include 'eye_interfaces/eyelink'
+%include 'eye_interfaces/mouse'
+// %include 'eye_interfaces/eyelink'
 
 // Nidaq interface and reward variable
 // %include 'nidaq'
-%include 'firmata_ephys'
-// %include 'firmata_train'
+// %include 'firmata_ephys'
+%include 'firmata_train'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Choose platform
 //
 ///////////////////////////////////////////////////////////////////////////////
-var platform = 'monkey_ephys'
-// var platform = 'monkey_train'
+// var platform = 'monkey_ephys'
+var platform = 'monkey_train'
 // var platform = 'psychophysics'
 // var platform = 'laptop'
 // var platform = 'desktop'
@@ -151,6 +151,7 @@ var tp = 0
 var ts = 0
 
 var prey_opacity=255
+var path_prey_opacity=255
 
 var prey_distance_invisible = 0
 var slope_opacity = 0
@@ -379,7 +380,7 @@ protocol 'path_partial_distract_even_odd_num_turns_staircase' {
 
 protocol 'path_distract_path_even_odd_num_turns_staircase' {
     run_python_string (
-        't = TaskManager(level="training.path_no_distract.path_distract_path_even_odd_num_turns_staircase", fixation_phase=False, prey_opacity=0, ms_per_unit=3000)') // 4000
+        't = TaskManager(level="training.path_no_distract.path_distract_path_even_odd_num_turns_staircase", fixation_phase=False, prey_opacity=0, ms_per_unit=2000)') // 3000)') // 4000
     run_task ()
 }
 
@@ -392,6 +393,12 @@ protocol 'timing, displaced_g' {
 protocol 'random_12_staircase' {
     run_python_string (
         't = TaskManager(level="random.random_12.random_12_staircase", fixation_phase=False, ms_per_unit=3000)') //_uniform_num_turns
+    run_task ()
+}
+
+protocol 'random_12_staircase_both_prey' {
+    run_python_string (
+        't = TaskManager(level="random.random_12.random_12_staircase_both", fixation_phase=False, prey_opacity=0, ms_per_unit=3000)') //_uniform_num_turns
     run_task ()
 }
 
