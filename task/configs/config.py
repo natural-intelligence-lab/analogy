@@ -51,7 +51,8 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 _IMAGE_SIZE = [24]  # [8, 16, 24]
-_AGENT_SCALE = 0.05 # 0.10  # 0.15
+_AGENT_SCALE = 0.03  # 0.05 # 0.10  # 0.15
+_AGENT_ASPECT_RATIO = 4
 _PREY_SCALE = 0.03
 _MIN_DIST_AGENT = 0.1/2  # minimum distance between initial agent position and target exit
 _MAX_DIST_AGENT = 0.5
@@ -73,7 +74,7 @@ _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
 _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
 # reward
-_MAX_REWARDING_DIST=(_AGENT_SCALE/2)+(_PREY_SCALE/2)   #/3*2 # _AGENT_SCALE/2 # 0.15 # also scale of agent sprite
+_MAX_REWARDING_DIST=((_AGENT_ASPECT_RATIO*_AGENT_SCALE)/2)+(_PREY_SCALE/2)   #/3*2 # _AGENT_SCALE/2 # 0.15 # also scale of agent sprite
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 _REWARD = 6 # 100 ms # post zero prey_distance
 _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
@@ -323,7 +324,7 @@ class TrialInitialization():
             x=agent0[0],  # agent_x0,  #  0.5,
             y=agent0[1], # _AGENT_Y,
             shape='square', # ,
-            aspect_ratio=3, #  1, 0.2,
+            aspect_ratio=_AGENT_ASPECT_RATIO, # 4, # 3, #  1, 0.2,
             scale=_AGENT_SCALE,  # 0.1, # aspect_ratio=0.3, scale=0.05,
             c0=128, c1=32, c2=32, metadata={'response_up': False, 'moved_h': False,'y_speed':0},
         )
@@ -721,7 +722,7 @@ class Config():
             return False
 
         phase_motion_visible = gr.Phase(
-            one_time_rules=[unglue,glue_agent,make_agent_red,disappear_path_prey],  # 
+            one_time_rules=[unglue,glue_agent,disappear_path_prey],  # make_agent_red
             continual_rules=update_motion_steps,
             end_condition=_end_vis_motion_phase,  # duration=10,
             name='motion_visible',
