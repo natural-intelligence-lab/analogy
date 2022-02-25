@@ -1,5 +1,10 @@
 """Common grid_chase task config.
 
+2022/2/25
+1) remove online for training (for now): offline_timeout_task
+2) vertical movement only (exit on the left/right only): _step_num_turns in layered.py
+3) increase paddle size
+
 2022/2/21
 1) exit on left or right: glue_path_prey
 2) put paddle corners (allowing # turns to be 1 to 4)
@@ -317,7 +322,8 @@ class TrialInitialization():
         agent = sprite.Sprite(
             x=agent0[0],  # agent_x0,  #  0.5,
             y=agent0[1], # _AGENT_Y,
-            shape='square', # , aspect_ratio=0.2,
+            shape='square', # ,
+            aspect_ratio=3, #  1, 0.2,
             scale=_AGENT_SCALE,  # 0.1, # aspect_ratio=0.3, scale=0.05,
             c0=128, c1=32, c2=32, metadata={'response_up': False, 'moved_h': False,'y_speed':0},
         )
@@ -451,6 +457,10 @@ class Config():
             'offline',
             max_rewarding_dist=_MAX_REWARDING_DIST,
             path_prey_opacity_staircase=self._path_prey_opacity_staircase)  # 0.1
+        offline_timeout_task = tasks.Reset(
+            condition=lambda _, meta_state: meta_state['phase'] == 'motion_visible',
+            steps_after_condition=_REWARD,
+        )
 
         # offline_task =  tasks.ContactReward(
         #     reward_fn=1.,
@@ -467,8 +477,9 @@ class Config():
         self._task = tasks.CompositeTask(
             # joystick_center_task,
             offline_task,
-            timeout_task,
-            prey_task,
+            offline_timeout_task,
+            # timeout_task,
+            # prey_task,
         )
 
     def _construct_action_space(self):
@@ -781,8 +792,8 @@ class Config():
             phase_foreperiod, # without agent
             phase_offline,
             phase_motion_visible,
-            phase_motion_invisible,
-            phase_reward,
+            # phase_motion_invisible,
+            # phase_reward,
             meta_state_phase_name_key='phase',
         )
         self._game_rules = (phase_sequence,)

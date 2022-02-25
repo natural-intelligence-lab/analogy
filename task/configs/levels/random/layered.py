@@ -10,7 +10,7 @@ import numpy as np
 # 2022/1/31
 _min_num_turns = 1 # 2
 _max_num_turns = 4
-_step_num_turns = 1 # 2
+_step_num_turns = 2 # 1 # 2
 _num_layers=50 # 7  # 2022/2/17
 
 min_num_turns_human = 2
