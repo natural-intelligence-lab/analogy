@@ -480,6 +480,7 @@ class PathDistractPath():
             maze.add_distractor_path(distractor_path=distractor_path,prey_path=prey_path)
             segments = _prey_path_to_segments(distractor_path)
             num_turns_distract = len(segments) - 1
+            start_x_distract = distractor_path[0][0]
         # maze.sample_distractors()
 
         maze_walls = maze.walls
@@ -492,6 +493,7 @@ class PathDistractPath():
         features = {
             'name': 'Random12',
             'start_x': start_x,
+            'start_x_distract': start_x_distract,
             'num_turns': num_turns,
             'path_length': path_length,
             'num_turns_distract': num_turns_distract,

@@ -79,7 +79,6 @@ def random_12_staircase(**kwargs):
     staircase = config.PreyOpacityStaircase()
     return config.Config(stimulus_generator, prey_opacity_staircase=staircase, **kwargs)
 
-
 # 2021/12/15
 def random_12_staircase_both(**kwargs):
     stim_dir = os.path.join(get_stimuli_dir.stimuli_dir(), 'random/Random12Square')
