@@ -403,11 +403,11 @@ protocol 'random_12_staircase_both_prey' {
     run_task ()
 }
 
-protocol 'random_12_staircase_both_prey' {
-    run_python_string (
-        't = TaskManager(level="random.random_12.random_12_staircase_both", fixation_phase=False, prey_opacity=0, ms_per_unit=3000)') //_uniform_num_turns
-    run_task ()
-}
+//protocol 'random_12_staircase_both_prey' {
+//    run_python_string (
+//        't = TaskManager(level="random.random_12.random_12_staircase_both", fixation_phase=False, prey_opacity=0, ms_per_unit=3000)') //_uniform_num_turns
+//    run_task ()
+//}
 
 protocol 'random_12' {
     run_python_string (
