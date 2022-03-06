@@ -120,8 +120,8 @@ class JoystickColor(action_spaces.AbstractActionSpace):
                 if action_index in (2, 3):  # left/right
                     sprite.velocity = action / sprite.mass
                 else: # when max direction is either up/down
-                    sprite.velocity = action / sprite.mass
-                    # sprite.velocity = np.zeros(2) # action / sprite.mass
+                    # sprite.velocity = action / sprite.mass
+                    sprite.velocity = np.zeros(2) # action / sprite.mass
                     sprite.metadata['y_speed'] = action[1] / sprite.mass
             else:  # glued
                 sprite.velocity = np.zeros(2)
