@@ -51,8 +51,8 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 _IMAGE_SIZE = [24]  # [8, 16, 24]
-_AGENT_SCALE = 0.03  # 0.05 # 0.10  # 0.15
-_AGENT_ASPECT_RATIO = 4
+_AGENT_SCALE = 0.1 # 0.03  # 0.05 # 0.10  # 0.15
+_AGENT_ASPECT_RATIO = 0.2 # 8 # 4
 _PREY_SCALE = 0.03
 _MIN_DIST_AGENT = 0.1/2  # minimum distance between initial agent position and target exit
 _MAX_DIST_AGENT = 0.5
@@ -88,9 +88,9 @@ _P_DIM_DISTANCE = 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
-_STEP_OPACITY_UP_ = 10 # 1  # 0 # 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
-_STEP_OPACITY_DOWN_ = 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT_ = 200 # 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
+_STEP_OPACITY_UP_ = 0 #10 # 1  # 0 # 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
+_STEP_OPACITY_DOWN_ = 0 #10 #     5 # 30 # 40  # [0 255]
+_OPACITY_INIT_ = 20 # 200 # 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
 _P_DIM_DISTANCE_ = 0 # 2/3
 _DIM_DURATION_ = 2 # [sec]
 
@@ -458,10 +458,10 @@ class Config():
             'offline',
             max_rewarding_dist=_MAX_REWARDING_DIST,
             path_prey_opacity_staircase=self._path_prey_opacity_staircase)  # 0.1
-        offline_timeout_task = tasks.Reset(
-            condition=lambda _, meta_state: meta_state['phase'] == 'motion_visible',
-            steps_after_condition=_REWARD,
-        )
+        # offline_timeout_task = tasks.Reset(
+        #     condition=lambda _, meta_state: meta_state['phase'] == 'motion_visible',
+        #     steps_after_condition=_REWARD,
+        # )
 
         # offline_task =  tasks.ContactReward(
         #     reward_fn=1.,
@@ -478,9 +478,9 @@ class Config():
         self._task = tasks.CompositeTask(
             # joystick_center_task,
             offline_task,
-            offline_timeout_task,
-            # timeout_task,
-            # prey_task,
+            # offline_timeout_task,
+            timeout_task,
+            prey_task,
         )
 
     def _construct_action_space(self):
@@ -793,8 +793,8 @@ class Config():
             phase_foreperiod, # without agent
             phase_offline,
             phase_motion_visible,
-            # phase_motion_invisible,
-            # phase_reward,
+            phase_motion_invisible,
+            phase_reward,
             meta_state_phase_name_key='phase',
         )
         self._game_rules = (phase_sequence,)
