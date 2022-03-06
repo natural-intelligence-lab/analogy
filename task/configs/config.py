@@ -222,31 +222,31 @@ class TrialInitialization():
             x=0.5, y=0.5, shape='circle', scale=0.015, c0=0, c1=255, c2=0,
         )
 
-        # setting initial agent position
-        exit_x = stimulus['prey_path'][-1][0]  # in grid unit
-        exit_y = stimulus['prey_path'][-1][1]
-        gap_maze_agent = _MAZE_Y - _AGENT_Y  # 0.05
-        if exit_y == 0 and exit_x != 0 and exit_x != maze_width-1:  # exit @ bottom
-            correct_side = 0
-            _agent_x0 = (1-_AGENT_Y) - np.random.randint(2)*(_MAZE_WIDTH+2*gap_maze_agent)  # 0.1 or 0.9
-            _agent_y0 = _AGENT_Y
-        if exit_x == 0 and exit_y != 0 and exit_y != maze_height - 1:  # exit @ left
-            correct_side = 1
-            _agent_x0 = _AGENT_Y
-            _agent_y0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
-        if exit_x == maze_width-1 and exit_y != 0 and exit_y != maze_height - 1:  # exit @ right
-            correct_side = 3
-            _agent_x0 = (1 - _AGENT_Y)
-            _agent_y0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
-        if exit_y == maze_height-1 and exit_x != 0 and exit_x != maze_width - 1:  # exit @ top
-            correct_side = 2
-            _agent_x0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
-            _agent_y0 = (1 - _AGENT_Y)
+        # # setting initial agent position
+        # exit_x = stimulus['prey_path'][-1][0]  # in grid unit
+        # exit_y = stimulus['prey_path'][-1][1]
+        # gap_maze_agent = _MAZE_Y - _AGENT_Y  # 0.05
+        # if exit_y == 0 and exit_x != 0 and exit_x != maze_width-1:  # exit @ bottom
+        #     correct_side = 0
+        #     _agent_x0 = (1-_AGENT_Y) - np.random.randint(2)*(_MAZE_WIDTH+2*gap_maze_agent)  # 0.1 or 0.9
+        #     _agent_y0 = _AGENT_Y
+        # if exit_x == 0 and exit_y != 0 and exit_y != maze_height - 1:  # exit @ left
+        #     correct_side = 1
+        #     _agent_x0 = _AGENT_Y
+        #     _agent_y0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
+        # if exit_x == maze_width-1 and exit_y != 0 and exit_y != maze_height - 1:  # exit @ right
+        #     correct_side = 3
+        #     _agent_x0 = (1 - _AGENT_Y)
+        #     _agent_y0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
+        # if exit_y == maze_height-1 and exit_x != 0 and exit_x != maze_width - 1:  # exit @ top
+        #     correct_side = 2
+        #     _agent_x0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
+        #     _agent_y0 = (1 - _AGENT_Y)
 
 
-        # _agent_x0 = np.random.rand()
-        # while np.abs(_agent_x0-prey_path[-1][0]) < _MIN_DIST_AGENT or np.abs(_agent_x0-prey_path[-1][0]) > _MAX_DIST_AGENT:
-        #     _agent_x0 = np.random.rand()  # if too close, resample
+        _agent_x0 = np.random.rand()
+        while np.abs(_agent_x0-prey_path[-1][0]) < _MIN_DIST_AGENT or np.abs(_agent_x0-prey_path[-1][0]) > _MAX_DIST_AGENT:
+            _agent_x0 = np.random.rand()  # if too close, resample
 
         state = collections.OrderedDict([
             ('agent', []),
