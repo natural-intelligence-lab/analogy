@@ -74,7 +74,7 @@ _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
 _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
 # reward
-_MAX_REWARDING_DIST=((_AGENT_ASPECT_RATIO*_AGENT_SCALE)/2)+(_PREY_SCALE/2)   #/3*2 # _AGENT_SCALE/2 # 0.15 # also scale of agent sprite
+_MAX_REWARDING_DIST=((_AGENT_SCALE)/2)+(_PREY_SCALE/2) # =((_AGENT_ASPECT_RATIO*_AGENT_SCALE)/2)+(_PREY_SCALE/2)   #/3*2 # _AGENT_SCALE/2 # 0.15 # also scale of agent sprite
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 _REWARD = 6 # 100 ms # post zero prey_distance
 _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
@@ -243,7 +243,8 @@ class TrialInitialization():
         #     _agent_x0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
         #     _agent_y0 = (1 - _AGENT_Y)
 
-
+        correct_side = 0
+        _agent_y0 = _AGENT_Y
         _agent_x0 = np.random.rand()
         while np.abs(_agent_x0-prey_path[-1][0]) < _MIN_DIST_AGENT or np.abs(_agent_x0-prey_path[-1][0]) > _MAX_DIST_AGENT:
             _agent_x0 = np.random.rand()  # if too close, resample
