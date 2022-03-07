@@ -345,8 +345,8 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         prey_path = [x for x in (path[::2] / 2).astype(int)]
 
         # Might need some lines like this to extend the path
-        # prey_path.append(prey_path[-1] + (prey_path[-1] - prey_path[-2]))
-        # prey_path.insert(0, prey_path[0] + (prey_path[0] - prey_path[1]))
+        prey_path.append(prey_path[-1] + (prey_path[-1] - prey_path[-2]))
+        prey_path.insert(0, prey_path[0] + (prey_path[0] - prey_path[1]))
 
         prey_path = [tuple(x) for x in prey_path]
 
