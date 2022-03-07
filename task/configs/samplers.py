@@ -4,6 +4,8 @@ import copy
 import json
 from layered_maze_lib import maze_composer
 from layered_maze_lib import path_dataset
+from wire_maze_lib import maze_composer as wire_maze_composer
+from wire_maze_lib import path_dataset as wire_path_dataset
 import logging
 import numpy as np
 import os
@@ -246,6 +248,112 @@ class LayeredMazeSampler(maze_composer.MazeComposer):
 
         features = {
             'name': 'LayeredMaze',
+            'start_x': prey_path[0][1],
+            'num_turns': num_turns,
+            'path_length': len(prey_path),
+        }
+
+        stimulus = dict(
+            maze_width=maze_width,
+            maze_height=maze_height,
+            prey_path=prey_path,
+            maze_walls=maze_walls,
+            features=features,
+        )
+
+        return stimulus
+
+    def __len__(self):
+        return self._num_mazes  # np.inf
+
+
+class WireMazeSampler(wire_maze_composer.MazeComposer):
+    """Generates stimuli composed of overlaying paths."""
+
+    def __init__(self,
+                 path_dir,
+                 num_layers,
+                 ball_path_top_bottom=True,
+                 distractors_top_bottom=True,
+                 max_num_turns=np.inf):
+        """Constructor.
+
+        Args:
+            path_dir: String. Directory of path dataset to use for composing
+                mazes.
+            num_layers: Int. Number of paths to compose for each maze.
+                Equivalently, one greater than number of distractor paths.
+            ball_path_top_bottom: Bool. Whether the ball path should be forced
+                to enter from the top and exit from the bottom.
+            distractors_top_bottom: Bool. Whether all distractor paths should be
+                forced to enter from the top and exit from the bottom.
+            max_num_turns: Int. Maximum number of turns for the ball path.
+        """
+        super(WireMazeSampler, self).__init__(
+            path_dir=path_dir,
+            num_layers=num_layers,
+            pixels_per_square=2,  # Irrelevant when using MOOG
+            ball_path_top_bottom=ball_path_top_bottom,
+            distractors_top_bottom=distractors_top_bottom,
+            max_num_turns=max_num_turns,
+        )
+
+    def _get_maze_walls(self, maze):
+        walls = []
+        for i, row in enumerate(maze):
+            for j, x in enumerate(row):
+                if x == 1:  # Wall exists here
+                    if i % 2 == 1:  # Vertical wall
+                        start = (i / 2, (j - 1) / 2)
+                        end = (i / 2, (j + 1) / 2)
+                    else:  # Horizontal wall
+                        start = ((i - 1) / 2, j / 2)
+                        end = ((i + 1) / 2, j / 2)
+
+                    # # Adjust for offset to make walls in the middle of the maze
+                    # start = (start[0], start[1] + 0.5)
+                    # end = (end[0], end[1] + 0.5)
+
+                    # Append wall
+                    walls.append((start, end))
+        return walls
+
+    def _num_turns_path(self, prey_path):
+        path_x = prey_path[:, 0]
+        path_x_diff = path_x[1:] - path_x[:-1]
+        num_turns = np.sum(
+            np.abs(np.convolve(path_x_diff, [-1, 1], mode='valid')))  # detect change point
+        return num_turns
+
+    def __call__(self):
+        _, maze, path = super(WireMazeSampler, self).__call__()
+
+        # Because of python .imshow() weirdness, the top is the left side of the
+        # screen, so have to rotate 270 degrees to correct for that
+        maze, path = wire_path_dataset.rotate_maze_and_path_90(
+            maze, path, num_times=3)
+
+        maze_width = int((maze.shape[0] + 1) / 2)
+        maze_height = int((maze.shape[1] + 1) / 2)
+        maze_walls = self._get_maze_walls(maze)
+
+        # original
+        # prey_path = [tuple(x) for x in (path[::2] / 2).astype(int)]
+
+        # NW: I'm not sure what this line does --- might no longer be correct
+        # HS: I think this is for undoing transformation into pixels (2 for pixels_per_square)
+        prey_path = [x for x in (path[::2] / 2).astype(int)]
+
+        # Might need some lines like this to extend the path
+        # prey_path.append(prey_path[-1] + (prey_path[-1] - prey_path[-2]))
+        # prey_path.insert(0, prey_path[0] + (prey_path[0] - prey_path[1]))
+
+        prey_path = [tuple(x) for x in prey_path]
+
+        num_turns = self._num_turns_path(path)
+
+        features = {
+            'name': 'WireMaze',
             'start_x': prey_path[0][1],
             'num_turns': num_turns,
             'path_length': len(prey_path),
