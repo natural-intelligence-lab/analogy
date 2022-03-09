@@ -5,6 +5,7 @@ import generate_path
 import numpy as np
 import os
 import path_dataset
+import shutil
 
 _MAZE_SIZE = 16  # Size of the maze
 _DIR_SUFFIX = '_v0'  # Suffix for the data directory
@@ -34,7 +35,9 @@ def main(_):
         'samples_per_pair_' + str(_SAMPLES_PER_PAIR) + _DIR_SUFFIX)
     write_dir = os.path.join(maze_size_dir, num_samples_name)
     if os.path.exists(write_dir):
-        raise ValueError(f'Directory {write_dir} already exists.')
+        # raise ValueError(f'Directory {write_dir} already exists.')
+        print(f'Directory {write_dir} already exists.')
+        shutil.rmtree(write_dir)
     os.makedirs(write_dir)
     print(f'Writing data to {write_dir}')
 

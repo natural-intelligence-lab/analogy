@@ -1,5 +1,10 @@
 """Common grid_chase task config.
 
+2022/3/7 debug list for wire_maze
+1) (done) when last segment is short, ball dynamics is weird
+2) loop?
+3) why so fast together with monkey_train branch?
+
 2022/2/25
 1) remove online for training (for now): offline_timeout_task
 2) vertical movement only (exit on the left/right only): _step_num_turns in layered.py

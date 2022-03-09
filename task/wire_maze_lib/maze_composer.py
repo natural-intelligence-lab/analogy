@@ -147,9 +147,10 @@ class MazeComposer():
             np.random.choice(self._valid_ball_path_inds)]
         maze = np.copy(maze)
         path = np.copy(path)
-        path = (0.25 * (path[1:] + path[:-1])).astype(int)
+
+        path = (0.25 * (path[1:] + path[:-1])).astype(int)  # ?? ; 0 to 0, 3 to 1, 30 to 14
         path *= self._pixels_per_square
-        path += int(self._pixels_per_square / 2)
+        path += int(self._pixels_per_square / 2) # 1 to 29
         path = self._augment_path(path)
 
         # Add distractor paths

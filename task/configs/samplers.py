@@ -325,6 +325,19 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             np.abs(np.convolve(path_x_diff, [-1, 1], mode='valid')))  # detect change point
         return num_turns
 
+    def _prey_path_to_segment_length(self, prey_path):
+        directions = np.array(prey_path[1:]) - np.array(prey_path[:-1])
+        segments = [0]
+        prev_direction = directions[0]
+        for d in directions:
+            if np.array_equal(d, prev_direction):
+                segments[-1] = segments[-1] + 1
+            else:
+                segments.append(1)
+            prev_direction = d
+
+        return segments
+
     def __call__(self):
         _, maze, path = super(WireMazeSampler, self).__call__()
 
@@ -341,14 +354,18 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         # prey_path = [tuple(x) for x in (path[::2] / 2).astype(int)]
 
         # NW: I'm not sure what this line does --- might no longer be correct
-        # HS: I think this is for undoing transformation into pixels (2 for pixels_per_square)
-        prey_path = [x for x in (path[::2] / 2).astype(int)]
+        # HS: I think this is for undoing (_augment_path) transformation into pixels (2 for pixels_per_square)
+        prey_path = [x for x in (path[::2] / 2).astype(int)] # 0 to 14
 
-        # Might need some lines like this to extend the path
-        prey_path.append(prey_path[-1] + (prey_path[-1] - prey_path[-2]))
+        # # Might need some lines like this to extend the path
+        # prey_path.append(prey_path[-1] + (prey_path[-1] - prey_path[-2]))
         prey_path.insert(0, prey_path[0] + (prey_path[0] - prey_path[1]))
 
         prey_path = [tuple(x) for x in prey_path]
+        # print(prey_path)
+
+        segment_length = self._prey_path_to_segment_length(prey_path)
+        # print(segment_length)
 
         num_turns = self._num_turns_path(path)
 

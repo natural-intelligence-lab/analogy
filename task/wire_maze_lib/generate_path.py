@@ -25,7 +25,7 @@ class PathGenerator():
                 implementation of the maze composer could, but that would slow
                 down the maze composer.
         """
-        self._maze_shape = [2 * maze_shape[0] - 1, 2 * maze_shape[1] - 1]
+        self._maze_shape = [2 * maze_shape[0] - 1, 2 * maze_shape[1] - 1] # ?? if 16 grids, 16*2-1 = 31
         self._min_segment_length = min_segment_length
         self._turn_prob = turn_prob
 
@@ -37,10 +37,10 @@ class PathGenerator():
         Each element of the list is (i, j), where 1 <= i < maze_width - 1 is the
         x-coordinate and 1 <= j < maze_height - 1 is the y-coordinate.
         """
-        w, h = self._maze_shape
-        edgepoints = (
-            [(0, i) for i in range(1, h - 1, 2)] +
-            [(w - 1, i) for i in range(1, h - 1, 2)] +
+        w, h = self._maze_shape  # 31
+        edgepoints = ( # 15 points along boundary
+            [(0, i) for i in range(1, h - 1, 2)] +  # (0,1), (0,3), ..., (0,29) range(1,30,2)
+            [(w - 1, i) for i in range(1, h - 1, 2)] +  # (29,1), (29, 3), ..., (29, 29)
             [(i, 0) for i in range(1, w - 1, 2)] +
             [(i, h - 1) for i in range(1, w - 1, 2)]
         )
@@ -98,7 +98,7 @@ class PathGenerator():
             if just_turned:
                 behind = self._tail_position - 2 * self._tail_direction
                 behind_in_maze = (
-                    (0 <= behind[0] <= self._maze_array.shape[0]) and
+                    (0 <= behind[0] <= self._maze_array.shape[0]) and  # 0<= <=31
                     (0 <= behind[1] <= self._maze_array.shape[1])
                 )
                 if behind_in_maze:
@@ -106,6 +106,11 @@ class PathGenerator():
                         return False
                     else:
                         self._maze_array[behind[0], behind[1]] = -1
+
+                # to prevent turn points just next to boundary
+                if self._finished():
+                    return False
+
             return True
 
     def _step(self):
