@@ -1,5 +1,10 @@
 """Common grid_chase task config.
 
+2022/3/7 debug list for wire_maze
+1) (done) when last segment is short, ball dynamics is weird
+2) loop?
+3) why so fast together with monkey_train branch?
+
 2022/2/25
 1) remove online for training (for now): offline_timeout_task
 2) vertical movement only (exit on the left/right only): _step_num_turns in layered.py
@@ -51,8 +56,8 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 _IMAGE_SIZE = [24]  # [8, 16, 24]
-_AGENT_SCALE = 0.1 # 0.03  # 0.05 # 0.10  # 0.15
-_AGENT_ASPECT_RATIO = 0.2 # 8 # 4
+_AGENT_SCALE = 0.1  # 0.03  # 0.05 # 0.10  # 0.15
+_AGENT_ASPECT_RATIO = 0.2 # 4 # 8 # 4
 _PREY_SCALE = 0.03
 _MIN_DIST_AGENT = 0.1/2  # minimum distance between initial agent position and target exit
 _MAX_DIST_AGENT = 0.5
@@ -74,7 +79,7 @@ _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
 _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
 # reward
-_MAX_REWARDING_DIST=((_AGENT_SCALE)/2)+(_PREY_SCALE/2) # ((_AGENT_ASPECT_RATIO*_AGENT_SCALE)/2)+(_PREY_SCALE/2)   #/3*2 # _AGENT_SCALE/2 # 0.15 # also scale of agent sprite
+_MAX_REWARDING_DIST=((_AGENT_SCALE)/2)+(_PREY_SCALE/2) # =((_AGENT_ASPECT_RATIO*_AGENT_SCALE)/2)+(_PREY_SCALE/2)   #/3*2 # _AGENT_SCALE/2 # 0.15 # also scale of agent sprite
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 _REWARD = 6 # 100 ms # post zero prey_distance
 _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
@@ -88,8 +93,8 @@ _P_DIM_DISTANCE = 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
-_STEP_OPACITY_UP_ = 0 #10 # 1  # 0 # 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
-_STEP_OPACITY_DOWN_ = 0 #10 #     5 # 30 # 40  # [0 255]
+_STEP_OPACITY_UP_ = 0 # 10 # 1  # 0 # 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
+_STEP_OPACITY_DOWN_ = 0 # 10 #     5 # 30 # 40  # [0 255]
 _OPACITY_INIT_ = 20 # 200 # 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
 _P_DIM_DISTANCE_ = 0 # 2/3
 _DIM_DURATION_ = 2 # [sec]
@@ -243,7 +248,7 @@ class TrialInitialization():
         #     _agent_x0 = (1 - _AGENT_Y) - np.random.randint(2) * (_MAZE_WIDTH + 2 * gap_maze_agent)  # 0.1 or 0.9
         #     _agent_y0 = (1 - _AGENT_Y)
 
-        correct_side = 1
+        correct_side = 0
         _agent_y0 = _AGENT_Y
         _agent_x0 = np.random.rand()
         while np.abs(_agent_x0-prey_path[-1][0]) < _MIN_DIST_AGENT or np.abs(_agent_x0-prey_path[-1][0]) > _MAX_DIST_AGENT:
