@@ -86,10 +86,10 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 
 # staircase
     # _STEP_OPACITY = 40  # [0 255]
-_STEP_OPACITY_UP = 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
-_STEP_OPACITY_DOWN = 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT = 100 # 20 # 20 # 100 #     10 # 100 # 10
-_P_DIM_DISTANCE = 0 # 2/3
+_STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
+_STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
+_OPACITY_INIT = 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
+_P_PATHPREY_DIM_DISTANCE = 1/2 # 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
@@ -628,7 +628,7 @@ class Config():
 
         def _update_motion_steps_path_prey(meta_state):
             meta_state['motion_steps_path_prey'] += 1 # [frames]? clock?
-            meta_state['prey_distance_remaining_path_prey'] -= self._prey_speed*_GAIN_PATH_PREY
+            meta_state['prey_distance_remaining_path_prey'] -= (self._prey_speed*_GAIN_PATH_PREY)
         update_motion_steps_path_prey = gr.ModifyMetaState(_update_motion_steps_path_prey)
 
         def _increase_RT_offline(meta_state): # increase RT from when path prey is shown
@@ -681,6 +681,11 @@ class Config():
             rules=gr.ModifySprites('agent', _make_green)
         )
 
+        def _decrease_path_prey_opacity(s,meta_state):
+            if meta_state['prey_distance_remaining_path_prey'] < meta_state['prey_distance_invisible']*_P_PATHPREY_DIM_DISTANCE: # P_DIM_DISTANCE=0 -> N/A
+                s.opacity=0            
+        dim_path_prey = custom_game_rules.DimPrey('path_prey',_decrease_path_prey_opacity)
+
         def _track_moved_h(s):
             if not np.all(s.velocity == 0): ##  # if not np.all(s.velocity[0] == 0): ##
                 s.metadata['moved_h'] = True
@@ -701,7 +706,7 @@ class Config():
         phase_offline = gr.Phase(
             one_time_rules=[create_agent,set_path_prey_opacity],  # ,glue_path_prey],
             # [disappear_screen,disappear_fake_prey,create_agent,set_path_prey_opacity,glue_path_prey], # [disappear_fixation, disappear_screen, create_agent],
-            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color], # ,update_joystick_fixation_dur],  # update_agent_color 
+            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color,dim_path_prey,update_motion_steps_path_prey], # ,update_joystick_fixation_dur],  # update_agent_color 
             name='offline',
             end_condition=_end_offline_phase,  #  duration=10,
         )
