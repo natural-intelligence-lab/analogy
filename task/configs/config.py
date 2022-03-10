@@ -86,8 +86,8 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 
 # staircase
     # _STEP_OPACITY = 40  # [0 255]
-_STEP_OPACITY_UP = 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
-_STEP_OPACITY_DOWN = 10 #     5 # 30 # 40  # [0 255]
+_STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
+_STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
 _OPACITY_INIT = 100 # 20 # 20 # 100 #     10 # 100 # 10
 _P_DIM_DISTANCE = 0 # 2/3
 _DIM_DURATION = 2 # [sec]
