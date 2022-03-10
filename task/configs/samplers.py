@@ -275,7 +275,9 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                  num_layers,
                  ball_path_top_bottom=True,
                  distractors_top_bottom=True,
-                 max_num_turns=np.inf):
+                 max_num_turns=np.inf,
+                 min_num_overlap=0,
+                 min_exit_distance=0):
         """Constructor.
 
         Args:
@@ -288,6 +290,8 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             distractors_top_bottom: Bool. Whether all distractor paths should be
                 forced to enter from the top and exit from the bottom.
             max_num_turns: Int. Maximum number of turns for the ball path.
+            min_num_overlap: Int. impose distractors have crossed the ball path with this number
+            min_exit_distance: Int. impose contraint of exits between path and distriactors being large than min
         """
         super(WireMazeSampler, self).__init__(
             path_dir=path_dir,
@@ -296,6 +300,8 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             ball_path_top_bottom=ball_path_top_bottom,
             distractors_top_bottom=distractors_top_bottom,
             max_num_turns=max_num_turns,
+            min_num_overlap=min_num_overlap,
+            min_exit_distance=min_exit_distance,
         )
 
     def _get_maze_walls(self, maze):
@@ -368,12 +374,14 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         # print(segment_length)
 
         num_turns = self._num_turns_path(path)
+        num_overlap = super(WireMazeSampler, self).num_overlap
 
         features = {
             'name': 'WireMaze',
             'start_x': prey_path[0][1],
             'num_turns': num_turns,
             'path_length': len(prey_path),
+            'num_overlap': num_overlap,
         }
 
         stimulus = dict(
