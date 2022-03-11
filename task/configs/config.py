@@ -88,8 +88,8 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
     # _STEP_OPACITY = 40  # [0 255]
 _STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT = 100 # 20 # 20 # 100 #     10 # 100 # 10
-_P_DIM_DISTANCE = 0 # 2/3
+_OPACITY_INIT = 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
+_P_PATHPREY_DIM_DISTANCE = 1/3 # 1/2 # 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
@@ -614,8 +614,8 @@ class Config():
             name='fake_prey',
             # end_condition=_end_foreperiod_phase,  
         )
-
-        # 3-3. foreperiod without agent
+        ###########################################
+        # 3-3. foreperiod without agent (path_prey)
         # one_time_rules
         disappear_fake_prey = gr.ModifySprites('fake_prey', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
@@ -628,8 +628,13 @@ class Config():
 
         def _update_motion_steps_path_prey(meta_state):
             meta_state['motion_steps_path_prey'] += 1 # [frames]? clock?
-            meta_state['prey_distance_remaining_path_prey'] -= self._prey_speed*_GAIN_PATH_PREY
+            meta_state['prey_distance_remaining_path_prey'] -= (self._prey_speed*_GAIN_PATH_PREY)
         update_motion_steps_path_prey = gr.ModifyMetaState(_update_motion_steps_path_prey)
+
+        def _decrease_path_prey_opacity(s,meta_state):
+            if meta_state['prey_distance_remaining_path_prey'] < (meta_state['prey_distance_invisible']*_P_PATHPREY_DIM_DISTANCE): # P_DIM_DISTANCE=0 -> N/A
+                s.opacity=0
+        dim_path_prey = custom_game_rules.DimPrey('path_prey',_decrease_path_prey_opacity)
 
         def _increase_RT_offline(meta_state): # increase RT from when path prey is shown
             meta_state['RT_offline'] += 1
@@ -642,13 +647,13 @@ class Config():
 
         phase_foreperiod = gr.Phase(
             one_time_rules=[disappear_screen,disappear_fake_prey,create_path_prey,unglue_path_prey],
-            continual_rules=[update_motion_steps_path_prey,increase_RT_offline],
+            continual_rules=[update_motion_steps_path_prey,increase_RT_offline,dim_path_prey],
             # duration=_FOREPERIOD_DURATION,
             name='foreperiod',
             end_condition=_end_foreperiod_phase,
         )
-
-        # 4. Offline phase
+        ###########################################
+        # 4. Offline phase (after paddle)
 
         # one_time_rules
         create_agent = custom_game_rules.CreateAgent(self._trial_init)
@@ -699,13 +704,13 @@ class Config():
             # meta_state['joystick_fixation_postoffline']>_JOYSTICK_FIXATION_POSTOFFLINE # np.all(agent.velocity == 0) # 
 
         phase_offline = gr.Phase(
-            one_time_rules=[create_agent,set_path_prey_opacity],  # ,glue_path_prey],
+            one_time_rules=[create_agent], # ,set_path_prey_opacity],  # ,glue_path_prey],
             # [disappear_screen,disappear_fake_prey,create_agent,set_path_prey_opacity,glue_path_prey], # [disappear_fixation, disappear_screen, create_agent],
-            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color], # ,update_joystick_fixation_dur],  # update_agent_color 
+            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color], # ,update_joystick_fixation_dur],  # update_agent_color
             name='offline',
             end_condition=_end_offline_phase,  #  duration=10,
         )
-
+        ###########################################
         # 5. Visible motion phase
         disappear_path_prey = gr.ModifySprites('path_prey', _make_transparent)
         def _unglue(meta_state):
@@ -733,7 +738,7 @@ class Config():
             end_condition=_end_vis_motion_phase,  # duration=10,
             name='motion_visible',
         )
-
+        ###########################################
         # 6. Invisible motion phase
         set_prey_opacity = gr.ModifySprites('prey', _set_prey_opacity)  # self._prey_opacity
         def _update_ts(meta_state):
