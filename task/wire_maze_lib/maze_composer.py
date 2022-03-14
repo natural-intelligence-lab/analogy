@@ -21,6 +21,7 @@ class MazeComposer():
                  distractors_top_bottom=True,
                  max_num_turns=np.inf,
                  min_num_overlap=0,
+                 max_num_overlap=np.inf,
                  min_exit_distance=0):
         """Constructor.
         
@@ -44,6 +45,7 @@ class MazeComposer():
         self._distractors_top_bottom = distractors_top_bottom
         self._max_num_turns = max_num_turns
         self._min_num_overlap = min_num_overlap
+        self._max_num_overlap = max_num_overlap
         self._min_exit_distance = min_exit_distance
 
         if pixels_per_square % 2 != 0:
@@ -204,10 +206,10 @@ class MazeComposer():
                         _min_dist_maze = self._min_exit_distance*2
                         if exit_distance > _min_dist_maze:
                             # impose num_overlap constraints
-                            if self._min_num_overlap > 0:
+                            if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
                                 # compute number of overlap
                                 self._num_overlap += self._compute_num_overlap(maze, new_maze) # total across distractors
-                                if self._num_overlap >= self._min_num_overlap:
+                                if self._num_overlap >= self._min_num_overlap and self._num_overlap <= self._max_num_overlap:
                                     maze += new_maze
                                     done = True
                             else:
@@ -215,10 +217,10 @@ class MazeComposer():
                                 done = True
                     else:
                         # impose num_overlap constraints
-                        if self._min_num_overlap > 0:
+                        if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
                             # compute number of overlap
                             self._num_overlap += self._compute_num_overlap(maze, new_maze)
-                            if self._num_overlap >= self._min_num_overlap:
+                            if self._num_overlap >= self._min_num_overlap and self._num_overlap <= self._max_num_overlap:
                                 maze += new_maze
                                 done = True
                         else:

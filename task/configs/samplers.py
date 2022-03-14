@@ -277,6 +277,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                  distractors_top_bottom=True,
                  max_num_turns=np.inf,
                  min_num_overlap=0,
+                 max_num_overlap=np.inf,
                  min_exit_distance=0):
         """Constructor.
 
@@ -301,6 +302,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             distractors_top_bottom=distractors_top_bottom,
             max_num_turns=max_num_turns,
             min_num_overlap=min_num_overlap,
+            max_num_overlap=max_num_overlap,
             min_exit_distance=min_exit_distance,
         )
 
