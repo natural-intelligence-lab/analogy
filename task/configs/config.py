@@ -89,7 +89,7 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 _STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
 _OPACITY_INIT = 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
-_P_PATHPREY_DIM_DISTANCE = 1/3 # 1/2 # 0 # 2/3
+_P_PATHPREY_DIM_DISTANCE = 1/2 # 1/3 # 1/2 # 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
@@ -176,11 +176,16 @@ class TrialInitialization():
         prey_path = stimulus['prey_path']
         maze_walls = stimulus['maze_walls']
         num_turns = stimulus['features']['num_turns']
+        path_walls = stimulus['features']['maze_prey_walls']  # list
         maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
         cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
             wall_width=0.05, cell_size=cell_size, bottom_border=_MAZE_Y, c0=128,
             c1=128, c2=128)
+
+        maze_prey_walls = maze_lib.Maze(maze_width, maze_height, all_walls=path_walls)
+        path_wall_sprite = maze_prey_walls.to_sprites(
+            wall_width=0.05*2, cell_size=cell_size, bottom_border=_MAZE_Y, c0=32,c1=128, c2=32, opacity=0)  # green
 
         # Compute scaled and translated prey path
         prey_path = 0.5 + np.array(stimulus['prey_path'])
@@ -266,6 +271,7 @@ class TrialInitialization():
             ('fake_prey', []),
             ('prey_path', []),
             ('path_prey', []),
+            ('prey_wall',path_wall_sprite),
         ])
 
         # Prey distance remaining is how far prey has to go to reach agent
@@ -303,6 +309,7 @@ class TrialInitialization():
             'image_size': image_size,
             'prey_distance_remaining': prey_distance_remaining,
             'prey_distance_invisible': cell_size * len(prey_path) + _MAZE_Y - _AGENT_Y,
+            'prey_distance': cell_size * len(prey_path),
             'slope_opacity': 0,
             'RT_offline': 0,
             'tp': 0,
@@ -319,6 +326,7 @@ class TrialInitialization():
             'path_prey_speed': self._prey_speed*_GAIN_PATH_PREY,
             'motion_steps_path_prey':0,
             'prey_distance_remaining_path_prey':prey_distance_remaining,
+            'prey_distance_offset':_MAZE_Y - _AGENT_Y,
 
         }
 
@@ -619,6 +627,7 @@ class Config():
         # one_time_rules
         disappear_fake_prey = gr.ModifySprites('fake_prey', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
+        clear_prey_wall =  gr.ModifySprites('prey_wall',_make_transparent)
 
         create_path_prey = custom_game_rules.CreatePathPrey(self._trial_init)
         def _unglue_path_prey(meta_state):
@@ -631,10 +640,25 @@ class Config():
             meta_state['prey_distance_remaining_path_prey'] -= (self._prey_speed*_GAIN_PATH_PREY)
         update_motion_steps_path_prey = gr.ModifyMetaState(_update_motion_steps_path_prey)
 
+        highlight_path = gr.ModifyOnContact('prey_wall','path_prey',modifier_0=_make_opaque)
+        # gr.ModifySprites('prey_wall', _make_opaque, sample_one=False, filter_fn=lambda s: _p_path_prey(state,x))
+        # def _p_path_prey(state, meta_state):
+        #     p_path_prey = (meta_state['prey_distance_remaining_path_prey']-meta_state['prey_distance_offset'])/meta_state['prey_distance']
+        #     return p_path_prey  # 1 to 0
+        # update_agent_color = gr.ConditionalRule(
+        #     condition=gr.get_contact_indices('prey_wall','path_prey'),
+        #     rules=gr.ModifySprites(layer='prey_wall',_make_opaque),
+        # )
+
         def _decrease_path_prey_opacity(s,meta_state):
             if meta_state['prey_distance_remaining_path_prey'] < (meta_state['prey_distance_invisible']*_P_PATHPREY_DIM_DISTANCE): # P_DIM_DISTANCE=0 -> N/A
                 s.opacity=0
         dim_path_prey = custom_game_rules.DimPrey('path_prey',_decrease_path_prey_opacity)
+
+        glue_path_prey_conditional = gr.ConditionalRule(
+            condition=lambda state, x: state['path_prey'][0].opacity == 0,
+            rules=custom_game_rules.GluePathPrey()
+        )
 
         def _increase_RT_offline(meta_state): # increase RT from when path prey is shown
             meta_state['RT_offline'] += 1
@@ -646,8 +670,8 @@ class Config():
             return False
 
         phase_foreperiod = gr.Phase(
-            one_time_rules=[disappear_screen,disappear_fake_prey,create_path_prey,unglue_path_prey],
-            continual_rules=[update_motion_steps_path_prey,increase_RT_offline,dim_path_prey],
+            one_time_rules=[disappear_screen,disappear_fake_prey,create_path_prey,unglue_path_prey,clear_prey_wall],
+            continual_rules=[highlight_path,update_motion_steps_path_prey,increase_RT_offline,dim_path_prey,glue_path_prey_conditional],
             # duration=_FOREPERIOD_DURATION,
             name='foreperiod',
             end_condition=_end_foreperiod_phase,
@@ -704,7 +728,7 @@ class Config():
             # meta_state['joystick_fixation_postoffline']>_JOYSTICK_FIXATION_POSTOFFLINE # np.all(agent.velocity == 0) # 
 
         phase_offline = gr.Phase(
-            one_time_rules=[create_agent], # ,set_path_prey_opacity],  # ,glue_path_prey],
+            one_time_rules=[create_agent,clear_prey_wall], # ,set_path_prey_opacity],  # ,glue_path_prey],
             # [disappear_screen,disappear_fake_prey,create_agent,set_path_prey_opacity,glue_path_prey], # [disappear_fixation, disappear_screen, create_agent],
             continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color], # ,update_joystick_fixation_dur],  # update_agent_color
             name='offline',

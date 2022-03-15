@@ -277,6 +277,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                  distractors_top_bottom=True,
                  max_num_turns=np.inf,
                  min_num_overlap=0,
+                 max_num_overlap=np.inf,
                  min_exit_distance=0):
         """Constructor.
 
@@ -301,6 +302,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             distractors_top_bottom=distractors_top_bottom,
             max_num_turns=max_num_turns,
             min_num_overlap=min_num_overlap,
+            max_num_overlap=max_num_overlap,
             min_exit_distance=min_exit_distance,
         )
 
@@ -324,6 +326,20 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                     walls.append((start, end))
         return walls
 
+    def _get_maze_walls_from_path(self, path):
+        walls = []
+        # from start/top
+        for i, x in enumerate(path):
+            if x[0] % 2==1: # Vertical wall
+                start = (x[0] / 2, (x[1] - 1) / 2)
+                end = (x[0] / 2, (x[1] + 1) / 2)
+            else:
+                start = ((x[0] - 1) / 2, x[1] / 2)
+                end = ((x[0] + 1) / 2, x[1] / 2)
+
+            walls.append((start, end))
+        return walls
+
     def _num_turns_path(self, prey_path):
         path_x = prey_path[:, 0]
         path_x_diff = path_x[1:] - path_x[:-1]
@@ -345,16 +361,18 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         return segments
 
     def __call__(self):
-        _, maze, path = super(WireMazeSampler, self).__call__()
+        _, maze, path, original_path = super(WireMazeSampler, self).__call__()
 
         # Because of python .imshow() weirdness, the top is the left side of the
         # screen, so have to rotate 270 degrees to correct for that
         maze, path = wire_path_dataset.rotate_maze_and_path_90(
             maze, path, num_times=3)
+        original_path = wire_path_dataset.rotate_path_90(maze, original_path, num_times=3)
 
         maze_width = int((maze.shape[0] + 1) / 2)
         maze_height = int((maze.shape[1] + 1) / 2)
         maze_walls = self._get_maze_walls(maze)
+        maze_prey_walls = self._get_maze_walls_from_path(original_path)
 
         # original
         # prey_path = [tuple(x) for x in (path[::2] / 2).astype(int)]
@@ -382,6 +400,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             'num_turns': num_turns,
             'path_length': len(prey_path),
             'num_overlap': num_overlap,
+            'maze_prey_walls': maze_prey_walls,
         }
 
         stimulus = dict(

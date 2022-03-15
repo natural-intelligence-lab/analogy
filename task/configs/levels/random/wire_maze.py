@@ -5,6 +5,7 @@ import os
 from configs import config
 from configs import samplers
 from configs.levels import get_stimuli_dir
+import numpy as np
 
 _MIN_NUM_TURNS = 2
 _MAX_NUM_TURNS = 6 # 4
@@ -12,6 +13,7 @@ _STEP_NUM_TURNS = 2
 _NUM_LAYERS= 2 # 50
 
 _MIN_NUM_OVERLAP=1
+_MAX_NUM_OVERLAP=np.inf
 _MIN_EXIT_DISTANCE = 3  # GRID; if set to zero, no constraint on the exit distance
 
 
@@ -41,6 +43,7 @@ def random_16_staircase(**kwargs):
             distractors_top_bottom=True,
             max_num_turns=_MAX_NUM_TURNS,
             min_num_overlap=_MIN_NUM_OVERLAP,
+            max_num_overlap=_MAX_NUM_OVERLAP,
             min_exit_distance=_MIN_EXIT_DISTANCE,
         )
     ]
