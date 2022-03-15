@@ -13,7 +13,7 @@ _STEP_NUM_TURNS = 2
 _NUM_LAYERS= 2 # 50
 
 _MIN_NUM_OVERLAP=1
-_MAX_NUM_OVERLAP=1 # 2 # np.inf
+_MAX_NUM_OVERLAP=1 # np.inf
 _MIN_EXIT_DISTANCE = 3  # GRID; if set to zero, no constraint on the exit distance
 
 

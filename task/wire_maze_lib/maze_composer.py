@@ -209,7 +209,8 @@ class MazeComposer():
                             # impose num_overlap constraints
                             if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
                                 # compute number of overlap
-                                self._num_overlap += self._compute_num_overlap(maze, new_maze) # total across distractors
+                                self._num_overlap = self._compute_num_overlap(maze, new_maze) # total across distractors
+                                # self._num_overlap += self._compute_num_overlap(maze, new_maze) # total across distractors
                                 if self._num_overlap >= self._min_num_overlap and self._num_overlap <= self._max_num_overlap:
                                     maze += new_maze
                                     done = True
@@ -220,7 +221,8 @@ class MazeComposer():
                         # impose num_overlap constraints
                         if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
                             # compute number of overlap
-                            self._num_overlap += self._compute_num_overlap(maze, new_maze)
+                            self._num_overlap = self._compute_num_overlap(maze, new_maze)
+                            # self._num_overlap += self._compute_num_overlap(maze, new_maze)
                             if self._num_overlap >= self._min_num_overlap and self._num_overlap <= self._max_num_overlap:
                                 maze += new_maze
                                 done = True
