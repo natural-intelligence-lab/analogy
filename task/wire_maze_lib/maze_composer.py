@@ -179,6 +179,7 @@ class MazeComposer():
         maze = np.copy(maze)
         path = np.copy(path)
 
+        # transform for visualization
         prey_path = (0.25 * (path[1:] + path[:-1])).astype(int)  # ?? ; 0 to 0, 3 to 1, 30 to 14
         prey_path *= self._pixels_per_square
         prey_path += int(self._pixels_per_square / 2) # 1 to 29
@@ -229,7 +230,7 @@ class MazeComposer():
 
         rendered_maze = self._render_maze(maze)
 
-        return rendered_maze, maze, prey_path
+        return rendered_maze, maze, prey_path, path
 
 
     @property

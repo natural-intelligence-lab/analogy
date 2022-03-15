@@ -14,6 +14,12 @@ def rotate_maze_and_path_90(maze, path, num_times=1):
         path = np.stack([maze_width - path[:, 1] - 1, path[:, 0]], axis=1)
     return maze, path
 
+def rotate_path_90(maze, path, num_times=1):
+    """Rotate maze and path 90 degrees."""
+    maze_width = maze.shape[1]
+    for _ in range(num_times):
+        path = np.stack([maze_width - path[:, 1] - 1, path[:, 0]], axis=1)
+    return path
 
 def orient_maze_and_path(maze, path):
     """Rotate maze and path so that the entrance point is on the top.
