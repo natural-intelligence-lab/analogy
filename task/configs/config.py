@@ -56,7 +56,7 @@ _AGENT_Y = 0.1
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 _IMAGE_SIZE = [24]  # [8, 16, 24]
-_AGENT_SCALE = 0.15  # 0.03  # 0.05 # 0.10  # 0.15
+_AGENT_SCALE = 0.1 # 0.15  # 0.03  # 0.05 # 0.10  # 0.15
 _AGENT_ASPECT_RATIO = 0.2 # 4 # 8 # 4
 _PREY_SCALE = 0.03
 _MIN_DIST_AGENT = 0.1/2  # minimum distance between initial agent position and target exit
@@ -89,7 +89,7 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 _STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
 _OPACITY_INIT = 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
-_P_PATHPREY_DIM_DISTANCE = 0 # 1/2 # 1/3 # 1/2 # 0 # 2/3
+_P_PATHPREY_DIM_DISTANCE = 2/3 # 1/2 # 1/3 # 1/2 # 1/4 # 0 # 1/3 # 1/2 # 1/3 # 1/2 # 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)

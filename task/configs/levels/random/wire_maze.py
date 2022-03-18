@@ -10,11 +10,11 @@ import numpy as np
 _MIN_NUM_TURNS = 2
 _MAX_NUM_TURNS = 6 # 4
 _STEP_NUM_TURNS = 2
-_NUM_LAYERS= 2 # 50
+_NUM_LAYERS= 3 # 2 # 50
 
 _MIN_NUM_OVERLAP=1
-_MAX_NUM_OVERLAP=1 # np.inf
-_MIN_EXIT_DISTANCE = 3  # GRID; if set to zero, no constraint on the exit distance
+_MAX_NUM_OVERLAP=2 # 1 # np.inf
+_MIN_EXIT_DISTANCE = 0 # 2 # 3  # GRID; if set to zero, no constraint on the exit distance
 
 
 def random_16(num_layers=4, max_num_turns=6, **kwargs):
