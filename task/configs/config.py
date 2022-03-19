@@ -89,7 +89,7 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 _STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
 _OPACITY_INIT = 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
-_P_PATHPREY_DIM_DISTANCE = 1/2 # 1/3 # 1/2 # 0 # 2/3
+_P_PATHPREY_DIM_DISTANCE = 1/3 # 1/5 # 0 # 1/3 # 1/2 # 1/3 # 1/2 # 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
@@ -292,6 +292,8 @@ class TrialInitialization():
             self._path_prey_opacity = _PATH_PREY_OPACITY
         else:
             self._path_prey_opacity = self._path_prey_opacity_staircase.opacity
+
+        del stimulus['features']['maze_prey_walls']
 
         self._meta_state = {
             'fixation_duration': 0,
@@ -670,7 +672,7 @@ class Config():
             return False
 
         phase_foreperiod = gr.Phase(
-            one_time_rules=[disappear_screen,disappear_fake_prey,create_path_prey,unglue_path_prey,clear_prey_wall],
+            one_time_rules=[disappear_screen,disappear_fake_prey,create_path_prey,unglue_path_prey],
             continual_rules=[highlight_path,update_motion_steps_path_prey,increase_RT_offline,dim_path_prey,glue_path_prey_conditional],
             # duration=_FOREPERIOD_DURATION,
             name='foreperiod',
@@ -728,7 +730,7 @@ class Config():
             # meta_state['joystick_fixation_postoffline']>_JOYSTICK_FIXATION_POSTOFFLINE # np.all(agent.velocity == 0) # 
 
         phase_offline = gr.Phase(
-            one_time_rules=[create_agent,clear_prey_wall], # ,set_path_prey_opacity],  # ,glue_path_prey],
+            one_time_rules=[create_agent], # ,set_path_prey_opacity],  # ,glue_path_prey],
             # [disappear_screen,disappear_fake_prey,create_agent,set_path_prey_opacity,glue_path_prey], # [disappear_fixation, disappear_screen, create_agent],
             continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color], # ,update_joystick_fixation_dur],  # update_agent_color
             name='offline',
@@ -757,7 +759,7 @@ class Config():
             return False
 
         phase_motion_visible = gr.Phase(
-            one_time_rules=[unglue,glue_agent,disappear_path_prey],  # make_agent_red
+            one_time_rules=[unglue,glue_agent,disappear_path_prey,clear_prey_wall],  # make_agent_red
             continual_rules=update_motion_steps,
             end_condition=_end_vis_motion_phase,  # duration=10,
             name='motion_visible',
