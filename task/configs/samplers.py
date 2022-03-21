@@ -310,7 +310,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         walls = []
         for i, row in enumerate(maze):
             for j, x in enumerate(row):
-                if x == 1:  # Wall exists here
+                if x > 0:  # == 1:  # Wall exists here
                     if i % 2 == 1:  # Vertical wall
                         start = (i / 2, (j - 1) / 2)
                         end = (i / 2, (j + 1) / 2)
@@ -368,6 +368,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         maze, path = wire_path_dataset.rotate_maze_and_path_90(
             maze, path, num_times=3)
         original_path = wire_path_dataset.rotate_path_90(maze, original_path, num_times=3)
+        # print(original_path)
 
         maze_width = int((maze.shape[0] + 1) / 2)
         maze_height = int((maze.shape[1] + 1) / 2)
@@ -387,6 +388,8 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
 
         prey_path = [tuple(x) for x in prey_path]
         # print(prey_path)
+        # if prey_path[0][1]==6:
+        #     print(prey_path)
 
         segment_length = self._prey_path_to_segment_length(prey_path)
         # print(segment_length)

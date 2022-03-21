@@ -52,15 +52,15 @@ from maze_lib.constants import max_reward, bonus_reward, reward_window
 
 
 # stimlulus
-_AGENT_Y = 0.1
+_AGENT_Y = 0.05
 _MAZE_Y = 0.15
 _MAZE_WIDTH = 0.7
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 _AGENT_SCALE = 0.1 # 0.15  # 0.03  # 0.05 # 0.10  # 0.15
 _AGENT_ASPECT_RATIO = 0.2 # 4 # 8 # 4
 _PREY_SCALE = 0.03
-_MIN_DIST_AGENT = 0.1/2  # minimum distance between initial agent position and target exit
-_MAX_DIST_AGENT = 0.5
+_MIN_DIST_AGENT = 0.1 # /2  # minimum distance between initial agent position and target exit
+_MAX_DIST_AGENT = 0.3 # 0.5
 _P_PREY0 = 0 # 0.1  #  0.3 # 0.5   # 0.9  # prey's initial position as % of path
 _GAIN_PATH_PREY = 1  # 2.5 # 2 # 3  # 1  # speed gain for path prey
 _PATH_PREY_OPACITY = 120  # 50
