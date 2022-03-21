@@ -438,3 +438,9 @@ protocol 'random_16_wire' {
         't = TaskManager(level="random.wire_maze.random_16_staircase", fixation_phase=False, ms_per_unit=1500)') //_uniform_num_turns ms_per_unit=2000
     run_task ()
 }
+
+protocol 'random_6_wire' {
+    run_python_string (
+        't = TaskManager(level="random.wire_maze.random_6_staircase", fixation_phase=False, ms_per_unit=1500)') //_uniform_num_turns ms_per_unit=2000
+    run_task ()
+}
