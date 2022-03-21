@@ -19,6 +19,7 @@ class MazeComposer():
                  pixels_per_square=6,
                  ball_path_top_bottom=True,
                  distractors_top_bottom=True,
+                 min_num_turns=0,
                  max_num_turns=np.inf,
                  min_num_overlap=0,
                  max_num_overlap=np.inf,
@@ -35,6 +36,7 @@ class MazeComposer():
                 to enter from the top and exit from the bottom.
             distractors_top_bottom: Bool. Whether all distractor paths should be
                 forced to enter from the top and exit from the bottom.
+            min_num_turns: Int. Minimum number of turns for the ball path.
             max_num_turns: Int. Maximum number of turns for the ball path.
             min_num_overlap: Int. impose distractors have crossed the ball path with this number
             min_exit_distance: Int. impose contraint of exits between path and distriactors being large than min
@@ -44,6 +46,7 @@ class MazeComposer():
         self._ball_path_top_bottom = ball_path_top_bottom
         self._distractors_top_bottom = distractors_top_bottom
         self._max_num_turns = max_num_turns
+        self._min_num_turns = min_num_turns
         self._min_num_overlap = min_num_overlap
         self._max_num_overlap = max_num_overlap
         self._min_exit_distance = min_exit_distance
@@ -80,6 +83,10 @@ class MazeComposer():
         if np.isfinite(self._max_num_turns):
             num_turns = self._num_turns(maze)
             if num_turns > self._max_num_turns:
+                return False
+        if self._min_num_turns > 0:
+            num_turns = self._num_turns(maze)
+            if num_turns < self._min_num_turns:
                 return False
         return True
 
@@ -169,6 +176,9 @@ class MazeComposer():
 
         return num_overlap
 
+    # def _get_overlap_position(self,maze,new_maze):
+
+
 
     def __call__(self):
         """Sample a maze."""
@@ -198,7 +208,7 @@ class MazeComposer():
                 count += 1
                 if self._distractors_top_bottom:
                     new_maze, distractor = self._mazes[
-                        np.random.choice(self._valid_ball_path_inds)]
+                        np.random.choice(self._valid_ball_path_inds)]  # for 6 grids, only 36 _valid_ball_path
                 else:
                     new_maze, distractor = self._transform_maze(*self._mazes[
                         np.random.randint(self._num_mazes)])
@@ -240,6 +250,7 @@ class MazeComposer():
 
         rendered_maze = self._render_maze(maze)
 
+        print(count)
         return rendered_maze, maze, prey_path, path
 
 

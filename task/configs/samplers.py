@@ -275,6 +275,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                  num_layers,
                  ball_path_top_bottom=True,
                  distractors_top_bottom=True,
+                 min_num_turns=0,
                  max_num_turns=np.inf,
                  min_num_overlap=0,
                  max_num_overlap=np.inf,
@@ -290,6 +291,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                 to enter from the top and exit from the bottom.
             distractors_top_bottom: Bool. Whether all distractor paths should be
                 forced to enter from the top and exit from the bottom.
+            min_num_turns: Int. Minimum number of turns for the ball path.
             max_num_turns: Int. Maximum number of turns for the ball path.
             min_num_overlap: Int. impose distractors have crossed the ball path with this number
             min_exit_distance: Int. impose contraint of exits between path and distriactors being large than min
@@ -300,6 +302,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             pixels_per_square=2,  # Irrelevant when using MOOG
             ball_path_top_bottom=ball_path_top_bottom,
             distractors_top_bottom=distractors_top_bottom,
+            min_num_turns=min_num_turns,
             max_num_turns=max_num_turns,
             min_num_overlap=min_num_overlap,
             max_num_overlap=max_num_overlap,
