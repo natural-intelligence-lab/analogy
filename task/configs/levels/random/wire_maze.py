@@ -7,8 +7,8 @@ from configs import samplers
 from configs.levels import get_stimuli_dir
 import numpy as np
 
-# _MIN_NUM_TURNS = 2
-_MAX_NUM_TURNS = 2 # 6 # 4
+_MIN_NUM_TURNS = 2 # inclusive
+_MAX_NUM_TURNS = 2 # 6 # 4 # exclusive
 # _STEP_NUM_TURNS = 2
 _NUM_LAYERS= 4 # 3 # 2 # 50
 
@@ -64,6 +64,7 @@ def random_6_staircase(**kwargs):
             num_layers=_NUM_LAYERS,
             ball_path_top_bottom=True,
             distractors_top_bottom=True,
+            min_num_turns= _MIN_NUM_TURNS,
             max_num_turns=_MAX_NUM_TURNS,
             min_num_overlap=_MIN_NUM_OVERLAP,
             max_num_overlap=_MAX_NUM_OVERLAP,

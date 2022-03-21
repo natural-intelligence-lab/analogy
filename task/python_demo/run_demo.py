@@ -70,7 +70,7 @@ def main(_):
         prey_opacity=FLAGS.prey_opacity,
         static_prey=FLAGS.static_prey,
         static_agent=FLAGS.static_agent,
-        ms_per_unit=800,
+        ms_per_unit=300,
     )
 
     config = config_instance()
