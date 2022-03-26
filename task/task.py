@@ -94,9 +94,11 @@ class TaskManager:
         config['observers'] = {'image': renderer}
 
         # staircase
-        if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
+        if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train' or getvar('platform') == 'laptop':
             self._prey_opacity_staircase = config_class._prey_opacity_staircase
             self._path_prey_opacity_staircase = config_class._path_prey_opacity_staircase
+            self._path_prey_position_staircase = config_class._path_prey_position_staircase
+            self._update_p_correct = config_class._update_p_correct
 
         # Create environment
         log_dir = os.path.join(_PWD, 'logs')
@@ -166,9 +168,14 @@ class TaskManager:
         self.flag5 = True
         self.flag6 = True
 
-        if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
+        if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train' or getvar('platform') == 'laptop':
             setvar('prey_opacity',self._prey_opacity_staircase.opacity)
             setvar('path_prey_opacity', self._path_prey_opacity_staircase.opacity)
+            setvar('num_trial_junction', self._update_p_correct.n_trial)
+            setvar('num_trial_amb_junction', self._update_p_correct.n_trial_amb)
+            setvar('num_correct_junction', self._update_p_correct.n_correct_n_junction)
+            setvar('num_correct_amb_junction', self._update_p_correct.n_correct_n_amb_junction)
+            setvar('p_visible_aid', self._path_prey_position_staircase.path_prey_position)
 
         # TBD: debug - how to change _MAX_REWARDING_DIST during task running?
         # max_rewarding_dist = getvar('max_rewarding_dist')

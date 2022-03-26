@@ -1,7 +1,17 @@
 function [retval] = plot_tstp(data, values)
-% click events/check variables (Interval/productionInterval)
-name={'ts',... % 1
-    'tp',... % 2
+
+% MAKE SURE click events/check variables (Interval/productionInterval)
+
+% fig.1: tp vs ts
+% (X) fig. 2: offline RT (only for invisible path aid)
+% (X) fig. 3: offline error
+% (X) fig. 4: opacity staircase
+% fig. 5: p(correct)=f(# junction)
+% fig. 6: p(correct)=f(# ambiguous junction)
+% fig. 7: p(visible path aid)
+
+name={'ts',... % 1 from meta_state
+    'tp',... % 2 from tRew-tInvMotion
     'prey_opacity',... % 3
     'num_turns',... % 4
     'RT_offline',... % 5
@@ -10,9 +20,13 @@ name={'ts',... % 1
     'end_x_distract',...% 8
     'start_x_prey',... % }; % 9 % ballAlphaProd
     'path_prey_opacity',... % 10
-    'num_trials'}; % 11
-
-
+    'num_trials',... % 11
+    'num_trial_junction',... % 12
+    'num_correct_junction',... % 13
+    'num_trial_amb_junction',... % 14
+    'num_correct_amb_junction',... % 15
+    'p_visible_aid',... % 16
+    }; % 16
 
 %% getting codec and events
 nParam=length(name); % ts, tp for now
@@ -41,13 +55,25 @@ end
 % finding values
 for iP=1:nParam
     indices = ([all_events(:).event_code] == event_code(iP));
-    
-    events = all_events(indices);
-    tmpValues=cast([events(:).data], 'double'); tmpValues=tmpValues(:);
-    values{iP} =[values{iP}(:); tmpValues];
+    if iP==12 | iP==13 | iP==14 | iP==15 % num_trial_junction
+        indices_find = find(indices);
+        if ~isempty(indices_find)
+            events = all_events(indices_find(end)); % only last
+            tmpData=events.data;
+            tmpValues=cell2mat(tmpData);
+%             fprintf(1, 'tmpValues: %d %d \n', [size(tmpValues,1) size(tmpValues,2)]);
+            tmpValues=tmpValues(:)';
+        end
+        values{iP} =[values{iP}; tmpValues];
+    else
+        events = all_events(indices);
+        
+        tmpValues=cast([events(:).data], 'double'); tmpValues=tmpValues(:);
+        values{iP} =[values{iP}(:); tmpValues];
+    end
 end
 
-%%
+%% other parameters
 winF=0.2;
 
 % debug
@@ -57,7 +83,7 @@ winF=0.2;
 %     %    fprintf(1, ', alpha: %d\n', values{3}(end));
 % end
 
-%% plot
+% plot
 cmap=[    1.0000         0         0;... % 1 'r' 
     0    0.6000         0;... %    2 'g' 
     0         0    1.0000;... %3    'g'    'b'
@@ -70,7 +96,6 @@ cmap=[    1.0000         0         0;... % 1 'r'
     0         0         0;...
     107.0000   66.0000   41.0000]; %'r'    'g'    'b'    'o'    'm'    'c'    'p'    'y'    'gray'    'k'    'brown'
 
-
 % tcrit=850; % Tcriteria for long/short prior
 if length(values{1})~=length(values{2}) & ~isempty(values{1}) & ~isempty(values{2})
     minN=min([length(values{1}); length(values{2})]);
@@ -80,9 +105,10 @@ end
 
 %% MAIN
 if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4}) & ~isempty(values{5}) &...
-        ~isempty(values{6}) & ~isempty(values{7}) & ~isempty(values{8}) & ~isempty(values{9}) & ~isempty(values{10}) & ~isempty(values{11})
+        ~isempty(values{6}) & ~isempty(values{7}) & ~isempty(values{8}) & ~isempty(values{9}) & ~isempty(values{10}) & ~isempty(values{11}) &...
+        ~isempty(values{12}) & ~isempty(values{13}) & ~isempty(values{14}) & ~isempty(values{15}) & ~isempty(values{16})
     %     if nargin==1
-    %% plot T vs t
+    %% fig. 1: plot T vs t
     Ttmp=values{1}(end); ttmp=values{2}(end); RT_offline=values{5}(end);
     % disp((values{3}));
     if length(values{3})>=2 & length(values{11})>=2 &length(values{10})>=2
@@ -99,7 +125,7 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
     else
         nTurn=values{4}(end);
     end
-    figure(1); set(gcf,'position',[0 615 560 420],'color','w','resize','off'); hold on;
+    figure(1); set(gcf,'position',[0 615 420 420],'color','w','resize','off'); hold on;
     if nTurn==0
         cmap='r';
     elseif nTurn==2
@@ -133,7 +159,30 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
     xlabel('t_s (s)'); ylabel('t_p (s)');
     %         figure(2); set(gcf,'position',[0 0 560 420],'color','w','resize','off'); % ballAlpha staircase
     
-%     %% offline error
+        %     % simple linear regression as a model-free check of prior effect (slope<1 & intercept>0)
+    %     if length(mut(idShort))>1 && length(sdt(idShort))>1
+    %         stats=regstats(mut(idShort),Tmat(idShort),'linear',{'tstat'}); % beta yhat r mse rsquare tstat
+    %         fprintf(1, 'intercept: %d (p=%d), slope: %d (p=%d)\n',[stats.tsat.beta(1) stats.tsat.pval(1) stats.tsat.beta(2) stats.tsat.pval(2)]);
+    %     end
+    %     if length(mut(~idShort))>1 && length(sdt(~idShort))>1
+    %         stats=regstats(mut(~idShort),Tmat(~idShort),'linear',{'tstat'}); % beta yhat r mse rsquare tstat
+    %         fprintf(1, 'intercept: %d (p=%d), slope: %d (p=%d)\n',[stats.tsat.beta(1) stats.tsat.pval(1) stats.tsat.beta(2) stats.tsat.pval(2)]);
+    %     end
+    
+    %% fig.2 : RT offline
+%     id_invisible=path_opacity==0;
+%     figure(2); set(gcf,'position',[560 615 420 420],'color','w','resize','off'); hold on;
+%     plot(Ttmp(id_invisible)+0.2*(rand(1,1)-0.5),RT_offline(id_invisible),'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
+%     xlabel('t_s (s)'); ylabel('RT (offline) (s)');
+
+        
+    %% fig. 3: offline error
+%     end_x_prey=values{6}(end); end_x_agent=values{7}(end); start_x_prey=values{9}(end);
+%     figure(3); set(gcf,'position',[560 615 420 420],'color','w','resize','off'); hold on;
+%     plot(end_x_agent-start_x_prey,end_x_agent-end_x_prey,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
+%     xlabel('agent_x-initial prey_x'); ylabel('agent_x - final prey_x');
+
+    %     %% offline error
 %     end_x_prey=values{6}(end); end_x_agent=values{7}(end); end_x_distract=values{8}(end);
 %     figure(2); set(gcf,'position',[560 615 560 420],'color','w','resize','off'); hold on;
 %     plot(end_x_prey-end_x_agent,end_x_distract-end_x_agent,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
@@ -144,35 +193,44 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
 %     end_x_prey=values{6}((end-minSize+1):end); end_x_agent=values{7}((end-minSize+1):end); end_x_distract=values{8}((end-minSize+1):end);
 %     errorMetric=abs(end_x_prey-end_x_agent)./abs(end_x_distract-end_x_agent); % better if closer to 0
 %     disp([mean(errorMetric) std(errorMetric)]);
-    
-    %% RT offline
-    id_invisible=path_opacity==0;
-    figure(2); set(gcf,'position',[560 615 560 420],'color','w','resize','off'); hold on;
-    plot(Ttmp(id_invisible)+0.2*(rand(1,1)-0.5),RT_offline(id_invisible),'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
-    xlabel('t_s (s)'); ylabel('RT (offline) (s)');
 
-        
-    %% offline error
-    end_x_prey=values{6}(end); end_x_agent=values{7}(end); start_x_prey=values{9}(end);
-    figure(3); set(gcf,'position',[560 615 560 420],'color','w','resize','off'); hold on;
-    plot(end_x_agent-start_x_prey,end_x_agent-end_x_prey,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
-    xlabel('agent_x-initial prey_x'); ylabel('agent_x - final prey_x');
-    
-    %     % simple linear regression as a model-free check of prior effect (slope<1 & intercept>0)
-    %     if length(mut(idShort))>1 && length(sdt(idShort))>1
-    %         stats=regstats(mut(idShort),Tmat(idShort),'linear',{'tstat'}); % beta yhat r mse rsquare tstat
-    %         fprintf(1, 'intercept: %d (p=%d), slope: %d (p=%d)\n',[stats.tsat.beta(1) stats.tsat.pval(1) stats.tsat.beta(2) stats.tsat.pval(2)]);
-    %     end
-    %     if length(mut(~idShort))>1 && length(sdt(~idShort))>1
-    %         stats=regstats(mut(~idShort),Tmat(~idShort),'linear',{'tstat'}); % beta yhat r mse rsquare tstat
-    %         fprintf(1, 'intercept: %d (p=%d), slope: %d (p=%d)\n',[stats.tsat.beta(1) stats.tsat.pval(1) stats.tsat.beta(2) stats.tsat.pval(2)]);
-    %     end
+%%     % fig.4: staircase
+%     figure(4); set(gcf,'position',[0 615 420 420],'color','w','resize','off'); hold on;
+%     plot(num_trials,opacity,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
+%     plot(num_trials,path_opacity,'o','markerfacecolor','g','color','g','linewidth',1,'markersize',3); drawnow; hold on;
 
-    % staircase
-    figure(4); set(gcf,'position',[0 615 560 420],'color','w','resize','off'); hold on;
-    plot(num_trials,opacity,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
-    plot(num_trials,path_opacity,'o','markerfacecolor','g','color','g','linewidth',1,'markersize',3); drawnow; hold on;
+%% fig. 5: p(correct)=f(# junction)
+num_trial_junction=values{12}(end,:);
+num_correct_junction=values{13}(end,:);
+[phat,pci]=binofit(num_correct_junction,num_trial_junction);
 
+figure(5); set(gcf,'position',[0 0 420 420],'color','w','resize','off');
+clf;
+num_junction=0:1:(length(num_trial_junction)-1);
+errorbar(num_junction,phat,pci(:,1)'-phat,pci(:,2)'-phat,'-o','MarkerSize',10,...
+    'MarkerEdgeColor','b','MarkerFaceColor','w');
+drawnow; 
+xlabel('# junction'); ylabel('% correct');
+
+%% fig. 6: p(correct)=f(# ambiguous junction)
+num_trial_amb_junction=values{14}(end,:);
+num_correct_amb_junction=values{15}(end,:);
+[phat,pci]=binofit(num_correct_amb_junction,num_trial_amb_junction);
+
+figure(6); set(gcf,'position',[420 0 420 420],'color','w','resize','off');
+clf;
+num_junction=0:1:(length(num_trial_amb_junction)-1);
+errorbar(num_junction,phat,pci(:,1)'-phat,pci(:,2)'-phat,'-ro','MarkerSize',10,...
+    'MarkerEdgeColor','r','MarkerFaceColor','w');
+drawnow; 
+xlabel('# ambiguous junction'); ylabel('% correct');
+
+%% fig. 7: p(visible path aid)
+p_visible_aid=values{16}(end);
+figure(7); set(gcf,'position',[840 0 420 420],'color','w','resize','off'); hold on;
+plot(num_trials,p_visible_aid,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
+xlabel('trials'); ylabel('p(visible path aid)');
+drawnow;
 else
     fprintf(1, 'number of physical intervals does not equal number of production intervals! or empty')
 end

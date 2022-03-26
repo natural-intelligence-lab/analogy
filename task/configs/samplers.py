@@ -10,7 +10,7 @@ import logging
 import numpy as np
 import os
 from scipy import signal as scipy_signal
-
+from matplotlib import pyplot as plt
 
 class Sampler():
     """Stimulus sampler class.
@@ -363,13 +363,48 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
 
         return segments
 
+    def _get_overlap_position(self, maze, path):
+        x_overlap = []
+        start_path = path[:-1]
+        end_path = path[1:]
+
+        # from start/top
+        for i, (start,end) in enumerate(zip(start_path,end_path)):
+            if start[0] % 2 == 0 and end[0] % 2 ==0: # vertical wall; note this is for original path before rotation
+                left_wall = [np.int((start[0]+end[0])/2), start[1] - 1]
+                right_wall = [np.int((start[0]+end[0])/2), start[1] + 1]
+                if maze[left_wall[0],left_wall[1]] > 0 and maze[right_wall[0],right_wall[1]] > 0: # path crossing
+                    x_overlap.append(i+1)
+            if start[0] % 2 != 0 and end[0] % 2 != 0:  # horizontal wall
+                up_wall = [start[0] - 1, np.int((start[1]+end[1])/2)]
+                down_wall = [start[0] + 1, np.int((start[1]+end[1])/2)]
+                if maze[up_wall[0],up_wall[1]] > 0 and maze[down_wall[0],down_wall[1]] > 0:  # path crossing
+                    x_overlap.append(i + 1)
+        return x_overlap
+
+    def plot_maze(self,maze_walls,maze_prey_walls):
+        for i,x in enumerate(maze_walls):
+            start = x[0]
+            end = x[1]
+            plt.plot([start[0],end[0]],[start[1],end[1]],'k-')
+        for i,x in enumerate(maze_prey_walls):
+            start = x[0]
+            end = x[1]
+            plt.plot([start[0],end[0]],[start[1],end[1]],'.r-')
+        plt.show()
+        plt.axis('equal')
+
     def __call__(self):
-        _, maze, path, original_path = super(WireMazeSampler, self).__call__()
+        render_maze, original_maze, path, original_path = super(WireMazeSampler, self).__call__()
+
+        # num_overlap = super(WireMazeSampler, self).num_overlap # do not take into account overlapping distractors
+        x_overlap = self._get_overlap_position(original_maze,original_path)
+        # print(x_overlap)
 
         # Because of python .imshow() weirdness, the top is the left side of the
         # screen, so have to rotate 270 degrees to correct for that
         maze, path = wire_path_dataset.rotate_maze_and_path_90(
-            maze, path, num_times=3)
+            original_maze, path, num_times=3)
         original_path = wire_path_dataset.rotate_path_90(maze, original_path, num_times=3)
         # print(original_path)
 
@@ -377,6 +412,8 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         maze_height = int((maze.shape[1] + 1) / 2)
         maze_walls = self._get_maze_walls(maze)
         maze_prey_walls = self._get_maze_walls_from_path(original_path)
+
+        # self.plot_maze(maze_walls,maze_prey_walls)
 
         # original
         # prey_path = [tuple(x) for x in (path[::2] / 2).astype(int)]
@@ -398,14 +435,14 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         # print(segment_length)
 
         num_turns = self._num_turns_path(path)
-        num_overlap = super(WireMazeSampler, self).num_overlap
 
         features = {
             'name': 'WireMaze',
             'start_x': prey_path[0][1],
             'num_turns': num_turns,
             'path_length': len(prey_path),
-            'num_overlap': num_overlap,
+            'num_overlap': len(x_overlap),
+            'x_overlap' : x_overlap,
             'maze_prey_walls': maze_prey_walls,
         }
 

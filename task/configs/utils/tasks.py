@@ -94,7 +94,9 @@ class OfflineReward(tasks.AbstractTask):
     def __init__(self,
                  phase,
                  max_rewarding_dist=0.,
-                 path_prey_opacity_staircase=None):
+                 path_prey_opacity_staircase=None,
+                 path_prey_position_staircase=None,
+                 update_p_correct=None):
         """Constructor.
         
         Args:
@@ -107,6 +109,8 @@ class OfflineReward(tasks.AbstractTask):
         self._phase = phase
         self._max_rewarding_dist = max_rewarding_dist
         self._path_prey_opacity_staircase = path_prey_opacity_staircase
+        self._path_prey_position_staircase = path_prey_position_staircase
+        self._update_p_correct = update_p_correct
 
     def reset(self, state, meta_state):
         del state
@@ -135,6 +139,10 @@ class OfflineReward(tasks.AbstractTask):
 
                 if self._path_prey_opacity_staircase is not None:
                     self._path_prey_opacity_staircase.step(reward)
+                if self._path_prey_position_staircase is not None:
+                    self._path_prey_position_staircase.step(reward)
+                if self._update_p_correct is not None:
+                    self._update_p_correct.step(reward,meta_state['num_junctions'],meta_state['num_amb_junctions'])
             else:
                 reward = 0.
         else:
