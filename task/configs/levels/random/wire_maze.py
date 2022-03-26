@@ -75,4 +75,6 @@ def random_6_staircase(**kwargs):
         num_passes=100)
     staircase = config.PreyOpacityStaircase()
     staircase_path = config.PathPreyOpacityStaircase()
-    return config.Config(stimulus_generator, prey_opacity_staircase=staircase, path_prey_opacity_staircase=staircase_path, **kwargs)
+    staircase_path_position = config.PathPreyPositionStaircase()
+    update_p_correct = config.UpdatePercentCorrect()
+    return config.Config(stimulus_generator, prey_opacity_staircase=staircase, path_prey_opacity_staircase=staircase_path, path_prey_position_staircase=staircase_path_position, update_p_correct=update_p_correct, **kwargs)

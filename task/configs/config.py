@@ -89,7 +89,6 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 _STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
 _OPACITY_INIT = 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
-_P_PATHPREY_DIM_DISTANCE = 0 # 1/3 # 1/5 # 0 # 1/3 # 1/2 # 1/3 # 1/2 # 0 # 2/3
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
@@ -98,6 +97,56 @@ _STEP_OPACITY_DOWN_ = 0 # 10 #     5 # 30 # 40  # [0 255]
 _OPACITY_INIT_ = 100 # 200 # 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
 _P_DIM_DISTANCE_ = 0 # 2/3
 _DIM_DURATION_ = 2 # [sec]
+
+# staircase p(visible aid)
+_P_PATHPREY_DIM_DISTANCE = 0 # 2/3 # 1/2 # 1/3 # 1/2 # 1/4 # 0 # 1/3 # 1/2 # 1/3 # 1/2 # 0 # 2/3
+_PathPreyPosition_INIT_ = 1/2
+_STEP_PathPreyPosition_DOWN_ = 0.1 # 1/4  # 0.1
+_STEP_PathPreyPosition_UP_ = 0.1 # 1/4  # 0.1
+
+# performance monitoring
+_NUM_LAYERS= 4 # 3 # 2 # 50  # should be match wire_maze.py
+_MAX_NUM_TURNS = 2
+_N_GRID = 6
+_MAX_NUM_JUNCTION = (_N_GRID-2)*_MAX_NUM_TURNS
+_n_correct_n_junction = np.zeros(_MAX_NUM_JUNCTION)
+_n_correct_n_amb_junction = np.zeros(_MAX_NUM_JUNCTION)
+_n_trial = np.zeros(_MAX_NUM_JUNCTION)
+_n_trial_amb = np.zeros(_MAX_NUM_JUNCTION)
+
+class UpdatePercentCorrect():
+    def __init__(self,
+                 n_correct_n_junction=_n_correct_n_junction,
+                 n_correct_n_amb_junction=_n_correct_n_amb_junction,
+                 n_trial=_n_trial,
+                 n_trial_amb=_n_trial_amb):
+        self._n_correct_n_junction = n_correct_n_junction
+        self._n_correct_n_amb_junction = n_correct_n_amb_junction
+        self._n_trial = n_trial
+        self._n_trial_amb = n_trial_amb
+
+    def step(self, reward,num_junctions, num_amb_junctions):
+        self._n_trial[num_junctions] += 1
+        self._n_trial_amb[num_amb_junctions] += 1
+        if reward > 0:
+            self._n_correct_n_junction[num_junctions] += 1
+            self._n_correct_n_amb_junction[num_amb_junctions] += 1
+
+    @property
+    def n_trial(self):
+        return self._n_trial
+
+    @property
+    def n_trial_amb(self):
+        return self._n_trial_amb
+
+    @property
+    def n_correct_n_amb_junction(self):
+        return self._n_correct_n_amb_junction
+
+    @property
+    def n_correct_n_junction(self):
+        return self._n_correct_n_junction
 
 class PreyOpacityStaircase():
 
@@ -147,10 +196,38 @@ class PathPreyOpacityStaircase():
     def opacity(self):
         return self._opacity
 
+
+class PathPreyPositionStaircase():
+
+    def __init__(self,
+                 init_value=_PathPreyPosition_INIT_,
+                 failure_delta=_STEP_PathPreyPosition_DOWN_,
+                 success_delta=_STEP_PathPreyPosition_UP_,
+                 minval=0,
+                 maxval=1):
+        self._path_prey_position = init_value
+        self._success_delta = success_delta
+        self._failure_delta = failure_delta
+        self._minval = minval
+        self._maxval = maxval
+
+    def step(self, reward):
+        if reward <= 0:
+            self._path_prey_position = max(self._path_prey_position - self._failure_delta, self._minval)
+        elif reward > 0: # higher with reward
+            self._path_prey_position = min(self._path_prey_position + self._success_delta, self._maxval)
+
+    @property
+    def path_prey_position(self):
+        return self._path_prey_position
+
+
+
 class TrialInitialization():
 
     def __init__(self, stimulus_generator, prey_lead_in, prey_speed, static_prey=False,
-                 static_agent=False,prey_opacity_staircase=None,path_prey_opacity_staircase=None):
+                 static_agent=False,prey_opacity_staircase=None,path_prey_opacity_staircase=None,
+                 path_prey_position_staircase=None,update_p_correct=None):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
         self._prey_speed = prey_speed
@@ -158,6 +235,8 @@ class TrialInitialization():
         self._static_agent = static_agent
         self._prey_opacity_staircase=prey_opacity_staircase
         self._path_prey_opacity_staircase = path_prey_opacity_staircase
+        self._path_prey_position_staircase = path_prey_position_staircase
+        self._update_p_correct = update_p_correct
         self._prey_factors = dict(
             shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0) # scale=0.015, c0=0, c1=255, c2=0)
         self._fixation_shape = 0.2 * np.array([
@@ -177,6 +256,7 @@ class TrialInitialization():
         maze_walls = stimulus['maze_walls']
         num_turns = stimulus['features']['num_turns']
         path_walls = stimulus['features']['maze_prey_walls']  # list
+        x_junction = [x / stimulus['features']['path_length'] for x in stimulus['features']['x_overlap']]
         maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
         cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
@@ -283,16 +363,28 @@ class TrialInitialization():
         # randomly choose image size across trials
         image_size = np.random.choice(_IMAGE_SIZE)
 
+        # opacity staircase
         if self._prey_opacity_staircase is None:
             self._prey_opacity = 255
         else:
             self._prey_opacity = self._prey_opacity_staircase.opacity
-
         if self._path_prey_opacity_staircase is None:
             self._path_prey_opacity = _PATH_PREY_OPACITY
         else:
             self._path_prey_opacity = self._path_prey_opacity_staircase.opacity
 
+        # position path aid
+        if self._path_prey_position_staircase is None:
+            self._path_prey_position = _P_PATHPREY_DIM_DISTANCE  # default: fully visible
+        else:
+            self._path_prey_position = self._path_prey_position_staircase.path_prey_position
+
+        n_correct_n_junction = self._update_p_correct.n_correct_n_junction
+        n_correct_n_amb_junction = self._update_p_correct.n_correct_n_amb_junction
+        n_trial = self._update_p_correct.n_trial
+        n_trial_amb = self._update_p_correct.n_trial_amb
+
+        # to make data json-seriziable
         del stimulus['features']['maze_prey_walls']
 
         self._meta_state = {
@@ -329,7 +421,13 @@ class TrialInitialization():
             'motion_steps_path_prey':0,
             'prey_distance_remaining_path_prey':prey_distance_remaining,
             'prey_distance_offset':_MAZE_Y - _AGENT_Y,
-
+            'num_junctions': len(x_junction),
+            'num_amb_junctions':np.int(sum([x > (1-self._path_prey_position) for x in x_junction])),
+            'path_prey_position': self._path_prey_position,
+            'n_correct_n_junction': n_correct_n_junction,
+            'n_correct_n_amb_junction': n_correct_n_amb_junction,
+            'n_trial': n_trial,
+            'n_trial_amb': n_trial_amb,
         }
 
         return state
@@ -382,6 +480,8 @@ class Config():
                  stimulus_generator,
                  prey_opacity_staircase=None,
                  path_prey_opacity_staircase=None,
+                 path_prey_position_staircase=None,
+                 update_p_correct=None,
                  fixation_phase=True,
                  prey_opacity=0,
                  path_prey_opacity=0,
@@ -406,6 +506,8 @@ class Config():
         self._static_agent = static_agent
         self._prey_opacity_staircase = prey_opacity_staircase
         self._path_prey_opacity_staircase = path_prey_opacity_staircase
+        self._path_prey_position_staircase = path_prey_position_staircase
+        self._update_p_correct = update_p_correct
 
         if self._prey_opacity_staircase is not None:
             self._prey_opacity = self._prey_opacity_staircase.opacity
@@ -417,6 +519,11 @@ class Config():
         else:
             self._path_prey_opacity = path_prey_opacity
 
+        if self._path_prey_position_staircase is not None:
+            self._path_prey_position = self._path_prey_position_staircase.path_prey_position
+        else:
+            self._path_prey_position = _PathPreyPosition_INIT_
+
         # How close to center joystick must be to count as joystick centering
         self._joystick_center_threshold = 0.05
 
@@ -427,7 +534,9 @@ class Config():
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in, prey_speed=self._prey_speed,
             static_prey=static_prey, static_agent=static_agent, prey_opacity_staircase=self._prey_opacity_staircase,
-            path_prey_opacity_staircase=self._path_prey_opacity_staircase)
+            path_prey_opacity_staircase=self._path_prey_opacity_staircase,path_prey_position_staircase=self._path_prey_position_staircase,
+            update_p_correct=self._update_p_correct,
+        )
 
         # Create renderer
         self._observer = observers.PILRenderer(
@@ -473,7 +582,10 @@ class Config():
         offline_task = tasks_custom.OfflineReward(
             'offline',
             max_rewarding_dist=_MAX_REWARDING_DIST,
-            path_prey_opacity_staircase=self._path_prey_opacity_staircase)  # 0.1
+            path_prey_opacity_staircase=self._path_prey_opacity_staircase,
+            path_prey_position_staircase=self._path_prey_position_staircase,
+            update_p_correct=self._update_p_correct,
+            )  # 0.1
         # offline_timeout_task = tasks.Reset(
         #     condition=lambda _, meta_state: meta_state['phase'] == 'motion_visible',
         #     steps_after_condition=_REWARD,
@@ -652,8 +764,10 @@ class Config():
         #     rules=gr.ModifySprites(layer='prey_wall',_make_opaque),
         # )
 
-        def _decrease_path_prey_opacity(s,meta_state):
-            if meta_state['prey_distance_remaining_path_prey'] < (meta_state['prey_distance_invisible']*_P_PATHPREY_DIM_DISTANCE): # P_DIM_DISTANCE=0 -> N/A
+        def _decrease_path_prey_opacity(s,meta_state): #'path_prey_position'
+            # if meta_state['prey_distance_remaining_path_prey'] < (meta_state['prey_distance_invisible']*_P_PATHPREY_DIM_DISTANCE): # P_DIM_DISTANCE=0 -> N/A
+            if meta_state['prey_distance_remaining_path_prey'] < (
+                    meta_state['prey_distance_invisible'] * meta_state['path_prey_position']):  # P_DIM_DISTANCE=0 -> N/A
                 s.opacity=0
         dim_path_prey = custom_game_rules.DimPrey('path_prey',_decrease_path_prey_opacity)
 

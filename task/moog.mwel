@@ -159,6 +159,12 @@ var slope_opacity = 0
 
 var num_turns = 0
 
+var num_trial_junction =[]
+var num_trial_amb_junction =[]
+var num_correct_junction=[]
+var num_correct_amb_junction=[]
+var p_visible_aid = 0
+
 var sync = 0
 
 ///////////////////////////////////////////////////////////////////////////////

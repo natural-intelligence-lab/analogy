@@ -176,9 +176,6 @@ class MazeComposer():
 
         return num_overlap
 
-    # def _get_overlap_position(self,maze,new_maze):
-
-
 
     def __call__(self):
         """Sample a maze."""
@@ -219,6 +216,7 @@ class MazeComposer():
                 # no overlapped path only with target
                 if not np.any(new_maze * maze0 != 0) \
                         and maze[-1,distractor_exit] != 1:  # exits all separate
+
                     # impose minimum distance of exits
                     if self._min_exit_distance > 0:
                         exit_distance = np.linalg.norm(distractor[-1]-path[-1]) # in maze unit
@@ -235,6 +233,7 @@ class MazeComposer():
                             else:
                                 maze += (new_maze>0)
                                 done = True
+                    #####
                     else:
                         # impose num_overlap constraints
                         if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
@@ -250,7 +249,7 @@ class MazeComposer():
 
         rendered_maze = self._render_maze(maze)
 
-        print(count)
+        # print(count)
         return rendered_maze, maze, prey_path, path
 
 
