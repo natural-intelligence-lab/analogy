@@ -127,7 +127,7 @@ class MixtureSampler():
         self._pass_num += 1
         # Create indices for which sampler to use at each trial
         sampler_inds = []
-        for i, x in enumerate(samplers):
+        for i, x in enumerate(self._samplers):
             sampler_inds.extend(len(x) * [i])
         self._sampler_inds = [
             sampler_inds[i] for i in np.random.permutation(len(sampler_inds))]
@@ -309,17 +309,56 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             min_exit_distance=min_exit_distance,
         )
 
-    def _get_maze_walls(self, maze):
+        self._gap_size = 0.15  # assuming wall size is one; if set to zero, no gap
+
+    def _get_wall_touch_path(self, maze, path):
+        wall_touch_path_0 = []  # short start
+        wall_touch_path_1 = []  # short end
+        start_path = path[:-1]
+        end_path = path[1:]
+
+        # from start/top
+        for i, (start,end) in enumerate(zip(start_path,end_path)):
+            if start[0] % 2 == 0 and end[0] % 2 ==0: # Horizontal wall; after rotation
+                left_wall = [np.int((start[0] + end[0]) / 2), start[1] - 1] # left only in maze,  actually vertical(up)
+                right_wall = [np.int((start[0] + end[0]) / 2), start[1] + 1]
+                if maze[left_wall[0],left_wall[1]] > 0 and maze[right_wall[0],right_wall[1]] > 0: # path crossing
+                    wall_touch_path_0.append(right_wall)
+                    wall_touch_path_1.append(left_wall)
+            if start[0] % 2 != 0 and end[0] % 2 != 0:  # Vertical wall
+                up_wall = [start[0] - 1, np.int((start[1] + end[1]) / 2)]
+                down_wall = [start[0] + 1, np.int((start[1] + end[1]) / 2)]
+                if maze[up_wall[0],up_wall[1]] > 0 and maze[down_wall[0],down_wall[1]] > 0:  # path crossing
+                    wall_touch_path_0.append(down_wall)
+                    wall_touch_path_1.append(up_wall)
+        return wall_touch_path_0,wall_touch_path_1
+
+
+    def _get_maze_walls(self, maze, wall_touch_path_0, wall_touch_path_1):
         walls = []
         for i, row in enumerate(maze):
             for j, x in enumerate(row):
                 if x > 0:  # == 1:  # Wall exists here
                     if i % 2 == 1:  # Vertical wall
-                        start = (i / 2, (j - 1) / 2)
-                        end = (i / 2, (j + 1) / 2)
+                        if [i,j] in wall_touch_path_0:  # shorter start
+                            start = (i / 2, (j - 1) / 2 + self._gap_size)
+                            end = (i / 2, (j + 1) / 2)
+                        elif [i, j] in wall_touch_path_1:  # shorter end
+                            start = (i / 2, (j - 1) / 2)
+                            end = (i / 2, (j + 1) / 2 - self._gap_size)
+                        else:
+                            start = (i / 2, (j - 1) / 2)
+                            end = (i / 2, (j + 1) / 2)
                     else:  # Horizontal wall
-                        start = ((i - 1) / 2, j / 2)
-                        end = ((i + 1) / 2, j / 2)
+                        if [i,j] in wall_touch_path_0:  # shorter start
+                            start = ((i - 1) / 2 + self._gap_size, j / 2)
+                            end = ((i + 1) / 2, j / 2)
+                        elif [i, j] in wall_touch_path_1:  # shorter end
+                            start = ((i - 1) / 2, j / 2)
+                            end = ((i + 1) / 2 - self._gap_size, j / 2)
+                        else:
+                            start = ((i - 1) / 2, j / 2)
+                            end = ((i + 1) / 2, j / 2)
 
                     # # Adjust for offset to make walls in the middle of the maze
                     # start = (start[0], start[1] + 0.5)
@@ -410,7 +449,8 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
 
         maze_width = int((maze.shape[0] + 1) / 2)
         maze_height = int((maze.shape[1] + 1) / 2)
-        maze_walls = self._get_maze_walls(maze)
+        wall_touch_path_start, wall_touch_path_end = self._get_wall_touch_path(maze,original_path)
+        maze_walls = self._get_maze_walls(maze,wall_touch_path_start, wall_touch_path_end)
         maze_prey_walls = self._get_maze_walls_from_path(original_path)
 
         # self.plot_maze(maze_walls,maze_prey_walls)
