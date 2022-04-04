@@ -104,7 +104,7 @@ _DIM_DURATION_ = 2 # [sec]
 
 # staircase p(visible aid)
 _P_PATHPREY_DIM_DISTANCE = 0 # 2/3 # 1/2 # 1/3 # 1/2 # 1/4 # 0 # 1/3 # 1/2 # 1/3 # 1/2 # 0 # 2/3
-_PathPreyPosition_INIT_ = 0 # 1/2
+_PathPreyPosition_INIT_ = 1 # 0 # 1/2
 _STEP_PathPreyPosition_DOWN_ = 0.1 # 1/4  # 0.1
 _STEP_PathPreyPosition_UP_ = 0.1 # 1/4  # 0.1
 

@@ -227,6 +227,7 @@ xlabel('# ambiguous junction'); ylabel('% correct');
 
 %% fig. 7: p(visible path aid)
 p_visible_aid=values{16}(end);
+fprintf(1, ', # fully invisible: %d\n', nnz(values{16}==1));
 figure(7); set(gcf,'position',[840 0 420 420],'color','w','resize','off'); hold on;
 plot(num_trials,p_visible_aid,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
 xlabel('trials'); ylabel('p(visible path aid)');
