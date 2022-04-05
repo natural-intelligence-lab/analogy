@@ -333,6 +333,47 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                     wall_touch_path_1.append(up_wall)
         return wall_touch_path_0,wall_touch_path_1
 
+    def _add_gap_distractor_junction(self,walls):
+        wall_array = np.asarray(walls)  # (# list,2,2)
+        done=np.zeros((wall_array.shape[0],wall_array.shape[1]),dtype=bool)
+        for i, wall in enumerate(walls):
+            for j, edge in enumerate(wall):
+                id_same_edge = np.logical_and(np.sum(np.abs(wall_array - edge), axis=2) == 0 ,(done==False)) # [# list, 2]
+                n_same_edge = np.count_nonzero(id_same_edge)
+
+                if n_same_edge > 2: # junction; note this is after inserting gap around target path, so no worry for them
+                    done += id_same_edge
+
+                    # build indices
+                    i_edge = []
+                    for i, row in enumerate(id_same_edge):
+                        for j, val in enumerate(row):
+                            if val:
+                                i_edge.insert(0, [i, j])
+                    wall_edge = wall_array[np.asarray(i_edge)[:, 0], :, :]  # (3/4,2,2)
+
+                    id_horizontal = np.squeeze(np.diff(wall_edge, n=1, axis=1)[:, :, 0]>0).tolist()
+                    id_start_junction = (np.asarray(i_edge)[:, 1] == 0).tolist()  # start is at junction; either RightHorizontal, TopVertical
+
+                    # inserting gap
+                    if np.random.random() > 0.5:  # vertical gap
+                        for i_horizon,value in enumerate(id_horizontal):
+                            x = i_edge[i_horizon][0]
+                            if not value:
+                                if id_start_junction[i_horizon]:  # TopVertical
+                                    walls[x]=((walls[x][0][0],walls[x][0][1]+ self._gap_size), walls[x][1])
+                                else: # bottomVertical
+                                    walls[x] = (walls[x][0], (walls[x][1][0],walls[x][1][1] - self._gap_size))
+                    else:  # horizontal gap
+                        for i_horizon,value in enumerate(id_horizontal):
+                            x = i_edge[i_horizon][0]
+                            if value:
+                                if id_start_junction[i_horizon]:  # RightHorizontal
+                                    walls[x]=((walls[x][0][0]+ self._gap_size,walls[x][0][1]), walls[x][1])
+                                else: # LeftHorizontal
+                                    walls[x] = (walls[x][0], (walls[x][1][0] - self._gap_size, walls[x][1][1]))
+        return walls
+
 
     def _get_maze_walls(self, maze, wall_touch_path_0, wall_touch_path_1):
         walls = []
@@ -356,7 +397,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                         elif [i, j] in wall_touch_path_1:  # shorter end
                             start = ((i - 1) / 2, j / 2)
                             end = ((i + 1) / 2 - self._gap_size, j / 2)
-                        else:
+                        else:  # for distractors
                             start = ((i - 1) / 2, j / 2)
                             end = ((i + 1) / 2, j / 2)
 
@@ -451,6 +492,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         maze_height = int((maze.shape[1] + 1) / 2)
         wall_touch_path_start, wall_touch_path_end = self._get_wall_touch_path(maze,original_path)
         maze_walls = self._get_maze_walls(maze,wall_touch_path_start, wall_touch_path_end)
+        maze_walls = self._add_gap_distractor_junction(maze_walls)
         maze_prey_walls = self._get_maze_walls_from_path(original_path)
 
         # self.plot_maze(maze_walls,maze_prey_walls)

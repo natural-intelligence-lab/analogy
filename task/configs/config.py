@@ -1,5 +1,10 @@
 """Common grid_chase task config.
 
+2022/4/4
+1) add gap for junctions between distractor paths
+2) implement slower paddle around target
+3) plot_tp_ts: get % correct for fully invisible trials
+
 2022/3/29
 1) implement gap
 2) (TBD) magnet for response
@@ -87,6 +92,11 @@ _MAX_REWARDING_DIST=((_AGENT_SCALE)/2)+(_PREY_SCALE/2) # =((_AGENT_ASPECT_RATIO*
 _EPSILON=1e-4 # FOR REWARD FUNCTION
 _REWARD = 6 # 100 ms # post zero prey_distance
 _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
+
+# joystick slowing near potential exits
+_SLOWING_DIST=((_AGENT_SCALE)/2)+(_PREY_SCALE/2)
+_GAIN_MASS = 1.5
+_DEFAULT_MASS = 0.5
 
 # staircase
     # _STEP_OPACITY = 40  # [0 255]
@@ -278,6 +288,12 @@ class TrialInitialization():
         total_width = cell_size * maze_width
         prey_path += np.array([[0.5 * (1 - total_width), _MAZE_Y]])
 
+        # identify exits
+        wall_array = np.asarray(maze_walls)
+        x_exit = wall_array[np.argwhere(wall_array==-0.5)[:,0],0,0]  # in maze wall coordinate
+        x_exit *= cell_size
+        x_exit += 0.5 * (1 - total_width)
+
         # Compute scaled and translated distractor path
         if 'distractor_path' in stimulus['features']:
             distractor_path = 0.5 + np.array(stimulus['features']['distractor_path'])
@@ -432,6 +448,7 @@ class TrialInitialization():
             'n_correct_n_amb_junction': n_correct_n_amb_junction,
             'n_trial': n_trial,
             'n_trial_amb': n_trial_amb,
+            'x_exit': x_exit,
         }
 
         return state
@@ -444,6 +461,7 @@ class TrialInitialization():
             shape='square', # ,
             aspect_ratio=_AGENT_ASPECT_RATIO, # 4, # 3, #  1, 0.2,
             scale=_AGENT_SCALE,  # 0.1, # aspect_ratio=0.3, scale=0.05,
+            mass = _DEFAULT_MASS,  # 0.5
             c0=128, c1=32, c2=32, metadata={'response_up': False, 'moved_h': False,'y_speed':0},
         )
         if self._static_agent:
@@ -805,6 +823,30 @@ class Config():
         set_path_prey_opacity = gr.ModifySprites('path_prey', _set_path_prey_opacity)  # self._prey_opacity
 
         # continual_rules
+        def _near_exit(state, meta_state):
+            if len(state['agent']) > 0:
+                agent = state['agent'][0]
+                if meta_state['phase'] == 'offline':
+                    distance_to_exits = agent.x - meta_state['x_exit']
+                    id_in_zone = np.any(np.abs(distance_to_exits)<_SLOWING_DIST)
+                else:
+                    id_in_zone = False
+            else:
+                id_in_zone = False
+            return id_in_zone
+        def _change_agent_mass(s):
+            s.mass = _GAIN_MASS
+        def _change_agent_mass2(s):
+            s.mass = _DEFAULT_MASS
+        update_agent_mass = gr.ConditionalRule(
+            condition=lambda state, x: _near_exit(state, x),
+            rules=gr.ModifySprites('agent', _change_agent_mass)
+        )
+        update_agent_mass2 = gr.ConditionalRule(
+            condition=lambda state, x: not _near_exit(state, x),
+            rules=gr.ModifySprites('agent', _change_agent_mass2)
+        )
+
         # change agent color if offline reward
         def _reward(state, meta_state):
             if len(state['agent']) > 0:
@@ -850,7 +892,7 @@ class Config():
         phase_offline = gr.Phase(
             one_time_rules=[create_agent], # ,set_path_prey_opacity],  # ,glue_path_prey],
             # [disappear_screen,disappear_fake_prey,create_agent,set_path_prey_opacity,glue_path_prey], # [disappear_fixation, disappear_screen, create_agent],
-            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color], # ,update_joystick_fixation_dur],  # update_agent_color
+            continual_rules=[update_agent_metadata, update_RT_offline, update_agent_color,update_agent_mass,update_agent_mass2], # ,update_joystick_fixation_dur],  # update_agent_color
             name='offline',
             end_condition=_end_offline_phase,  #  duration=10,
         )

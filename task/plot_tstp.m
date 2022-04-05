@@ -26,6 +26,7 @@ name={'ts',... % 1 from meta_state
     'num_trial_amb_junction',... % 14
     'num_correct_amb_junction',... % 15
     'p_visible_aid',... % 16
+    'num_completeTrials',... % 17
     }; % 16
 
 %% getting codec and events
@@ -106,7 +107,7 @@ end
 %% MAIN
 if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4}) & ~isempty(values{5}) &...
         ~isempty(values{6}) & ~isempty(values{7}) & ~isempty(values{8}) & ~isempty(values{9}) & ~isempty(values{10}) & ~isempty(values{11}) &...
-        ~isempty(values{12}) & ~isempty(values{13}) & ~isempty(values{14}) & ~isempty(values{15}) & ~isempty(values{16})
+        ~isempty(values{12}) & ~isempty(values{13}) & ~isempty(values{14}) & ~isempty(values{15}) & ~isempty(values{16}) & ~isempty(values{17})
     %     if nargin==1
     %% fig. 1: plot T vs t
     Ttmp=values{1}(end); ttmp=values{2}(end); RT_offline=values{5}(end);
@@ -227,11 +228,14 @@ xlabel('# ambiguous junction'); ylabel('% correct');
 
 %% fig. 7: p(visible path aid)
 p_visible_aid=values{16}(end);
-fprintf(1, ', # fully invisible: %d\n', nnz(values{16}==1));
 figure(7); set(gcf,'position',[840 0 420 420],'color','w','resize','off'); hold on;
 plot(num_trials,p_visible_aid,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
 xlabel('trials'); ylabel('p(visible path aid)');
 drawnow;
+
+%% measure % correct only for fully invisible trials
+id_correct=diff(values{17});
+fprintf(1, '# correct , # fully invisible: %d, %d\n', nnz(id_correct),nnz(values{16}==1));
 else
     fprintf(1, 'number of physical intervals does not equal number of production intervals! or empty')
 end
