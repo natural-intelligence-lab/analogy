@@ -355,9 +355,9 @@ class TrialInitialization():
 
         correct_side = 0
         _agent_y0 = _AGENT_Y
-        _agent_x0 = np.random.rand()
-        while np.abs(_agent_x0-prey_path[-1][0]) < _MIN_DIST_AGENT or np.abs(_agent_x0-prey_path[-1][0]) > _MAX_DIST_AGENT:
-            _agent_x0 = np.random.rand()  # if too close, resample
+        _agent_x0 = 0.5  # np.random.rand()
+        # while np.abs(_agent_x0-prey_path[-1][0]) < _MIN_DIST_AGENT or np.abs(_agent_x0-prey_path[-1][0]) > _MAX_DIST_AGENT:
+        #     _agent_x0 = np.random.rand()  # if too close, resample
 
         state = collections.OrderedDict([
             ('agent', []),
