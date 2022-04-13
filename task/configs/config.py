@@ -82,7 +82,7 @@ _FIXATION_THRESHOLD = 0.4
 _ITI = 60
 _FIXATION_STEPS = 60  # 30
 _FAKE_PREY_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
-_FOREPERIOD_DURATION=60 # 1s
+_FOREPERIOD_DURATION=30 # 60 # 1s
 
 _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
 _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
@@ -758,11 +758,20 @@ class Config():
             name='fake_prey',
             # end_condition=_end_foreperiod_phase,  
         )
-        ###########################################
-        # 3-3. foreperiod without agent (path_prey)
-        # one_time_rules
+
+        # present maze
         disappear_fake_prey = gr.ModifySprites('fake_prey', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
+
+        phase_foreperiod = gr.Phase(
+            one_time_rules=[disappear_screen, disappear_fake_prey],
+            duration=_FOREPERIOD_DURATION,
+            name='foreperiod',
+        )
+
+        ###########################################
+        # 3-3. path_prey without agent
+        # one_time_rules
         clear_prey_wall =  gr.ModifySprites('prey_wall',_make_transparent)
 
         create_path_prey = custom_game_rules.CreatePathPrey(self._trial_init)
@@ -807,11 +816,10 @@ class Config():
                 return True
             return False
 
-        phase_foreperiod = gr.Phase(
-            one_time_rules=[disappear_screen,disappear_fake_prey,create_path_prey,unglue_path_prey],
+        phase_path_prey = gr.Phase(
+            one_time_rules=[create_path_prey,unglue_path_prey], # disappear_screen,disappear_fake_prey,
             continual_rules=[highlight_path,update_motion_steps_path_prey,increase_RT_offline,dim_path_prey,glue_path_prey_conditional],
-            # duration=_FOREPERIOD_DURATION,
-            name='foreperiod',
+            name='path_prey',
             end_condition=_end_foreperiod_phase,
         )
         ###########################################
@@ -988,6 +996,7 @@ class Config():
             phase_fixation,
             phase_fake_prey, # only fake prey
             phase_foreperiod, # without agent
+            phase_path_prey,
             phase_offline,
             phase_motion_visible,
             phase_motion_invisible,
