@@ -309,7 +309,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             min_exit_distance=min_exit_distance,
         )
 
-        self._gap_size = 0.15  # assuming wall size is one; if set to zero, no gap
+        self._gap_size = 0 # 0.15  # assuming wall size is one; if set to zero, no gap
 
     def _get_wall_touch_path(self, maze, path):
         wall_touch_path_0 = []  # short start
