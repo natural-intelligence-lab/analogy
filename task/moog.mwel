@@ -118,7 +118,7 @@ var inter_trial_interval_duration = 0s
 var default_iti = 0s
 
 // For mapping eye tracker coordinates to positions on the image frame
-var eye_to_frame_coeffs = [[0, 0], [0, 0]]
+var eye_to_frame_coeffs = [[1, 0], [0, 1]]
 var eye_to_frame_intercept = [0, 0]
 
 var reward_gain = 60000
@@ -141,6 +141,9 @@ var start_x_prey = 0
 
 //time stamps for eye movement analysis
 var tFix = 0
+var tBallOn = 0
+var tMazeOn = 0
+var tPathPrey = 0
 var tOffline = 0
 var tOfflineRT = 0
 var tVisMotion = 0

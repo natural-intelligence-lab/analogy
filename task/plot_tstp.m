@@ -171,10 +171,11 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
     %     end
     
     %% fig.2 : RT offline
-%     id_invisible=path_opacity==0;
-%     figure(2); set(gcf,'position',[560 615 420 420],'color','w','resize','off'); hold on;
-%     plot(Ttmp(id_invisible)+0.2*(rand(1,1)-0.5),RT_offline(id_invisible),'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
-%     xlabel('t_s (s)'); ylabel('RT (offline) (s)');
+    p_visible_aid=values{16}(end);
+     id_invisible=p_visible_aid==1;
+     figure(2); set(gcf,'position',[560 615 420 420],'color','w','resize','off'); hold on;
+     plot(Ttmp(id_invisible)+0.2*(rand(1,1)-0.5),RT_offline(id_invisible),'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
+     xlabel('t_s (s)'); ylabel('RT (offline) (s)');
 
         
     %% fig. 3: offline error
@@ -227,7 +228,6 @@ drawnow;
 xlabel('# ambiguous junction'); ylabel('% correct');
 
 %% fig. 7: p(visible path aid)
-p_visible_aid=values{16}(end);
 figure(7); set(gcf,'position',[840 0 420 420],'color','w','resize','off'); hold on;
 plot(num_trials,p_visible_aid,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
 xlabel('trials'); ylabel('p(visible path aid)');

@@ -1,7 +1,7 @@
 """Common grid_chase task config.
 
 2022/4/21
-1) make maze on & path prey optional
+1) make maze on & path prey optional (to resume staircase, set _PATH_PREY_DURATION to np.inf and bring back highlight_path in continual_rules
 2) clean up code: rename task phase & meta_state
 3) TBD: streamline eye data collection & distractor_path in samplers.py
 

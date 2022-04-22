@@ -110,9 +110,9 @@ class TaskManager:
 
         # Fetch linear regression coefficients to map raw eye position to frame
         # position.
-        self._eye_to_frame_coeffs = np.array(getvar('eye_to_frame_coeffs'))
+        self._eye_to_frame_coeffs = np.array(getvar('eye_to_frame_coeffs'))  # [[1, 0], [0, 1]] in moog.mwel
         self._eye_to_frame_intercept = np.array(
-            getvar('eye_to_frame_intercept'))
+            getvar('eye_to_frame_intercept'))  # [0, 0] in moog.mwel
 
         self._dump_file = os.path.join(_PWD, 'dump.txt')
         with open(self._dump_file, 'w') as f:
@@ -127,6 +127,9 @@ class TaskManager:
         self.flag4 = True
         self.flag5 = True
         self.flag6 = True
+        self.flag7 = True
+        self.flag8 = True
+        self.flag9 = True
 
     def reset(self):
         """Reset environment.
@@ -167,17 +170,9 @@ class TaskManager:
         self.flag4 = True
         self.flag5 = True
         self.flag6 = True
-
-        # 1.phase_iti, 'iti' (1sec)
-        # 2.phase_joystick_center, 'joystick_fixation' (variable)
-        # 3.phase_fixation, 'fixation' (0)
-        # 4.phase_ball_on,  'ball_on' (.5sec)
-        # 5.phase_maze_on,  'maze_on' (0)
-        # 6.phase_path_prey, 'path_prey' (0)
-        # 7. phase_off_move, 'offMove' (variable)
-        # 8. phase_motion_visible, 'motion_visible' (variable)
-        # 9. phase_motion_invisible, 'motion_invisible' (variable)
-        # 10. phase_reward, 'reward'
+        self.flag7 = True
+        self.flag8 = True
+        self.flag9 = True
 
         if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train' or getvar('platform') == 'laptop':
             setvar('prey_opacity',self._prey_opacity_staircase.opacity)
@@ -266,58 +261,94 @@ class TaskManager:
         if timestep.last():
             setvar('end_trial', True)
             self.complete = True
-            RT_offline=self.env.meta_state['RT_offline']/60  # [s]
-            setvar('RT_offline',RT_offline)
+            # RT_offline=self.env.meta_state['RT_offline']/60  # [s]
+            # setvar('RT_offline',RT_offline)
             # tp = self.env.meta_state['tp']/60
             # setvar('tp', tp)
 
+        # 3.phase_fixation, 'fixation' (0)
         if self.env.meta_state['phase'] == 'fixation' and self.flag1:
             setvar('tFix',time.time())
             setvar('prey_distance_invisible',self.env.meta_state['prey_distance_invisible'])
             self.flag1 = False
-        if self.env.meta_state['phase'] == 'offline' and self.flag2:
-            setvar('tOffline',time.time())
+
+        # 4.phase_ball_on,  'ball_on' (.5sec)
+        if self.env.meta_state['phase'] == 'ball_on' and self.flag2:
+            setvar('tBallOn',time.time())
             self.flag2 = False
+
+        # 5.phase_maze_on,  'maze_on' (0)
+        if self.env.meta_state['phase'] == 'maze_on' and self.flag3:
+            tMazeOn = time.time()
+            setvar('tMazeOn',tMazeOn)
+            self.flag3 = False
+
+        # 6.phase_path_prey, 'path_prey' (0)
+        if self.env.meta_state['phase'] == 'path_prey' and self.flag4:
+            setvar('tPathPrey',time.time())
+            self.flag4 = False
+
+        # 7. phase_off_move, 'offMove' (variable)
+        if self.env.meta_state['phase'] == 'offMove' and self.flag5:
+            setvar('tOffline',time.time())
+            self.flag5 = False
             setvar('num_turns',self.env.meta_state['num_turns'])
             setvar('end_x_prey',self.env.meta_state['prey_path'][-1][0])
             setvar('start_x_prey',self.env.meta_state['prey_path'][0][0])
-            if not len(self.env.meta_state['distractor_path'])==0:
-                setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
+            # if not len(self.env.meta_state['distractor_path'])==0:
+            #     setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
 
+        # get offline RT
         agent = self.env.state['agent']
-        if self.env.meta_state['phase'] == 'offline' and self.flag3:
+        if self.env.meta_state['phase'] == 'offMove' and self.flag6:
             if len(agent) > 0:
                 if agent[0].metadata['moved_h']:
-                    setvar('tOfflineRT',time.time())
-                    self.flag3 = False
-        if self.env.meta_state['phase'] == 'motion_visible' and self.flag4:
+                    tOfflineRT = time.time()
+                    setvar('tOfflineRT',tOfflineRT)
+                    RT_offline = tOfflineRT - tMazeOn
+                    # RT_offline = self.env.meta_state['RT_offline'] / 60  # [s] # less accurate by skipping monitor refresh? but still constrained by 60 Hz?
+                    setvar('RT_offline', RT_offline)
+                    self.flag6 = False
+
+        # 8. phase_motion_visible, 'motion_visible' (variable)
+        if self.env.meta_state['phase'] == 'motion_visible' and self.flag7:
             setvar('tVisMotion',time.time())
             setvar('end_x_agent',self.env.meta_state['end_x_agent'])
-            self.flag4 = False
-        if self.env.meta_state['phase'] == 'motion_invisible' and self.flag5:
+            self.flag7 = False
+
+        # 9. phase_motion_invisible, 'motion_invisible' (variable)
+        if self.env.meta_state['phase'] == 'motion_invisible' and self.flag8:
             tInvMotion = time.time()
             setvar('tInvMotion',tInvMotion)
-            self.flag5 = False
+            self.flag8 = False
         if self.env.meta_state['phase'] == 'motion_invisible':
             if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
                 setvar('slope_opacity',self.env.meta_state['slope_opacity'])
                 # setvar('prey_opacity',self.env.state['prey'][0].opacity) 
-            
-        if self.env.meta_state['phase'] == 'reward' and self.flag6:
+
+        # 10. phase_reward, 'reward'
+        if self.env.meta_state['phase'] == 'reward' and self.flag9:
             tRew = time.time()
             setvar('tRew',tRew)
-            self.flag6 = False
+            self.flag9 = False
             tInvMotion = getvar('tInvMotion')
             setvar('tp',tRew-tInvMotion)
             ts = self.env.meta_state['ts']/60 # [s]
             setvar('ts', ts)
-
-            
-            
-
 
         # MWorks' Python image stimulus requires a contiguous buffer, so we use
         # ascontiguousarray to provide one.
         to_return = np.ascontiguousarray(img)
 
         return to_return
+
+        # 1.phase_iti, 'iti' (1sec)
+        # 2.phase_joystick_center, 'joystick_fixation' (variable)
+        # 3.phase_fixation, 'fixation' (0)
+        # 4.phase_ball_on,  'ball_on' (.5sec)
+        # 5.phase_maze_on,  'maze_on' (0)
+        # 6.phase_path_prey, 'path_prey' (0)
+        # 7. phase_off_move, 'offMove' (variable)
+        # 8. phase_motion_visible, 'motion_visible' (variable)
+        # 9. phase_motion_invisible, 'motion_invisible' (variable)
+        # 10. phase_reward, 'reward'
