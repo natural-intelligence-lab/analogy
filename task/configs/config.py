@@ -1,7 +1,7 @@
 """Common grid_chase task config.
 
 2022/4/21
-1) make maze on & path prey optional (to resume staircase, set _PATH_PREY_DURATION to np.inf and bring back highlight_path in continual_rules
+1) make maze on & path prey optional (to resume staircase, set _PATH_PREY_DURATION to np.inf (_OPACITY_INIT_>0) and bring back highlight_path in continual_rules
 2) clean up code: rename task phase & meta_state
 3) TBD: streamline eye data collection & distractor_path in samplers.py
 
@@ -115,7 +115,7 @@ _DIM_DURATION = 2 # [sec]
 # staircase for path prey (offline)
 _STEP_OPACITY_UP_ = 0 # 10 # 1  # 0 # 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN_ = 0 # 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT_ = 100 # 200 # 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
+_OPACITY_INIT_ = 0 # 100 # 200 # 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
 _P_DIM_DISTANCE_ = 0 # 2/3
 _DIM_DURATION_ = 2 # [sec]
 
@@ -384,14 +384,14 @@ class TrialInitialization():
             'fix_dur': 0,
             'motion_steps': 0,
             'phase': '',  # fixation -> offline -> motion -> online -> reward -> ITI
-            'stim_feat': stimulus['features'],
+            'stimulus_features': stimulus['features'],
             'prey_path': np.around(prey_path, decimals=3),
             'prey_speed': self._prey_speed,
             'prey_opacity': self._prey_opacity,
             'path_prey_opacity': self._path_prey_opacity,
             'half_width' : _TOOTH_HALF_WIDTH,
-            'maze_w': maze_width,
-            'maze_h': maze_height,
+            'maze_width': maze_width,
+            'maze_height': maze_height,
             'image_size': image_size,
             'prey_distance_remaining': prey_distance_remaining,
             'prey_distance_invisible': cell_size * len(prey_path) + _MAZE_Y - _AGENT_Y,

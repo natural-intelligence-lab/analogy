@@ -290,7 +290,8 @@ class TaskManager:
 
         # 7. phase_off_move, 'offMove' (variable)
         if self.env.meta_state['phase'] == 'offMove' and self.flag5:
-            setvar('tOffline',time.time())
+            tOffline = time.time()
+            setvar('tOffline',tOffline)
             self.flag5 = False
             setvar('num_turns',self.env.meta_state['num_turns'])
             setvar('end_x_prey',self.env.meta_state['prey_path'][-1][0])
@@ -305,7 +306,8 @@ class TaskManager:
                 if agent[0].metadata['moved_h']:
                     tOfflineRT = time.time()
                     setvar('tOfflineRT',tOfflineRT)
-                    RT_offline = tOfflineRT - tMazeOn
+                    tMazeOn = getvar('tMazeOn')
+                    RT_offline = tOfflineRT - tMazeOn # tOffline # tMazeOn if maze_on duration is zero, no tMazeOn
                     # RT_offline = self.env.meta_state['RT_offline'] / 60  # [s] # less accurate by skipping monitor refresh? but still constrained by 60 Hz?
                     setvar('RT_offline', RT_offline)
                     self.flag6 = False
