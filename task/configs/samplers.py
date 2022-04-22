@@ -526,6 +526,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             'num_overlap': len(x_overlap),
             'x_overlap' : x_overlap,
             'maze_prey_walls': maze_prey_walls,
+            'distractor_path':[],
         }
 
         stimulus = dict(

@@ -168,6 +168,17 @@ class TaskManager:
         self.flag5 = True
         self.flag6 = True
 
+        # phase_iti, iti (1sec)
+        # phase_joystick_center, joystick_fixation (variable)
+        # phase_fixation, fixation (0)
+        # phase_ball_on,  # only fake prey
+        # phase_maze_on,  # without agent
+        # phase_path_prey,
+        # phase_off_move,
+        # phase_motion_visible,
+        # phase_motion_invisible,
+        # phase_reward,
+
         if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train' or getvar('platform') == 'laptop':
             setvar('prey_opacity',self._prey_opacity_staircase.opacity)
             setvar('path_prey_opacity', self._path_prey_opacity_staircase.opacity)
