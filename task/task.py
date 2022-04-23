@@ -296,6 +296,7 @@ class TaskManager:
             setvar('num_turns',self.env.meta_state['num_turns'])
             setvar('end_x_prey',self.env.meta_state['prey_path'][-1][0])
             setvar('start_x_prey',self.env.meta_state['prey_path'][0][0])
+            setvar('id_correct_offline',self.env.meta_state['id_correct_offline'])
             # if not len(self.env.meta_state['distractor_path'])==0:
             #     setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
 

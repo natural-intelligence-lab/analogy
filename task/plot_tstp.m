@@ -27,7 +27,10 @@ name={'ts',... % 1 from meta_state
     'num_correct_amb_junction',... % 15
     'p_visible_aid',... % 16
     'num_completeTrials',... % 17
+    'id_correct_offline',... % 18
     }; % 16
+
+plotNoise=0.1; % for tp-ts, RT plot
 
 %% getting codec and events
 nParam=length(name); % ts, tp for now
@@ -107,7 +110,7 @@ end
 %% MAIN
 if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4}) & ~isempty(values{5}) &...
         ~isempty(values{6}) & ~isempty(values{7}) & ~isempty(values{8}) & ~isempty(values{9}) & ~isempty(values{10}) & ~isempty(values{11}) &...
-        ~isempty(values{12}) & ~isempty(values{13}) & ~isempty(values{14}) & ~isempty(values{15}) & ~isempty(values{16}) & ~isempty(values{17})
+        ~isempty(values{12}) & ~isempty(values{13}) & ~isempty(values{14}) & ~isempty(values{15}) & ~isempty(values{16}) & ~isempty(values{17}) & ~isempty(values{18})
     %     if nargin==1
     %% fig. 1: plot T vs t
     Ttmp=values{1}(end); ttmp=values{2}(end); RT_offline=values{5}(end);
@@ -141,7 +144,7 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
     
     % plot
     fprintf(1, 'ts vs tp: %d vs %d , alpha: %d\n', [Ttmp; ttmp; opacity]);
-    plot(Ttmp+0.2*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
+    plot(Ttmp+plotNoise*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
 
     % TBD: debug
     %    % plot regression for 0 opacity & 2-turn
@@ -172,9 +175,11 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
     
     %% fig.2 : RT offline
     p_visible_aid=values{16}(end);
+    id_offline_correct=values{18}(end);
      id_invisible=p_visible_aid==1;
      figure(2); set(gcf,'position',[560 615 420 420],'color','w','resize','off'); hold on;
-     plot(Ttmp(id_invisible)+0.2*(rand(1,1)-0.5),RT_offline(id_invisible),'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
+     plot(Ttmp(id_invisible&id_offline_correct)+plotNoise*(rand(1,1)-0.5),RT_offline(id_invisible&id_offline_correct),'o','markerfacecolor','g','color','g','linewidth',1,'markersize',2); drawnow; hold on;
+     plot(Ttmp(id_invisible&~id_offline_correct)+plotNoise*(rand(1,1)-0.5),RT_offline(id_invisible&~id_offline_correct),'o','markerfacecolor','r','color','r','linewidth',1,'markersize',2); drawnow; hold on;
      xlabel('t_s (s)'); ylabel('RT (offline) (s)');
 
         

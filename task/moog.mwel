@@ -168,6 +168,8 @@ var num_correct_junction=[]
 var num_correct_amb_junction=[]
 var p_visible_aid = 0
 
+var id_correct_offline = 0
+
 var sync = 0
 
 ///////////////////////////////////////////////////////////////////////////////
