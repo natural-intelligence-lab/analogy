@@ -30,7 +30,7 @@ name={'ts',... % 1 from meta_state
     'id_correct_offline',... % 18
     }; % 16
 
-plotNoise=0.01; % for tp-ts, RT plot; was 0.2
+plotNoise=0.05; % for tp-ts, RT plot; was 0.2
 
 %% getting codec and events
 nParam=length(name); % ts, tp for now

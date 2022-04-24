@@ -71,7 +71,7 @@ python_file ('task.py')
 
 var image_pixel_width = 512
 var image_pixel_height = 512
-var image_size_x = 20 # overridden by _IMAGE_SIZE in config.py
+var image_size_x = 20 // # overridden by _IMAGE_SIZE in config.py
 var image_size_y = 20
 var image_pos_x = 0
 var image_pos_y = 0
@@ -121,18 +121,18 @@ var default_iti = 0s
 var distance_to_eye = 66  // cm
 var monitor_width = 53
 var monitor_height = 30
-screen_width_deg=atan(monitor_height/distance_to_eye)/pi()*180; # 24.44 deg % atand(height/2/distance)*2; % 25.6 deg
+var screen_width_deg=atan(monitor_height/distance_to_eye)/pi()*180 // # 24.44 deg % atand(height/2/distance)*2; % 25.6 deg
 
 // Maze: 17 cm, Black background: 24cm (20 dva), 17/24=0.7 (_MAZE_WIDTH)
-var background_width = 24;  # cm (20 dva)
-var p_background=background_width/monitor_height; % 80%
+var background_width = 24  //# cm (20 dva)
+var p_background=background_width/monitor_height //% 80%
 
 // 1 degree of visual angle
-var width_per_deg = 1/(p_background*screen_width_deg); % [maze width unit/deg]
+var width_per_deg = 1/(p_background*screen_width_deg) //% [maze width unit/deg]
 
 // For mapping eye tracker coordinates to positions on the image frame
-var eye_to_frame_coeffs = [[width_per_deg,0],[0,width_per_deg]]  # [[1, 0], [0, 1]]
-var eye_to_frame_intercept = [0.5, 0.5]  # [0, 0]
+var eye_to_frame_coeffs = [[width_per_deg,0],[0,width_per_deg]]  //# [[1, 0], [0, 1]]
+var eye_to_frame_intercept = [0.5, 0.5]  //# [0, 0]
 
 var reward_gain = 60000
 var max_rewarding_dist=0.1
