@@ -7,7 +7,7 @@ from configs import samplers
 from configs.levels import get_stimuli_dir
 import numpy as np
 
-_MIN_NUM_TURNS = 2 # inclusive
+_MIN_NUM_TURNS = 1 # 2 # inclusive
 _MAX_NUM_TURNS = 2 # 6 # 4 # exclusive
 # _STEP_NUM_TURNS = 2
 _NUM_LAYERS= 4 # 3 # 2 # 50
@@ -57,7 +57,8 @@ def random_6_staircase(**kwargs):
     """now fix exits equally divided at bottom """
     path_dir = os.path.join(
         get_stimuli_dir.stimuli_dir(),
-        'wire_mazes/maze_size_6/samples_per_pair_100_v0',
+        'wire_mazes/maze_size_6/samples_per_pair_200_v1',  # min seg length of 1
+        # 'wire_mazes/maze_size_6/samples_per_pair_100_v0',  # min seg length of 2
     )
     num_turns_samplers = [samplers.WireMazeSampler(
             path_dir=path_dir,

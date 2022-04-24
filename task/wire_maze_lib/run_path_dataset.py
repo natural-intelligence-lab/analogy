@@ -8,17 +8,17 @@ import path_dataset
 import shutil
 
 _MAZE_SIZE = 6 # 9 # 8 # 16  # Size of the maze
-_DIR_SUFFIX = '_v0'  # Suffix for the data directory
+_DIR_SUFFIX = '_v1' # '_v0'  # Suffix for the data directory
 
 # Maximum number of unique paths for each (start, end) pair
-_SAMPLES_PER_PAIR = 100
+_SAMPLES_PER_PAIR = 2*100
 
 # Number of data paths to attempt to generate. The true number of data points
 # will be significantly less than this because of rejection sampling.
-_NUM_TRIES = int(2e5)
+_NUM_TRIES = int(5*2e5)
 
 # Minimum length of a segment in the path before a turn
-_MIN_SEGMENT_LENGTH = 2 # 1 # 3
+_MIN_SEGMENT_LENGTH = 1 # 2 # 1 # 3
 
 # Probability when generating a path of turning at each step after
 # _MIN_SEGMENT_LENGTH
