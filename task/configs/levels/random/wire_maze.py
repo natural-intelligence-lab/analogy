@@ -7,12 +7,12 @@ from configs import samplers
 from configs.levels import get_stimuli_dir
 import numpy as np
 
-_MIN_NUM_TURNS = 1 # 2 # inclusive
+_MIN_NUM_TURNS = 0 # 2 # 0 # 2 # inclusive
 _MAX_NUM_TURNS = 2 # 6 # 4 # exclusive
 # _STEP_NUM_TURNS = 2
 _NUM_LAYERS= 4 # 3 # 2 # 50
 
-_MIN_NUM_OVERLAP=1
+_MIN_NUM_OVERLAP= 0 # 1
 _MAX_NUM_OVERLAP=np.inf # 2 # 1 # np.inf
 _MIN_EXIT_DISTANCE = 0 # 1 # 0 # 2 # 3  # GRID; if set to zero, no constraint on the exit distance
 
@@ -57,10 +57,11 @@ def random_6_staircase(**kwargs):
     """now fix exits equally divided at bottom """
     path_dir = os.path.join(
         get_stimuli_dir.stimuli_dir(),
-        'wire_mazes/maze_size_6/samples_per_pair_200_v1',  # min seg length of 1
-        # 'wire_mazes/maze_size_6/samples_per_pair_100_v0',  # min seg length of 2
+        # 'wire_mazes/maze_size_6/samples_per_pair_200_v1',  # min seg length of 1
+        'wire_mazes/maze_size_6/samples_per_pair_100_v0',  # min seg length of 2
     )
-    num_turns_samplers = [samplers.WireMazeSampler(
+    num_turns_samplers = [
+        samplers.WireMazeSampler(
             path_dir=path_dir,
             num_layers=_NUM_LAYERS,
             ball_path_top_bottom=True,
@@ -71,6 +72,7 @@ def random_6_staircase(**kwargs):
             max_num_overlap=_MAX_NUM_OVERLAP,
             min_exit_distance=_MIN_EXIT_DISTANCE, # -np.inf,
         )
+        # for i in range(_min_num_turns, max_num_turns + 1, _step_num_turns)
     ]
     stimulus_generator = samplers.MixtureSampler(*num_turns_samplers,
         num_passes=100)
