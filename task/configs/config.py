@@ -80,6 +80,7 @@ _P_PREY0 = 0 # 0.1  #  0.3 # 0.5   # 0.9  # prey's initial position as % of path
 _GAIN_PATH_PREY = 1  # 2.5 # 2 # 3  # 1  # speed gain for path prey
 _PATH_PREY_OPACITY = 120  # 50
 _ACTION_SCALING_FACTOR = 0.015 # 0.01
+_GAIN_SLOW_OFFLINE_ERROR = 0.3 # after offline error, prey_speed is scaled by this factor
 
 # fixation
 _FIXATION_THRESHOLD = 0.4
@@ -523,7 +524,8 @@ class Config():
         self._joystick_center_threshold = 0.05
 
         # Compute prey speed given ms_per_unit, assuming 60 fps
-        self._prey_speed = 1000. / (60. * ms_per_unit) # 0.0083 frame width / refresh
+        self._prey_speed0 = 1000. / (60. * ms_per_unit) # 0.0083 frame width / refresh
+        self._prey_speed = self._prey_speed0
         self._prey_lead_in = 0.15  # 0.08
 
         self._trial_init = TrialInitialization(
@@ -887,6 +889,8 @@ class Config():
         clear_prey_wall = gr.ModifySprites('prey_wall', _make_transparent)
         disappear_path_prey = gr.ModifySprites('path_prey', _make_transparent)
         def _unglue(meta_state):
+            if meta_state['id_correct_offline'] != 1:
+                self._prey_speed = self._prey_speed * _GAIN_SLOW_OFFLINE_ERROR
             self._maze_walk.speed = self._prey_speed
             meta_state['prey_speed'] = self._prey_speed
         unglue = gr.ModifyMetaState(_unglue)
@@ -955,9 +959,12 @@ class Config():
             condition=lambda state, x: _id_time_reward(state, x),
             rules=gr.ModifySprites('prey', _make_red)
         )
+        def _reset_prey_speed(meta_state):
+            self._prey_speed = self._prey_speed0
+        reset_prey_speed = gr.ModifyMetaState(_reset_prey_speed)
 
         phase_reward = gr.Phase(
-            one_time_rules=[reveal_prey,make_agent_green,update_prey_color],
+            one_time_rules=[reveal_prey,make_agent_green,update_prey_color,reset_prey_speed],
             continual_rules=update_motion_steps,
             name='reward',
         )
