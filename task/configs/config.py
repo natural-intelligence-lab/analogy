@@ -921,7 +921,7 @@ class Config():
         # one_time_rules
         set_prey_opacity = gr.ModifySprites('prey', _set_prey_opacity)  # self._prey_opacity
         def _update_ts(meta_state):
-            meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed # [frames]
+            meta_state['ts'] = meta_state['prey_distance_remaining'] / self._prey_speed0 # [frames]
         update_ts = gr.ModifyMetaState(_update_ts)
 
         # continual_rules
