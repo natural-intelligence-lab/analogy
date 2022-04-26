@@ -935,7 +935,8 @@ class Config():
 
         # end_condition
         def _end_motion_phase(state,meta_state):
-            id_response_up = state['agent'][0].metadata['response_up']
+            if meta_state['id_correct_offline'] == 1:  # response counts only if correct offline
+                id_response_up = state['agent'][0].metadata['response_up']
             id_late = meta_state['tp'] > _MAX_WAIT_TIME_GAIN*meta_state['ts']
             return id_response_up or id_late
 
