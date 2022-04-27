@@ -110,7 +110,7 @@ _DEFAULT_MASS = 0.5
 # _staircase for prey (online)
 _STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT = 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
+_OPACITY_INIT = 100  # 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
@@ -937,12 +937,15 @@ class Config():
         def _end_motion_phase(state,meta_state):
             if meta_state['id_correct_offline'] == 1:  # response counts only if correct offline
                 id_response_up = state['agent'][0].metadata['response_up']
-            id_late = meta_state['tp'] > _MAX_WAIT_TIME_GAIN*meta_state['ts']
+                id_late = meta_state['tp'] > _MAX_WAIT_TIME_GAIN * meta_state['ts']
+            else:
+                id_response_up = False
+                id_late = meta_state['tp'] > (meta_state['prey_distance_invisible'] / self._prey_speed)
             return id_response_up or id_late
 
         phase_motion_invisible = gr.Phase(
             one_time_rules=[set_prey_opacity,update_ts],
-            continual_rules=[update_motion_steps,increase_tp],  # ,dim_prey],
+            continual_rules=[update_motion_steps,increase_tp],  # ,dim_prey], update_prey_distance
             end_condition=_end_motion_phase,
             name='motion_invisible',
         )
