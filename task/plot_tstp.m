@@ -26,7 +26,11 @@ name={'ts',... % 1 from meta_state
     'num_trial_amb_junction',... % 14
     'num_correct_amb_junction',... % 15
     'p_visible_aid',... % 16
+    'num_completeTrials',... % 17
+    'id_correct_offline',... % 18
     }; % 16
+
+plotNoise=0.05; % for tp-ts, RT plot; was 0.2
 
 %% getting codec and events
 nParam=length(name); % ts, tp for now
@@ -106,7 +110,7 @@ end
 %% MAIN
 if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4}) & ~isempty(values{5}) &...
         ~isempty(values{6}) & ~isempty(values{7}) & ~isempty(values{8}) & ~isempty(values{9}) & ~isempty(values{10}) & ~isempty(values{11}) &...
-        ~isempty(values{12}) & ~isempty(values{13}) & ~isempty(values{14}) & ~isempty(values{15}) & ~isempty(values{16})
+        ~isempty(values{12}) & ~isempty(values{13}) & ~isempty(values{14}) & ~isempty(values{15}) & ~isempty(values{16}) & ~isempty(values{17}) & ~isempty(values{18})
     %     if nargin==1
     %% fig. 1: plot T vs t
     Ttmp=values{1}(end); ttmp=values{2}(end); RT_offline=values{5}(end);
@@ -140,7 +144,7 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
     
     % plot
     fprintf(1, 'ts vs tp: %d vs %d , alpha: %d\n', [Ttmp; ttmp; opacity]);
-    plot(Ttmp+0.2*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
+    plot(Ttmp+plotNoise*(rand(1,1)-0.5),ttmp,'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
 
     % TBD: debug
     %    % plot regression for 0 opacity & 2-turn
@@ -170,10 +174,13 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
     %     end
     
     %% fig.2 : RT offline
-%     id_invisible=path_opacity==0;
-%     figure(2); set(gcf,'position',[560 615 420 420],'color','w','resize','off'); hold on;
-%     plot(Ttmp(id_invisible)+0.2*(rand(1,1)-0.5),RT_offline(id_invisible),'o','markerfacecolor',cmap,'color',cmap,'linewidth',1,'markersize',3); drawnow; hold on;
-%     xlabel('t_s (s)'); ylabel('RT (offline) (s)');
+    p_visible_aid=values{16}(end);
+    id_offline_correct=values{18}(end);
+     id_invisible=p_visible_aid==1;
+     figure(2); set(gcf,'position',[560 615 420 420],'color','w','resize','off'); hold on;
+     plot(Ttmp(id_invisible&id_offline_correct)+plotNoise*(rand(1,1)-0.5),RT_offline(id_invisible&id_offline_correct),'o','markerfacecolor','g','color','g','linewidth',1,'markersize',2); drawnow; hold on;
+     plot(Ttmp(id_invisible&~id_offline_correct)+plotNoise*(rand(1,1)-0.5),RT_offline(id_invisible&~id_offline_correct),'o','markerfacecolor','r','color','r','linewidth',1,'markersize',2); drawnow; hold on;
+     xlabel('t_s (s)'); ylabel('RT (offline) (s)');
 
         
     %% fig. 3: offline error
@@ -226,11 +233,14 @@ drawnow;
 xlabel('# ambiguous junction'); ylabel('% correct');
 
 %% fig. 7: p(visible path aid)
-p_visible_aid=values{16}(end);
 figure(7); set(gcf,'position',[840 0 420 420],'color','w','resize','off'); hold on;
 plot(num_trials,p_visible_aid,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
 xlabel('trials'); ylabel('p(visible path aid)');
 drawnow;
+
+%% measure % correct only for fully invisible trials
+id_correct=diff(values{17});
+fprintf(1, '# correct , # fully invisible: %d, %d\n', nnz(id_correct),nnz(values{16}==1));
 else
     fprintf(1, 'number of physical intervals does not equal number of production intervals! or empty')
 end

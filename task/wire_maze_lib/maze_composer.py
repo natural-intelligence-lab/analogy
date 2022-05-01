@@ -64,7 +64,7 @@ class MazeComposer():
             self._mazes.extend(new_mazes)
         self._num_mazes = len(self._mazes)
 
-        # Get valid ball path indices
+        # Get valid ball path indices: 80 mazes for 2-turn only, 85 for [0 2] turns
         self._valid_ball_path_inds = [
             i for i, maze in enumerate(self._mazes)
             if self._valid_ball_path(maze)
@@ -189,7 +189,7 @@ class MazeComposer():
         # print(path)
 
         # transform for visualization
-        prey_path = (0.25 * (path[1:] + path[:-1])).astype(int)  # ?? ; 0 to 0, 3 to 1, 30 to 14
+        prey_path = (0.25 * (path[1:] + path[:-1])).astype(int)  # ?? ; 0 to 0, 3 to 1, 30 to 14; 2022/4/24: this effectively make it impossible to have segment length of 1
         prey_path *= self._pixels_per_square
         prey_path += int(self._pixels_per_square / 2) # 1 to 29
         prey_path = self._augment_path(prey_path)
