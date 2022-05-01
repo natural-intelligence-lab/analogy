@@ -1,5 +1,9 @@
 """Common grid_chase task config.
 
+2022/4/30
+1) TBD: Control trials: highlight path before
+2) Impose 500ms for maze-on
+
 2022/4/21
 1) make maze on & path prey optional (to resume staircase, set _PATH_PREY_DURATION to np.inf (_OPACITY_INIT_>0) and bring back highlight_path in continual_rules
 2) clean up code: rename task phase & meta_state
@@ -89,7 +93,7 @@ _FIXATION_THRESHOLD = 0.4
 _ITI = 60
 _FIXATION_STEPS = 0 # 60  # 30
 _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
-_MAZE_ON_DURATION=0  # 30 # 60 # 30 # 60 # 1s
+_MAZE_ON_DURATION=30  # 30 # 60 # 30 # 60 # 1s
 _PATH_PREY_DURATION=0
 
 _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
