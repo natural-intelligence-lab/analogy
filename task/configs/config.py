@@ -4,6 +4,12 @@
 1) TBD: Control trials: highlight path before
 2) Impose 500ms for maze-on
 
+TBD
+1) repeat error trial
+2) black background
+3) include 2-turn
+4) highlight during online
+
 2022/4/21
 1) make maze on & path prey optional (to resume staircase, set _PATH_PREY_DURATION to np.inf (_OPACITY_INIT_>0) and bring back highlight_path in continual_rules
 2) clean up code: rename task phase & meta_state
