@@ -1,17 +1,22 @@
 """Common grid_chase task config.
 
-2022/4/30
-1) TBD: Control trials: highlight path before
-2) Impose 500ms for maze-on
+TBD
+1) Control trials: highlight path before
+2) highlight during online
+3) 2-turn, 4-turn (to fight against 2-turn bias)
 
-TBD "-" for done
-1) repeat error trial
-- black background
-3) include 2-turn
-4) highlight during online
+2022/5/2
+1) repeat error trial: _ID_REPEAT_INCORRECT_TRIAL
+2) black background
+
+2022/4/30
+1) Impose 500ms for maze-on
 
 2022/4/21
-1) make maze on & path prey optional (to resume staircase, set _PATH_PREY_DURATION to np.inf (_OPACITY_INIT_>0) and bring back highlight_path in continual_rules
+1) make maze on & path prey optional (to resume staircase,
+    - set _PATH_PREY_DURATION to np.inf
+    - (_OPACITY_INIT_>0) and
+    - bring back highlight_path in continual_rules
 2) clean up code: rename task phase & meta_state
 3) TBD: streamline eye data collection & distractor_path in samplers.py
 
@@ -58,6 +63,7 @@ import abc
 import collections
 import math
 import numpy as np
+import copy
 
 from moog import action_spaces
 from moog import observers
@@ -92,6 +98,8 @@ _PATH_PREY_OPACITY = 120  # 50
 _ACTION_SCALING_FACTOR = 0.015 # 0.01
 _GAIN_SLOW_OFFLINE_ERROR = 0.3 # after offline error, prey_speed is scaled by this factor
 
+_ID_REPEAT_INCORRECT_TRIAL = True
+
 # fixation
 _FIXATION_THRESHOLD = 0.4
 
@@ -99,7 +107,7 @@ _FIXATION_THRESHOLD = 0.4
 _ITI = 60
 _FIXATION_STEPS = 0 # 60  # 30
 _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
-_MAZE_ON_DURATION=0  # 30 # 60 # 30 # 60 # 1s
+_MAZE_ON_DURATION=30  # 30 # 60 # 30 # 60 # 1s
 _PATH_PREY_DURATION=np.inf # 0
 
 _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
@@ -120,7 +128,7 @@ _DEFAULT_MASS = 0.5
 # _staircase for prey (online)
 _STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT = 20  # 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
+_OPACITY_INIT = 100  # 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
@@ -239,12 +247,39 @@ class PathPreyPositionStaircase():
     def path_prey_position(self):
         return self._path_prey_position
 
+class RepeatIncorrectTrial():
+    def __init__(self,
+                 id_repeat_incorrect_trial=_ID_REPEAT_INCORRECT_TRIAL,
+                 id_correct_offline0=True):
+        self._id_correct_offline=id_correct_offline0
+        self._id_repeat_incorrect_trial=id_repeat_incorrect_trial
+        self._stimulus = None
+
+    def step(self, reward):
+        if self._id_repeat_incorrect_trial:
+            if reward <= 0:
+                self._id_correct_offline = False
+            elif reward > 0:
+                self._id_correct_offline = True
+        else:
+            self._id_correct_offline = True
+    @property
+    def id_correct_offline(self):
+        return self._id_correct_offline
+    @property
+    def stimulus(self):
+        return self._stimulus
+    @stimulus.setter
+    def stimulus(self, value):
+        self._stimulus = value
+
+
 ################################################################################################
 class TrialInitialization():
 
     def __init__(self, stimulus_generator, prey_lead_in, prey_speed, static_prey=False,
                  static_agent=False,prey_opacity_staircase=None,path_prey_opacity_staircase=None,
-                 path_prey_position_staircase=None,update_p_correct=None):
+                 path_prey_position_staircase=None,update_p_correct=None,repeat_incorrect_trial=None):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
         self._prey_speed = prey_speed
@@ -254,6 +289,7 @@ class TrialInitialization():
         self._path_prey_opacity_staircase = path_prey_opacity_staircase
         self._path_prey_position_staircase = path_prey_position_staircase
         self._update_p_correct = update_p_correct
+        self._repeat_incorrect_trial = repeat_incorrect_trial
         self._prey_factors = dict(
             shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0) # scale=0.015, c0=0, c1=255, c2=0)
         self._fixation_shape = 0.2 * np.array([
@@ -263,7 +299,12 @@ class TrialInitialization():
 
     def __call__(self):
         """State initializer."""
-        stimulus = self._stimulus_generator()
+        if self._repeat_incorrect_trial.id_correct_offline:
+            stimulus = self._stimulus_generator()
+            self._repeat_incorrect_trial.stimulus = copy.deepcopy(stimulus)  # save stimulus to repeat later
+        else:
+            stimulus = copy.deepcopy(self._repeat_incorrect_trial.stimulus)
+
         if stimulus is None:
             return None
 
@@ -488,6 +529,7 @@ class Config():
                  path_prey_opacity_staircase=None,
                  path_prey_position_staircase=None,
                  update_p_correct=None,
+                 repeat_incorrect_trial=None,
                  fixation_phase=True,
                  prey_opacity=0,
                  path_prey_opacity=0,
@@ -514,6 +556,7 @@ class Config():
         self._path_prey_opacity_staircase = path_prey_opacity_staircase
         self._path_prey_position_staircase = path_prey_position_staircase
         self._update_p_correct = update_p_correct
+        self._repeat_incorrect_trial = repeat_incorrect_trial
 
         if self._prey_opacity_staircase is not None:
             self._prey_opacity = self._prey_opacity_staircase.opacity
@@ -542,7 +585,7 @@ class Config():
             stimulus_generator, prey_lead_in=self._prey_lead_in, prey_speed=self._prey_speed,
             static_prey=static_prey, static_agent=static_agent, prey_opacity_staircase=self._prey_opacity_staircase,
             path_prey_opacity_staircase=self._path_prey_opacity_staircase,path_prey_position_staircase=self._path_prey_position_staircase,
-            update_p_correct=self._update_p_correct,
+            update_p_correct=self._update_p_correct,repeat_incorrect_trial=self._repeat_incorrect_trial,
         )
 
         # Create renderer
@@ -592,6 +635,7 @@ class Config():
             path_prey_opacity_staircase=self._path_prey_opacity_staircase,
             path_prey_position_staircase=self._path_prey_position_staircase,
             update_p_correct=self._update_p_correct,
+            repeat_incorrect_trial=self._repeat_incorrect_trial,
             )  # 0.1
         # offline_timeout_task = tasks.Reset(
         #     condition=lambda _, meta_state: meta_state['phase'] == 'motion_visible',
