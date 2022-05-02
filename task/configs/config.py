@@ -4,9 +4,9 @@
 1) TBD: Control trials: highlight path before
 2) Impose 500ms for maze-on
 
-TBD
+TBD "-" for done
 1) repeat error trial
-2) black background
+- black background
 3) include 2-turn
 4) highlight during online
 

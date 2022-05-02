@@ -87,6 +87,10 @@ stimulus/python_image image (
     y_position = image_pos_y
     )
 
+iodevice/stimulus_display(
+    background_color = 0,0,0
+    )
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
