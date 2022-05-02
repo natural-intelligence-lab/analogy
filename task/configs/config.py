@@ -90,7 +90,7 @@ _ITI = 60
 _FIXATION_STEPS = 0 # 60  # 30
 _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
 _MAZE_ON_DURATION=0  # 30 # 60 # 30 # 60 # 1s
-_PATH_PREY_DURATION=0
+_PATH_PREY_DURATION=np.inf # 0
 
 _MAX_WAIT_TIME_GAIN = 2 # when tp>2*ts, abort
 # _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
@@ -110,19 +110,19 @@ _DEFAULT_MASS = 0.5
 # _staircase for prey (online)
 _STEP_OPACITY_UP = 0 # 5 ## 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN = 0 # 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT = 100  # 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
+_OPACITY_INIT = 20  # 20 # 100 # 20 # 20 # 100 #     10 # 100 # 10
 _DIM_DURATION = 2 # [sec]
 
 # staircase for path prey (offline)
 _STEP_OPACITY_UP_ = 0 # 10 # 1  # 0 # 5 # 10 #      0 # 1 # 2021/9/8 # 1 # 0 # 1 # 2 # 3 # 10  # [0 255] # 2021/9/3
 _STEP_OPACITY_DOWN_ = 0 # 10 #     5 # 30 # 40  # [0 255]
-_OPACITY_INIT_ = 0 # 100 # 200 # 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
+_OPACITY_INIT_ = 100 # 0 # 100 # 200 # 100 # 20  # 0 # 20 # 100 #     10 # 100 # 10
 _P_DIM_DISTANCE_ = 0 # 2/3
 _DIM_DURATION_ = 2 # [sec]
 
 # staircase p(visible aid)
 _P_PATHPREY_DIM_DISTANCE = 0 # 2/3 # 1/2 # 1/3 # 1/2 # 1/4 # 0 # 1/3 # 1/2 # 1/3 # 1/2 # 0 # 2/3
-_PathPreyPosition_INIT_ = 1 # 0 # 1/2
+_PathPreyPosition_INIT_ = 2/3 # 1 # 0 # 1/2
 _STEP_PathPreyPosition_DOWN_ = 0.1 # 1/4  # 0.1
 _STEP_PathPreyPosition_UP_ = 0.1 # 1/4  # 0.1
 
@@ -787,7 +787,7 @@ class Config():
 
         phase_path_prey = gr.Phase(
             one_time_rules=[create_path_prey,unglue_path_prey], # disappear_screen,disappear_fake_prey,
-            continual_rules=[update_motion_steps_path_prey,increase_RT_offline,dim_path_prey,glue_path_prey_conditional],  # highlight_path
+            continual_rules=[update_motion_steps_path_prey,increase_RT_offline,dim_path_prey,glue_path_prey_conditional,highlight_path],  # 
             name='path_prey',
             duration=_PATH_PREY_DURATION, # 0
             end_condition=_end_path_prey_phase,
