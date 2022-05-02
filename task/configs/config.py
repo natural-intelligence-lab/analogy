@@ -8,6 +8,7 @@ TBD
 2022/5/2
 1) repeat error trial: _ID_REPEAT_INCORRECT_TRIAL
 2) black background
+3) moving ball at the beginning
 
 2022/4/30
 1) Impose 500ms for maze-on
@@ -279,7 +280,7 @@ class TrialInitialization():
 
     def __init__(self, stimulus_generator, prey_lead_in, prey_speed, static_prey=False,
                  static_agent=False,prey_opacity_staircase=None,path_prey_opacity_staircase=None,
-                 path_prey_position_staircase=None,update_p_correct=None,repeat_incorrect_trial=None):
+                 path_prey_position_staircase=None,update_p_correct=None,repeat_incorrect_trial=None,ms_per_unit=None):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
         self._prey_speed = prey_speed
@@ -296,6 +297,7 @@ class TrialInitialization():
             [-5, 1], [-1, 1], [-1, 5], [1, 5], [1, 1], [5, 1], [5, -1], [1, -1],
             [1, -5], [-1, -5], [-1, -1], [-5, -1]
         ])
+        self._ms_per_unit = ms_per_unit
 
     def __call__(self):
         """State initializer."""
@@ -495,8 +497,15 @@ class TrialInitialization():
         state['agent'] = [agent]
 
     def create_fake_prey(self, state):
-        fake_prey = sprite.Sprite(shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0)
-        fake_prey.position = [self._meta_state['prey_path'][0][0], self._meta_state['prey_path'][0][1]+self._prey_lead_in]
+
+        distance_to_start = (_BALL_ON_DURATION/60) / (self._ms_per_unit/1000)   # 30/60 [s] / 2[s/unit] = 0.25
+        direction_fake_prey = np.round(np.random.rand())*2-1
+        speed = (1/60) / (self._ms_per_unit/1000)
+
+        fake_prey = sprite.Sprite(shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0,
+                                  metadata={'distance_to_start': distance_to_start, 'direction_fake_prey': direction_fake_prey,'speed':speed})
+        fake_prey.position = [self._meta_state['prey_path'][0][0] +direction_fake_prey*distance_to_start,
+                              self._meta_state['prey_path'][0][1]+self._prey_lead_in]
 
         state['fake_prey'] = [fake_prey]
 
@@ -585,7 +594,7 @@ class Config():
             stimulus_generator, prey_lead_in=self._prey_lead_in, prey_speed=self._prey_speed,
             static_prey=static_prey, static_agent=static_agent, prey_opacity_staircase=self._prey_opacity_staircase,
             path_prey_opacity_staircase=self._path_prey_opacity_staircase,path_prey_position_staircase=self._path_prey_position_staircase,
-            update_p_correct=self._update_p_correct,repeat_incorrect_trial=self._repeat_incorrect_trial,
+            update_p_correct=self._update_p_correct,repeat_incorrect_trial=self._repeat_incorrect_trial,ms_per_unit=ms_per_unit,
         )
 
         # Create renderer
@@ -781,9 +790,26 @@ class Config():
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
         create_fake_prey = custom_game_rules.CreateFakePrey(self._trial_init)
 
+        # continual_rules
+        def _update_motion_steps_fake_prey(s):
+            s.position[0] = s.position[0]-s.metadata['direction_fake_prey']*s.metadata['speed']
+            s.metadata['distance_to_start'] -= s.metadata['speed']
+        update_motion_steps_fake_prey = gr.ModifySprites('fake_prey', _update_motion_steps_fake_prey)
+
+        # end condition
+        def _end_ball_on_phase(state):
+            if len(state['fake_prey']) > 0:
+                fake_prey = state['fake_prey'][0]
+                if fake_prey.metadata['distance_to_start'] < 0:
+                    return True
+                return False
+            return False
+
         phase_ball_on = gr.Phase(
-            one_time_rules=[disappear_fixation, create_fake_prey],  # 
-            duration=_BALL_ON_DURATION,  # 500 ms
+            one_time_rules=[disappear_fixation, create_fake_prey],  #
+            continual_rules=[update_motion_steps_fake_prey],
+            # duration=_BALL_ON_DURATION,  # 500 ms
+            end_condition=_end_ball_on_phase,
             name='ball_on',
         )
 
