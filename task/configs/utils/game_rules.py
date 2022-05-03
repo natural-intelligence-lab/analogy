@@ -41,6 +41,13 @@ class GlueAgent(game_rules.AbstractRule):
         agent = state['agent'][0]
         agent.mass = np.inf
 
+class GlueFakePrey(game_rules.AbstractRule):
+
+    def step(self, state, meta_state):
+        del meta_state
+        fake_prey = state['fake_prey'][0]
+        fake_prey.mass = np.inf
+
 class GluePathPrey(game_rules.AbstractRule):
 
     def step(self, state, meta_state):

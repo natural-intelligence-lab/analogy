@@ -79,6 +79,7 @@ import maze_lib
 from configs.utils import action_spaces as action_spaces_custom
 from configs.utils import game_rules as custom_game_rules
 from configs.utils import tasks as tasks_custom
+from configs.utils import physics as physics_custom
 from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
@@ -386,6 +387,15 @@ class TrialInitialization():
         # while np.abs(_agent_x0-prey_path[-1][0]) < _MIN_DIST_AGENT or np.abs(_agent_x0-prey_path[-1][0]) > _MAX_DIST_AGENT:
         #     _agent_x0 = np.random.rand()  # if too close, resample
 
+        # fake prey
+        distance_to_start = (_BALL_ON_DURATION/60) / (self._ms_per_unit/1000)   # 30/60 [s] / 2[s/unit] = 0.25
+        direction_fake_prey = np.array([np.round(np.random.rand())*2-1, 0])
+        speed_fake_prey = (1/60) / (self._ms_per_unit/1000)
+        fake_prey = sprite.Sprite(shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0, opacity=0,
+                                  metadata={'distance_to_start': distance_to_start, 'direction_fake_prey': direction_fake_prey,'speed':speed_fake_prey})
+        fake_prey.position = [prey_path[0][0] -direction_fake_prey[0]*distance_to_start,
+                              prey_path[0][1]+self._prey_lead_in]
+
         state = collections.OrderedDict([
             ('agent', []),
             ('prey', [prey]),
@@ -395,7 +405,7 @@ class TrialInitialization():
             ('joystick', [joystick]),
             ('fixation', [fixation]),
             ('eye', [eye]),
-            ('fake_prey', []),
+            ('fake_prey', [fake_prey]),
             ('prey_path', []),
             ('path_prey', []),
             ('prey_wall',path_wall_sprite),
@@ -476,6 +486,9 @@ class TrialInitialization():
             'n_trial_amb': n_trial_amb,
             'x_exit': np.around(x_exit, decimals=3),
             'id_correct_offline': 0,
+            'direction_fake_prey':  direction_fake_prey,
+            'speed_fake_prey': speed_fake_prey,
+            'distance_to_start': distance_to_start,
         }
 
         return state
@@ -496,18 +509,18 @@ class TrialInitialization():
 
         state['agent'] = [agent]
 
-    def create_fake_prey(self, state):
-
-        distance_to_start = (_BALL_ON_DURATION/60) / (self._ms_per_unit/1000)   # 30/60 [s] / 2[s/unit] = 0.25
-        direction_fake_prey = np.round(np.random.rand())*2-1
-        speed = (1/60) / (self._ms_per_unit/1000)
-
-        fake_prey = sprite.Sprite(shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0,
-                                  metadata={'distance_to_start': distance_to_start, 'direction_fake_prey': direction_fake_prey,'speed':speed})
-        fake_prey.position = [self._meta_state['prey_path'][0][0] +direction_fake_prey*distance_to_start,
-                              self._meta_state['prey_path'][0][1]+self._prey_lead_in]
-
-        state['fake_prey'] = [fake_prey]
+    # def create_fake_prey(self, state):
+    #
+    #     distance_to_start = (_BALL_ON_DURATION/60) / (self._ms_per_unit/1000)   # 30/60 [s] / 2[s/unit] = 0.25
+    #     direction_fake_prey = np.round(np.random.rand())*2-1
+    #     speed = (1/60) / (self._ms_per_unit/1000)
+    #
+    #     fake_prey = sprite.Sprite(shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0,
+    #                               metadata={'distance_to_start': distance_to_start, 'direction_fake_prey': direction_fake_prey,'speed':speed})
+    #     fake_prey.position = [self._meta_state['prey_path'][0][0] +direction_fake_prey*distance_to_start,
+    #                           self._meta_state['prey_path'][0][1]+self._prey_lead_in]
+    #
+    #     state['fake_prey'] = [fake_prey]
 
     def create_path_prey(self, state):
         path_prey = sprite.Sprite(shape='square', scale=0.04, 
@@ -616,10 +629,14 @@ class Config():
         self._maze_walk_path = maze_lib.MazeWalk(
             speed=0., avatar_layer='path_prey', start_lead_in=self._prey_lead_in)
 
+        self._fake_prey_walk = physics_custom.FakePreyWalk(
+            speed=0,direction=np.array([0,0])
+        )
+
         if self._static_prey:
             corrective_physics = []
         else:
-            corrective_physics = [self._maze_walk, self._maze_walk_path]
+            corrective_physics = [self._maze_walk, self._maze_walk_path,self._fake_prey_walk]
         
         self._physics = physics_lib.Physics(
             corrective_physics=corrective_physics)
@@ -716,6 +733,9 @@ class Config():
             self._maze_walk_path.set_prey_path(meta_state['prey_path'])
             self._maze_walk_path.speed = 0
 
+            self._fake_prey_walk.speed = 0
+            self._fake_prey_walk.direction = np.array([0, 0])
+
         reset_physics = gr.ModifyMetaState(_reset_physics)
 
         phase_iti = gr.Phase(
@@ -788,25 +808,31 @@ class Config():
         ###########################################
         # one_time_rules
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
-        create_fake_prey = custom_game_rules.CreateFakePrey(self._trial_init)
+        appear_fake_prey = gr.ModifySprites('fake_prey', _make_opaque)
+        # create_fake_prey = custom_game_rules.CreateFakePrey(self._trial_init)
+
+        def _unglue_fake_prey(meta_state):
+            self._fake_prey_walk.speed = meta_state['speed_fake_prey']
+            self._fake_prey_walk.direction = meta_state['direction_fake_prey']
+        unglue_fake_prey = gr.ModifyMetaState(_unglue_fake_prey)
 
         # continual_rules
-        def _update_motion_steps_fake_prey(s):
-            s.position[0] = s.position[0]-s.metadata['direction_fake_prey']*s.metadata['speed']
-            s.metadata['distance_to_start'] -= s.metadata['speed']
-        update_motion_steps_fake_prey = gr.ModifySprites('fake_prey', _update_motion_steps_fake_prey)
+        def _update_motion_steps_fake_prey(meta_state):
+            meta_state['distance_to_start'] -= meta_state['speed_fake_prey']
+        update_motion_steps_fake_prey = gr.ModifyMetaState(_update_motion_steps_fake_prey)
+        # def _update_motion_steps_fake_prey(s):
+        #     s.position[0] = s.position[0]-s.metadata['direction_fake_prey']*s.metadata['speed']
+        #     s.metadata['distance_to_start'] -= s.metadata['speed']
+        # update_motion_steps_fake_prey = gr.ModifySprites('fake_prey', _update_motion_steps_fake_prey)
 
         # end condition
-        def _end_ball_on_phase(state):
-            if len(state['fake_prey']) > 0:
-                fake_prey = state['fake_prey'][0]
-                if fake_prey.metadata['distance_to_start'] < 0:
-                    return True
-                return False
+        def _end_ball_on_phase(state,meta_state):
+            if meta_state['distance_to_start'] < 1e4:
+                return True
             return False
 
         phase_ball_on = gr.Phase(
-            one_time_rules=[disappear_fixation, create_fake_prey],  #
+            one_time_rules=[disappear_fixation, appear_fake_prey,unglue_fake_prey],  #  create_fake_prey
             continual_rules=[update_motion_steps_fake_prey],
             # duration=_BALL_ON_DURATION,  # 500 ms
             end_condition=_end_ball_on_phase,
@@ -817,6 +843,7 @@ class Config():
         # 5. maze on (0)
         ###########################################
         # present maze
+        glue_fake_prey = custom_game_rules.GlueFakePrey()
         disappear_fake_prey = gr.ModifySprites('fake_prey', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
 
@@ -826,7 +853,7 @@ class Config():
         increase_RT_offline = gr.ModifyMetaState(_increase_RT_offline)
 
         phase_maze_on = gr.Phase(
-            one_time_rules=[disappear_screen, disappear_fake_prey],
+            one_time_rules=[glue_fake_prey,disappear_screen, disappear_fake_prey],
             continual_rules=[increase_RT_offline],
             duration=_MAZE_ON_DURATION,  # 0 ms
             name='maze_on',

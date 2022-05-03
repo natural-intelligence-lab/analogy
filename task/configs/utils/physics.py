@@ -34,3 +34,21 @@ class Physics(physics.AbstractPhysics):
 
         for corrective_physics in self._corrective_physics:
             corrective_physics.apply_physics(state, updates_per_env_step)
+
+class FakePreyWalk(physics.AbstractPhysics):
+    def __init__(self,
+                 speed,
+                 direction):
+        self.speed = speed
+        self.direction = direction
+
+    def _update_sprite(self,sprite):
+
+        vel = self.direction * self.speed
+        new_pos = sprite.position + vel
+        sprite.position = new_pos
+
+    def apply_physics(self, state, updates_per_env_step):
+        del updates_per_env_step
+        for sprite in state['fake_prey']:
+            self._update_sprite(sprite)
