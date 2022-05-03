@@ -827,7 +827,7 @@ class Config():
 
         # end condition
         def _end_ball_on_phase(state,meta_state):
-            if meta_state['distance_to_start'] < 1e4:
+            if meta_state['distance_to_start'] < 1e-4:
                 return True
             return False
 
