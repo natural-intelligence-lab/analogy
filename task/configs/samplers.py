@@ -279,7 +279,8 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                  max_num_turns=np.inf,
                  min_num_overlap=0,
                  max_num_overlap=np.inf,
-                 min_exit_distance=0):
+                 min_exit_distance=0,
+                 distractors_num_turns=None):
         """Constructor.
 
         Args:
@@ -307,6 +308,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             min_num_overlap=min_num_overlap,
             max_num_overlap=max_num_overlap,
             min_exit_distance=min_exit_distance,
+            distractors_num_turns=distractors_num_turns,
         )
 
         self._gap_size = 0 # 0.15  # assuming wall size is one; if set to zero, no gap
