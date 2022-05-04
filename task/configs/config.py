@@ -83,7 +83,7 @@ _PREY_SCALE = 0.03
 _P_PREY0 = 0 # 0.1  #  0.3 # 0.5   # 0.9  # prey's initial position as % of path
 _GAIN_PATH_PREY = 1  # 2.5 # 2 # 3  # 1  # speed gain for path prey
 _PATH_PREY_OPACITY = 120  # 50
-_ACTION_SCALING_FACTOR = 0.015 # 0.01
+_ACTION_SCALING_FACTOR = .01 # 0.015 # 0.01
 _GAIN_SLOW_OFFLINE_ERROR = 0.3 # after offline error, prey_speed is scaled by this factor
 
 # fixation
@@ -126,7 +126,7 @@ _DIM_DURATION_ = 2 # [sec]
 
 # staircase p(visible aid)
 _P_PATHPREY_DIM_DISTANCE = 0 # 2/3 # 1/2 # 1/3 # 1/2 # 1/4 # 0 # 1/3 # 1/2 # 1/3 # 1/2 # 0 # 2/3
-_PathPreyPosition_INIT_ = 1 # 0 # 1/2
+_PathPreyPosition_INIT_ = 0 # 1 # 0 # 1/2
 _STEP_PathPreyPosition_DOWN_ = 0.1 # 1/4  # 0.1
 _STEP_PathPreyPosition_UP_ = 0.1 # 1/4  # 0.1
 
