@@ -7,16 +7,27 @@ from configs import samplers
 from configs.levels import get_stimuli_dir
 import numpy as np
 
+## for 16 grid
+# _MIN_NUM_TURNS = 0 # 2 # 0 # 2 # inclusive
+# _MAX_NUM_TURNS = 5 # np.inf # 0 # 2 # 6 # 4 # exclusive
+# # _STEP_NUM_TURNS = 2
+# _NUM_LAYERS= 3 # 5 # 4 # 3 # 2 # 50
+#
+# _MIN_NUM_OVERLAP= 0 # 1
+# _MAX_NUM_OVERLAP=2 # 1 # np.inf # 2 # 1 # np.inf
+# _MIN_EXIT_DISTANCE = 3 # 0.7/16*3>0.1 # 1 # 0 # 2 # 3  # GRID; if set to zero, no constraint on the exit distance
+#
+# _DISTRACTOR_NUMBER_TURNS=[0,2]
+
+## for 6 grid
 _MIN_NUM_TURNS = 0 # 2 # 0 # 2 # inclusive
 _MAX_NUM_TURNS = 5 # np.inf # 0 # 2 # 6 # 4 # exclusive
 # _STEP_NUM_TURNS = 2
 _NUM_LAYERS= 3 # 5 # 4 # 3 # 2 # 50
 
 _MIN_NUM_OVERLAP= 0 # 1
-_MAX_NUM_OVERLAP=2 # 1 # np.inf # 2 # 1 # np.inf
-_MIN_EXIT_DISTANCE = 3 # 0.7/16*3>0.1 # 1 # 0 # 2 # 3  # GRID; if set to zero, no constraint on the exit distance
-
-_DISTRACTOR_NUMBER_TURNS=[0,2]
+_MAX_NUM_OVERLAP= np.inf # 2 # 1 # np.inf
+_MIN_EXIT_DISTANCE = 0
 
 def random_6_staircase(**kwargs):
     """now fix exits equally divided at bottom """

@@ -477,7 +477,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         plt.axis('equal')
 
     def __call__(self):
-        render_maze, original_maze, path, original_path = super(WireMazeSampler, self).__call__()
+        render_maze, original_maze, path, original_path, distractors = super(WireMazeSampler, self).__call__()
 
         # num_overlap = super(WireMazeSampler, self).num_overlap # do not take into account overlapping distractors
         x_overlap = self._get_overlap_position(original_maze,original_path)
@@ -490,6 +490,11 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         original_path = wire_path_dataset.rotate_path_90(maze, original_path, num_times=3)
         # print(original_path)
 
+        # transform distractor path same way
+        for i, distractor_path in enumerate(distractors):
+            distractors[i] = wire_path_dataset.rotate_path_90(maze, distractor_path, num_times=3)
+
+        # deal with walls
         maze_width = int((maze.shape[0] + 1) / 2)
         maze_height = int((maze.shape[1] + 1) / 2)
         wall_touch_path_start, wall_touch_path_end = self._get_wall_touch_path(maze,original_path)
@@ -528,7 +533,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             'num_overlap': len(x_overlap),
             'x_overlap' : x_overlap,
             'maze_prey_walls': maze_prey_walls,
-            'distractor_path':[],
+            'distractor_path':distractors,
         }
 
         stimulus = dict(
