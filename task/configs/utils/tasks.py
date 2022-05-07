@@ -78,6 +78,7 @@ class ContactReward(tasks.AbstractTask):
 
     def reset(self, state, meta_state):
         self._steps_until_reset = np.inf
+        self._reward_given = False
 
     def reward(self, state, meta_state, step_count):
         """Compute reward.
@@ -96,25 +97,31 @@ class ContactReward(tasks.AbstractTask):
             should_reset: Bool. Whether to reset task.
         """
         reward = 0
-        sprites_0 = [s for k in self._layers_0 for s in state[k]]
-        sprites_1 = [s for k in self._layers_1 for s in state[k]]
-        for s_0 in sprites_0:
-            for s_1 in sprites_1:
-                if not self._condition(s_0, s_1, meta_state):
-                    continue
-                if s_0.overlaps_sprite(s_1):
-                    reward = self._reward_fn(s_0, s_1)
-                    if self._steps_until_reset == np.inf:
-                        self._steps_until_reset = (
-                            self._reset_steps_after_contact)
-                    # custom staircase
-                    if self._update_p_correct is not None:
-                        self._update_p_correct.step(reward, meta_state['num_junctions'],
-                                                    meta_state['num_amb_junctions'])
-                    if self._repeat_incorrect_trial is not None:
-                        self._repeat_incorrect_trial.step(reward)
-                    if self._prey_opacity_staircase is not None:
-                        self._prey_opacity_staircase.step(reward)
+
+        if meta_state['phase'] == 'reward' and not self._reward_given:  # and state['agent'][0].metadata['response']
+
+            sprites_0 = [s for k in self._layers_0 for s in state[k]]
+            sprites_1 = [s for k in self._layers_1 for s in state[k]]
+            for s_0 in sprites_0:
+                for s_1 in sprites_1:
+                    if not self._condition(s_0, s_1, meta_state):
+                        continue
+                    if s_0.overlaps_sprite(s_1):
+                        reward = self._reward_fn(s_0, s_1)
+                        if self._steps_until_reset == np.inf:
+                            self._steps_until_reset = (
+                                self._reset_steps_after_contact)
+                        # custom staircase
+                        if self._update_p_correct is not None:
+                            self._update_p_correct.step(reward, meta_state['num_junctions'],
+                                                        meta_state['num_amb_junctions'])
+                        if self._repeat_incorrect_trial is not None:
+                            self._repeat_incorrect_trial.step(reward)
+                        if self._prey_opacity_staircase is not None:
+                            self._prey_opacity_staircase.step(reward)
+
+                        self._reward_given=True
+
 
         self._steps_until_reset -= 1
         should_reset = self._steps_until_reset < 0
