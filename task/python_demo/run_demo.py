@@ -22,8 +22,8 @@ from utils import logger_env_wrapper
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('level',
-                    'random.wire_maze.random_6_staircase', #  random_12
-                    # 'random.wire_maze.random_16_staircase', #  random_12
+                    # 'random.wire_maze.random_6_staircase', #  random_12
+                    'random.wire_maze.random_16_staircase', #  random_12
                     # 'random.layered.random_14_staircase',
                     # 'training.path_no_distract.path_no_distract_uniform_num_turns_staircase',
                     # 'random.random_12.random_12_uniform_num_turns',
@@ -70,7 +70,7 @@ def main(_):
         prey_opacity=FLAGS.prey_opacity,
         static_prey=FLAGS.static_prey,
         static_agent=FLAGS.static_agent,
-        ms_per_unit=300,
+        ms_per_unit=500, #300,
     )
 
     config = config_instance()

@@ -87,6 +87,10 @@ stimulus/python_image image (
     y_position = image_pos_y
     )
 
+iodevice/stimulus_display(
+    background_color = 0,0,0
+    )
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -457,14 +461,15 @@ protocol 'random_14_layered' {
     run_task ()
 }
 
-protocol 'random_16_wire' {
-    run_python_string (
-        't = TaskManager(level="random.wire_maze.random_16_staircase", fixation_phase=False, ms_per_unit=1500)') //_uniform_num_turns ms_per_unit=2000
-    run_task ()
-}
 
 protocol 'random_6_wire' {
     run_python_string (
         't = TaskManager(level="random.wire_maze.random_6_staircase", fixation_phase=False, ms_per_unit=1500)') //_uniform_num_turns ms_per_unit=2000
+    run_task ()
+}
+
+protocol 'random_16_wire' {
+    run_python_string (
+        't = TaskManager(level="random.wire_maze.random_16_staircase", fixation_phase=False, ms_per_unit=1500)') //_uniform_num_turns ms_per_unit=2000
     run_task ()
 }

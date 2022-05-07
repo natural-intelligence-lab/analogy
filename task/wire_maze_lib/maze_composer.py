@@ -6,8 +6,9 @@ import os
 from wire_maze_lib import path_dataset
 # import path_dataset
 from scipy import signal as scipy_signal
+from matplotlib import pyplot as plt
 
-_MAX_TRIES = int(1e4)
+_MAX_TRIES = int(1e6)  # int(1e4)
 
 
 class MazeComposer():
@@ -23,7 +24,8 @@ class MazeComposer():
                  max_num_turns=np.inf,
                  min_num_overlap=0,
                  max_num_overlap=np.inf,
-                 min_exit_distance=0):
+                 min_exit_distance=0,
+                 distractors_num_turns=None):
         """Constructor.
         
         Args:
@@ -50,6 +52,7 @@ class MazeComposer():
         self._min_num_overlap = min_num_overlap
         self._max_num_overlap = max_num_overlap
         self._min_exit_distance = min_exit_distance
+        self._distractors_num_turns = distractors_num_turns
 
         if pixels_per_square % 2 != 0:
             raise ValueError(
@@ -73,6 +76,13 @@ class MazeComposer():
         self._maze_num_grid = int((self._mazes[0][0].shape[0]+1)/2)
         self._num_overlap = 0
 
+        self._num_turns_maze = [
+            self._num_turns(maze) for i, maze in enumerate(self._mazes)
+            if self._valid_ball_path(maze)
+        ]
+        # plt.hist(self._num_turns_maze, 50)
+        # plt.show()
+
     def _valid_ball_path(self, maze):
         """Check if maze is a valid ball path."""
         if self._ball_path_top_bottom:
@@ -93,6 +103,10 @@ class MazeComposer():
     def _num_turns(self, maze):
         """Get number of turns in a maze."""
         return np.sum(maze[0] == -1)
+
+    def _num_turns_matrix(self, maze):
+        """Get number of turns in a maze."""
+        return np.sum(maze == -1)
 
     def _transform_maze(self, maze, path):
         """Randomly flip/rotate maze and path."""
@@ -176,6 +190,13 @@ class MazeComposer():
 
         return num_overlap
 
+    def _transform_path(self,path):
+        prey_path = (0.25 * (path[1:] + path[:-1])).astype(int)  # ?? ; 0 to 0, 3 to 1, 30 to 14; 2022/4/24: this effectively make it impossible to have segment length of 1
+        prey_path *= self._pixels_per_square
+        prey_path += int(self._pixels_per_square / 2)  # 1 to 29
+        prey_path = self._augment_path(prey_path)
+
+        return prey_path
 
     def __call__(self):
         """Sample a maze."""
@@ -188,14 +209,10 @@ class MazeComposer():
         path = np.copy(path)
         # print(path)
 
-        # transform for visualization
-        prey_path = (0.25 * (path[1:] + path[:-1])).astype(int)  # ?? ; 0 to 0, 3 to 1, 30 to 14; 2022/4/24: this effectively make it impossible to have segment length of 1
-        prey_path *= self._pixels_per_square
-        prey_path += int(self._pixels_per_square / 2) # 1 to 29
-        prey_path = self._augment_path(prey_path)
-
         # Add distractor paths
+        distractors = []
         self._num_overlap = 0
+        self._total_num_overlap = 0
         for _ in range(self._num_layers - 1):
             done = False
             count  = 0
@@ -213,44 +230,116 @@ class MazeComposer():
                 # exits all separate
                 distractor_exit= distractor[-1][-1]
 
-                # no overlapped path only with target
-                if not np.any(new_maze * maze0 != 0) \
-                        and maze[-1,distractor_exit] != 1:  # exits all separate
+                # constrain distractor's number of turns
+                if self._distractors_num_turns is not None:
+                    if sum(self._distractors_num_turns==self._num_turns_matrix(new_maze)):
 
-                    # impose minimum distance of exits
-                    if self._min_exit_distance > 0:
-                        exit_distance = np.linalg.norm(distractor[-1]-path[-1]) # in maze unit
-                        _min_dist_maze = self._min_exit_distance*2
-                        if exit_distance > _min_dist_maze:
+                        # no overlapped path only with target
+                        if not np.any(new_maze * maze0 != 0) \
+                                and maze[-1,distractor_exit] != 1:  # exits all separate
+
+                            # impose minimum distance of exits
+                            if self._min_exit_distance > 0:
+                                exit_distance = np.linalg.norm(distractor[-1]-path[-1])/2 # in maze unit
+                                _min_dist_maze = self._min_exit_distance
+                                if exit_distance > _min_dist_maze:
+                                    # impose num_overlap constraints
+                                    if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
+                                        # compute number of overlap
+                                        # self._num_overlap = self._compute_num_overlap(maze0, new_maze)
+                                        total_num_overlap = self._total_num_overlap + self._compute_num_overlap(maze0, new_maze)
+                                        if total_num_overlap >= self._min_num_overlap and total_num_overlap <= self._max_num_overlap:
+                                            maze += (new_maze>0)  # ignore "behind" (-1)
+                                            self._total_num_overlap += self._compute_num_overlap(maze0,new_maze)  # total between target and distractors, not across distractors
+                                            done = True
+                                            distractors.append(self._transform_path(distractor))
+                                    else:
+                                        maze += (new_maze>0)
+                                        done = True
+                                        distractors.append(self._transform_path(distractor))
+                                else: # if exit_distance > _min_dist_maze:
+                                    # resample target path if distance is too close
+                                    maze, path = self._mazes[
+                                        np.random.choice(self._valid_ball_path_inds)]
+                                    maze = np.copy(maze)
+                                    maze0 = np.copy(maze)
+                                    path = np.copy(path)
+
+
+                            else: # if self._min_exit_distance > 0:
+                                # impose num_overlap constraints
+                                if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
+                                    # compute number of overlap
+                                    # self._num_overlap = self._compute_num_overlap(maze0, new_maze)
+                                    total_num_overlap = self._total_num_overlap + self._compute_num_overlap(maze0, new_maze)
+                                    if total_num_overlap >= self._min_num_overlap and total_num_overlap <= self._max_num_overlap:
+                                        maze += (new_maze>0)
+                                        self._total_num_overlap += self._compute_num_overlap(maze0, new_maze)
+                                        done = True
+                                        distractors.append(self._transform_path(distractor))
+                                else:
+                                    maze += (new_maze>0)
+                                    done = True
+                                    distractors.append(self._transform_path(distractor))
+                else: # if self._distractors_num_turns is not None:
+                    # no overlapped path only with target
+                    if not np.any(new_maze * maze0 != 0) \
+                            and maze[-1, distractor_exit] != 1:  # exits all separate
+
+                        # impose minimum distance of exits
+                        if self._min_exit_distance > 0:
+                            exit_distance = np.linalg.norm(distractor[-1] - path[-1])/2  # in maze unit
+                            _min_dist_maze = self._min_exit_distance
+                            if exit_distance > _min_dist_maze:
+                                # impose num_overlap constraints
+                                if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
+                                    # compute number of overlap
+                                    # self._num_overlap = self._compute_num_overlap(maze0, new_maze)
+                                    total_num_overlap = self._total_num_overlap + self._compute_num_overlap(maze0,
+                                                                                                            new_maze)
+                                    if total_num_overlap >= self._min_num_overlap and total_num_overlap <= self._max_num_overlap:
+                                        maze += (new_maze > 0)  # ignore "behind" (-1)
+                                        self._total_num_overlap += self._compute_num_overlap(maze0,
+                                                                                             new_maze)  # total between target and distractors, not across distractors
+                                        done = True
+                                        distractors.append(self._transform_path(distractor))
+                                else:
+                                    maze += (new_maze > 0)
+                                    done = True
+                                    ####### To be debugged
+                                    distractors.append(self._transform_path(distractor))
+                            else: # if exit_distance > _min_dist_maze:
+                                # resample target path if distance is too close
+                                maze, path = self._mazes[
+                                    np.random.choice(self._valid_ball_path_inds)]
+                                maze = np.copy(maze)
+                                maze0 = np.copy(maze)
+                                path = np.copy(path)
+
+                        else: # if self._min_exit_distance > 0:
                             # impose num_overlap constraints
                             if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
                                 # compute number of overlap
                                 # self._num_overlap = self._compute_num_overlap(maze0, new_maze)
-                                self._num_overlap += self._compute_num_overlap(maze0, new_maze) # total between target and distractors, not across distractors
-                                if self._num_overlap >= self._min_num_overlap and self._num_overlap <= self._max_num_overlap:
-                                    maze += (new_maze>0)  # ignore "behind" (-1)
+                                total_num_overlap = self._total_num_overlap + self._compute_num_overlap(maze0, new_maze)
+                                if total_num_overlap >= self._min_num_overlap and total_num_overlap <= self._max_num_overlap:
+                                    maze += (new_maze > 0)
+                                    self._total_num_overlap += self._compute_num_overlap(maze0, new_maze)
                                     done = True
+                                    distractors.append(self._transform_path(distractor))
+                            ###################################
                             else:
-                                maze += (new_maze>0)
+                                maze += (new_maze > 0)
                                 done = True
-                    #####
-                    else:
-                        # impose num_overlap constraints
-                        if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
-                            # compute number of overlap
-                            # self._num_overlap = self._compute_num_overlap(maze0, new_maze)
-                            self._num_overlap += self._compute_num_overlap(maze0, new_maze)
-                            if self._num_overlap >= self._min_num_overlap and self._num_overlap <= self._max_num_overlap:
-                                maze += (new_maze>0)
-                                done = True
-                        else:
-                            maze += (new_maze>0)
-                            done = True
+                                distractors.append(self._transform_path(distractor))
 
         rendered_maze = self._render_maze(maze)
 
+        # transform for visualization
+        prey_path = self._transform_path(path)
+
         # print(count)
-        return rendered_maze, maze, prey_path, path
+        return rendered_maze, maze, prey_path, path,distractors
 
 
     @property
