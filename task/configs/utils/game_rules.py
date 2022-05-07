@@ -55,6 +55,13 @@ class GluePathPrey(game_rules.AbstractRule):
         path_prey = state['path_prey'][0]
         path_prey.mass = np.inf
 
+class GluePrey(game_rules.AbstractRule):
+
+    def step(self, state, meta_state):
+        del meta_state
+        prey = state['prey'][0]
+        prey.mass = np.inf
+
 class DimPrey(game_rules.AbstractRule):
     """Modify sprites in a layer or set of layers.
 
