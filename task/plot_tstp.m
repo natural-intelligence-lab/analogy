@@ -219,23 +219,23 @@ errorbar(num_junction,phat,pci(:,1)'-phat,pci(:,2)'-phat,'-o','MarkerSize',10,..
 drawnow; 
 xlabel('# junction'); ylabel('% correct');
 
-%% fig. 6: p(correct)=f(# ambiguous junction)
-num_trial_amb_junction=values{14}(end,:);
-num_correct_amb_junction=values{15}(end,:);
-[phat,pci]=binofit(num_correct_amb_junction,num_trial_amb_junction);
+%%% fig. 6: p(correct)=f(# ambiguous junction)
+%num_trial_amb_junction=values{14}(end,:);
+%num_correct_amb_junction=values{15}(end,:);
+%[phat,pci]=binofit(num_correct_amb_junction,num_trial_amb_junction);
+%
+%figure(6); set(gcf,'position',[420 0 420 420],'color','w','resize','off');
+%clf;
+%num_junction=0:1:(length(num_trial_amb_junction)-1);
+%errorbar(num_junction,phat,pci(:,1)'-phat,pci(:,2)'-phat,'-ro','MarkerSize',10,...
+%    'MarkerEdgeColor','r','MarkerFaceColor','w');
+%drawnow;
+%xlabel('# ambiguous junction'); ylabel('% correct');
 
-figure(6); set(gcf,'position',[420 0 420 420],'color','w','resize','off');
-clf;
-num_junction=0:1:(length(num_trial_amb_junction)-1);
-errorbar(num_junction,phat,pci(:,1)'-phat,pci(:,2)'-phat,'-ro','MarkerSize',10,...
-    'MarkerEdgeColor','r','MarkerFaceColor','w');
-drawnow; 
-xlabel('# ambiguous junction'); ylabel('% correct');
-
-%% fig. 7: p(visible path aid)
+%% fig. 7: tp-ts
 figure(7); set(gcf,'position',[840 0 420 420],'color','w','resize','off'); hold on;
-plot(num_trials,p_visible_aid,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
-xlabel('trials'); ylabel('p(visible path aid)');
+plot(num_trials,ttmp-Ttmp,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
+xlabel('trials'); ylabel('tp-ts');
 drawnow;
 
 %% measure % correct only for fully invisible trials

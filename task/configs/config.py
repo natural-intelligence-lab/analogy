@@ -5,6 +5,9 @@
 2) plan: [0 turn 0]>[0 1](0,1 junctions)>[0 2]... (# turns, # junctions, # distractors)
 
 TBD
+1) % correct initial direction
+
+old-TBD
 1) Control trials: highlight path before
 2) highlight during online
 3) 2-turn, 4-turn (to fight against 2-turn bias)
