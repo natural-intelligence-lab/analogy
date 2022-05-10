@@ -3,6 +3,38 @@
 from moog import game_rules
 import numpy as np
 
+_GAIN_AGENT_MASS = 2
+_MAX_WAIT_TIME_GAIN = 10 # 2 # when tp>2*ts, abort
+
+class SmallerPrey(game_rules.AbstractRule):
+    def __init__(self):
+        self._done = False
+
+    def step(self, state, meta_state):
+        agent = state['prey'][0]
+
+        if not self._done:
+            glue_time = _MAX_WAIT_TIME_GAIN * meta_state['ts']
+            self._decrement = agent.scale/glue_time
+            self._done = True
+
+        agent.scale -= self._decrement
+
+class HeavierAgent(game_rules.AbstractRule):
+    def __init__(self):
+        self._done = False
+
+    def step(self, state, meta_state):
+        del meta_state
+        agent = state['agent'][0]
+        if not self._done:
+            agent.mass = _GAIN_AGENT_MASS*agent.mass
+            self._done = True
+
+class UpdateDirection0(game_rules.AbstractRule):
+    def step(self,state, meta_state):
+        agent = state['agent'][0]
+        meta_state['id_left0'] = agent.metadata['id_left0']
 
 class CreateAgent(game_rules.AbstractRule):
     """Create agent."""

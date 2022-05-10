@@ -1,11 +1,16 @@
 """Common grid_chase task config.
 
+2022/5/10
+1) % correct initial direction (# junctions): agent.metadata['id_left0'] & meta_state['id_left0'] > meta_state['id_correct_offline']
+2) ball size/reward decreasing after glued at bottom
+3) slow down (color change to red) after initial movement error
+4) increase wall size
+5) highlight path
+
 2022/5/6
 1) ball moving right after paddle moves; paddle freely moving
 2) plan: [0 turn 0]>[0 1](0,1 junctions)>[0 2]... (# turns, # junctions, # distractors)
 
-TBD
-1) % correct initial direction
 
 old-TBD
 1) Control trials: highlight path before
@@ -99,6 +104,7 @@ _IMAGE_SIZE = [24]  # [8, 16, 24]
 _AGENT_SCALE = 0.1 # 0.15  # 0.03  # 0.05 # 0.10  # 0.15
 _AGENT_ASPECT_RATIO = 0.2 # 4 # 8 # 4
 _PREY_SCALE = 0.03
+_WALL_WIDTH = 12*0.05
 # _MIN_DIST_AGENT = 0.1 # /2  # minimum distance between initial agent position and target exit
 # _MAX_DIST_AGENT = 0.3 # 0.5
 _P_PREY0 = 0 # 0.1  #  0.3 # 0.5   # 0.9  # prey's initial position as % of path
@@ -174,10 +180,10 @@ class UpdatePercentCorrect():
         self._n_trial = n_trial
         self._n_trial_amb = n_trial_amb
 
-    def step(self, reward,num_junctions, num_amb_junctions):
+    def step(self, reward,num_junctions, num_amb_junctions,id_correct_offline):
         self._n_trial[num_junctions] += 1
         self._n_trial_amb[num_amb_junctions] += 1
-        if reward > 0:
+        if id_correct_offline>0:  # reward > 0:
             self._n_correct_n_junction[num_junctions] += 1
             self._n_correct_n_amb_junction[num_amb_junctions] += 1
     @property
@@ -327,12 +333,12 @@ class TrialInitialization():
         maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
         cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
-            wall_width=0.05, cell_size=cell_size, bottom_border=_MAZE_Y, c0=128,
+            wall_width=_WALL_WIDTH, cell_size=cell_size, bottom_border=_MAZE_Y, c0=128,
             c1=128, c2=128)
         # to highlight path touched by path aid
         maze_prey_walls = maze_lib.Maze(maze_width, maze_height, all_walls=path_walls)
         path_wall_sprite = maze_prey_walls.to_sprites(
-            wall_width=0.05*2, cell_size=cell_size, bottom_border=_MAZE_Y, c0=32,c1=128, c2=32, opacity=0)  # green
+            wall_width=_WALL_WIDTH, cell_size=cell_size, bottom_border=_MAZE_Y, c0=32,c1=128, c2=32, opacity=0)  # green
 
         # Compute scaled and translated prey path
         prey_path = 0.5 + np.array(stimulus['prey_path'])
@@ -405,8 +411,9 @@ class TrialInitialization():
 
         state = collections.OrderedDict([
             ('agent', []),
-            ('prey', [prey]),
             ('maze', tunnels),
+            ('prey_wall', path_wall_sprite),
+            ('prey', [prey]),
             ('screen', [screen]),
             ('joystick_fixation', [joystick_fixation]),
             ('joystick', [joystick]),
@@ -415,7 +422,6 @@ class TrialInitialization():
             ('fake_prey', [fake_prey]),
             ('prey_path', []),
             ('path_prey', []),
-            ('prey_wall',path_wall_sprite),
         ])
 
         # Prey distance remaining is how far prey has to go to reach agent
@@ -496,6 +502,8 @@ class TrialInitialization():
             'direction_fake_prey':  direction_fake_prey,
             'speed_fake_prey': speed_fake_prey,
             'distance_to_start': distance_to_start,
+            'id_left0': -1,
+            'reward': 1,
         }
 
         return state
@@ -510,7 +518,7 @@ class TrialInitialization():
             scale=_AGENT_SCALE,  # 0.1, # aspect_ratio=0.3, scale=0.05,
             mass = _DEFAULT_MASS,  # 1
             c0=64, c1=64, c2=64, # c0=128, c1=32, c2=32, # red
-            metadata={'response_up': False, 'moved_h': False,'y_speed':0},
+            metadata={'response_up': False, 'moved_h': False,'y_speed':0,'id_left0':-1},
         )
         if self._static_agent:
             agent.mass = np.inf
@@ -986,6 +994,7 @@ class Config():
         def _track_moved_h(s):
             if not np.all(s.velocity == 0): ##  # if not np.all(s.velocity[0] == 0): ##
                 s.metadata['moved_h'] = True
+                s.metadata['id_left0'] = s.velocity[0]<0
         update_agent_metadata = gr.ModifySprites('agent', _track_moved_h)
 
         def _should_increase_RT_offline(state, meta_state):
@@ -1024,6 +1033,35 @@ class Config():
         unglue = gr.ModifyMetaState(_unglue)
         glue_agent = custom_game_rules.GlueAgent()
         make_agent_red = gr.ModifySprites('agent', _make_red)
+        update_direction0_metastate=custom_game_rules.UpdateDirection0()
+
+        def _should_update_id_correct(state, meta_state):
+            if meta_state['end_x_agent'] < 0.5:  # target on left
+                if meta_state['id_left0']==1:
+                    return True
+                if meta_state['id_left0']==0:
+                    return False
+            else:  # target on right
+                if meta_state['id_left0']==0:
+                    return True
+                if meta_state['id_left0']==1:
+                    return False
+        def _should_not_update_id_correct(state, meta_state):
+            return not _should_update_id_correct(state, meta_state)
+        heavier_agent = gr.ConditionalRule(
+            condition=_should_not_update_id_correct,
+            rules=custom_game_rules.HeavierAgent()
+        )
+        red_agent = gr.ConditionalRule(
+            condition=_should_not_update_id_correct,
+            rules=gr.ModifySprites('agent', _make_red)
+        )
+        def _update_id_correct_offline(meta_state):
+            meta_state['id_correct_offline'] = 1
+        update_id_correct_offline = gr.ConditionalRule(
+            condition=_should_update_id_correct,
+            rules=gr.ModifyMetaState(_update_id_correct_offline)
+        )
 
         # continual_rules
         def _update_motion_steps(meta_state):
@@ -1038,7 +1076,8 @@ class Config():
             return False
 
         phase_motion_visible = gr.Phase(
-            one_time_rules=[unglue,disappear_path_prey,clear_prey_wall,update_agent_color],  # make_agent_red glue_agent, unglue
+            one_time_rules=[unglue,disappear_path_prey,update_agent_color,  # clear_prey_wall
+                            update_direction0_metastate,heavier_agent,red_agent,update_id_correct_offline],  # make_agent_red glue_agent, unglue
             continual_rules=update_motion_steps,
             end_condition=_end_vis_motion_phase,  # duration=10,
             name='motion_visible',
@@ -1053,6 +1092,7 @@ class Config():
         update_ts = gr.ModifyMetaState(_update_ts)
 
         # continual_rules
+        highlight_path = gr.ModifyOnContact('prey_wall','prey',modifier_0=_make_opaque)
         def _decrease_prey_opacity(s,meta_state):
             if meta_state['prey_distance_remaining'] < meta_state['prey_distance_invisible']*_P_DIM_DISTANCE: # P_DIM_DISTANCE=0 -> N/A
                 s.opacity=0
@@ -1069,21 +1109,24 @@ class Config():
             rules=custom_game_rules.GluePrey()
         )
 
+        smaller_prey=gr.ConditionalRule(
+            condition=_compare_tp_ts,
+            rules=custom_game_rules.SmallerPrey()
+        )
+
+        def _smaller_reward(meta_state):
+            glue_time = _MAX_WAIT_TIME_GAIN * meta_state['ts']
+            meta_state['reward'] /= meta_state['reward'] / glue_time
+        smaller_reward=gr.ConditionalRule(
+            condition=_compare_tp_ts,
+            rules=gr.ModifyMetaState(_smaller_reward)
+        )
+
         update_agent_color_green = gr.ModifyOnContact('agent','prey',modifier_0=_make_green)
 
         def _update_metadata(s):
             s.metadata['response_up']=True
         update_agent_metadata_online = gr.ModifyOnContact('agent', 'prey', modifier_0=_update_metadata)
-
-        def _should_update_id_correct(state, meta_state):
-            agent = state['agent'][0]
-            return agent.metadata['response_up']
-        def _update_id_correct_offline(meta_state):
-            meta_state['id_correct_offline'] = 1
-        update_id_correct_offline = gr.ConditionalRule(
-            condition=_should_update_id_correct,
-            rules=gr.ModifyMetaState(_update_id_correct_offline)
-        )
 
         # end_condition
         def _end_motion_phase(state,meta_state):
@@ -1099,7 +1142,8 @@ class Config():
 
         phase_motion_invisible = gr.Phase(
             one_time_rules=[set_prey_opacity,update_ts],
-            continual_rules=[update_motion_steps,increase_tp,glue_prey,update_agent_color_green,update_agent_metadata_online,update_id_correct_offline],  # ,dim_prey], update_prey_distance
+            continual_rules=[update_motion_steps,increase_tp,glue_prey,update_agent_color_green,update_agent_metadata_online,
+                             smaller_prey,smaller_reward,highlight_path],  # ,dim_prey], update_prey_distance
             end_condition=_end_motion_phase,
             name='motion_invisible',
         )
