@@ -996,7 +996,10 @@ class Config():
         def _track_moved_h(s):
             if not np.all(s.velocity == 0): ##  # if not np.all(s.velocity[0] == 0): ##
                 s.metadata['moved_h'] = True
-                s.metadata['id_left0'] = s.velocity[0]<0
+                if s.velocity[0]<0:
+                    s.metadata['id_left0'] = 1
+                if s.velocity[0]>0:
+                    s.metadata['id_left0'] = 0
         update_agent_metadata = gr.ModifySprites('agent', _track_moved_h)
 
         def _should_increase_RT_offline(state, meta_state):
@@ -1104,7 +1107,7 @@ class Config():
         increase_tp = gr.ModifyMetaState(_increase_tp)
 
         def _compare_tp_ts(state,meta_state):
-            prey_at_bottom = meta_state['tp']>meta_state['ts']
+            prey_at_bottom = meta_state['tp']>=meta_state['ts']
             return prey_at_bottom
         glue_prey = gr.ConditionalRule(
             condition=_compare_tp_ts,
