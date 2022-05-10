@@ -1119,7 +1119,7 @@ class Config():
 
         def _smaller_reward(meta_state):
             glue_time = _MAX_WAIT_TIME_GAIN * meta_state['ts']
-            meta_state['reward'] /= meta_state['reward'] / glue_time
+            meta_state['reward'] = max(0,meta_state['reward']- 1/glue_time)
         smaller_reward=gr.ConditionalRule(
             condition=_compare_tp_ts,
             rules=gr.ModifyMetaState(_smaller_reward)
