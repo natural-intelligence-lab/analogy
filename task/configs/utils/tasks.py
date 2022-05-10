@@ -107,14 +107,16 @@ class ContactReward(tasks.AbstractTask):
                     if not self._condition(s_0, s_1, meta_state):
                         continue
                     if s_0.overlaps_sprite(s_1):
-                        reward = self._reward_fn(s_0, s_1)
+                        reward = self._reward_fn(s_0, s_1) * meta_state['reward']
                         if self._steps_until_reset == np.inf:
                             self._steps_until_reset = (
                                 self._reset_steps_after_contact)
                         # custom staircase
                         if self._update_p_correct is not None:
                             self._update_p_correct.step(reward, meta_state['num_junctions'],
-                                                        meta_state['num_amb_junctions'])
+                                                        meta_state['num_amb_junctions'],
+                                                        meta_state['id_correct_offline'],
+                                                        )
                         if self._repeat_incorrect_trial is not None:
                             self._repeat_incorrect_trial.step(reward)
                         if self._prey_opacity_staircase is not None:
