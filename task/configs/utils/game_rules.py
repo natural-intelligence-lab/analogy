@@ -34,7 +34,10 @@ class HeavierAgent(game_rules.AbstractRule):
 class UpdateDirection0(game_rules.AbstractRule):
     def step(self,state, meta_state):
         agent = state['agent'][0]
-        meta_state['id_left0'] = agent.metadata['id_left0']
+        if agent.metadata['id_left0']:
+            meta_state['id_left0'] = 1
+        else:
+            meta_state['id_left0'] = 0
 
 class CreateAgent(game_rules.AbstractRule):
     """Create agent."""
