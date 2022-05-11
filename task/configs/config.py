@@ -124,7 +124,7 @@ _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
 _MAZE_ON_DURATION=30  # 30 # 60 # 30 # 60 # 1s
 _PATH_PREY_DURATION=0 # np.inf # 0
 
-_MAX_WAIT_TIME_GAIN = 3 # 5 # 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN = 5 # 10 # 2 # when tp>2*ts, abort
 # _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
 # reward
@@ -1080,8 +1080,8 @@ class Config():
 
         phase_motion_visible = gr.Phase(
             one_time_rules=[unglue,disappear_path_prey,update_agent_color,  # clear_prey_wall
-                            update_direction0_metastate,heavier_agent,red_agent,update_id_correct_offline],  # make_agent_red glue_agent, unglue
-            continual_rules=update_motion_steps,
+                            update_direction0_metastate,red_agent,update_id_correct_offline],  # make_agent_red glue_agent, unglue
+            continual_rules=[update_motion_steps,heavier_agent],
             end_condition=_end_vis_motion_phase,  # duration=10,
             name='motion_visible',
         )
