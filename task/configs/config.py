@@ -1080,7 +1080,7 @@ class Config():
 
         phase_motion_visible = gr.Phase(
             one_time_rules=[unglue,disappear_path_prey,update_agent_color,  # clear_prey_wall
-                            update_direction0_metastate,red_agent,update_id_correct_offline],  # make_agent_red glue_agent, unglue
+                            update_direction0_metastate,red_agent],  # make_agent_red glue_agent, unglue
             continual_rules=[update_motion_steps,heavier_agent],
             end_condition=_end_vis_motion_phase,  # duration=10,
             name='motion_visible',
@@ -1144,7 +1144,7 @@ class Config():
             return id_response_up or id_late
 
         phase_motion_invisible = gr.Phase(
-            one_time_rules=[set_prey_opacity,update_ts],
+            one_time_rules=[set_prey_opacity,update_ts,update_id_correct_offline],
             continual_rules=[update_motion_steps,increase_tp,glue_prey,update_agent_color_green,update_agent_metadata_online,
                              smaller_prey,smaller_reward,highlight_path],  # ,dim_prey], update_prey_distance
             end_condition=_end_motion_phase,
