@@ -124,7 +124,7 @@ _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
 _MAZE_ON_DURATION=30  # 30 # 60 # 30 # 60 # 1s
 _PATH_PREY_DURATION=0 # np.inf # 0
 
-_MAX_WAIT_TIME_GAIN = 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN = 3 # 5 # 10 # 2 # when tp>2*ts, abort
 # _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
 # reward
@@ -137,7 +137,7 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 _SLOWING_DIST=((_AGENT_SCALE)/2)+(_PREY_SCALE/2)
 _GAIN_MASS = 1.5
 _DEFAULT_MASS = 1 # 0.5
-_ACTION_SCALING_FACTOR = 0.01 # 0.015 # 0.01
+_ACTION_SCALING_FACTOR = 0.005 # 0.01 # 0.015 # 0.01
 
 # staircase
 # _staircase for prey (online)
@@ -270,11 +270,11 @@ class RepeatIncorrectTrial():
         self._id_repeat_incorrect_trial=id_repeat_incorrect_trial
         self._stimulus = None
 
-    def step(self, reward):
+    def step(self, reward,id_correct_offline):
         if self._id_repeat_incorrect_trial:
-            if reward <= 0:
+            if id_correct_offline<=0: # reward <= 0:
                 self._id_correct_offline = False
-            elif reward > 0:
+            elif id_correct_offline>0: # reward > 0:
                 self._id_correct_offline = True
         else:
             self._id_correct_offline = True
