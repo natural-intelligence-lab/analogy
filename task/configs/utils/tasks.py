@@ -111,18 +111,18 @@ class ContactReward(tasks.AbstractTask):
                         if self._steps_until_reset == np.inf:
                             self._steps_until_reset = (
                                 self._reset_steps_after_contact)
-                        # custom staircase
-                        if self._update_p_correct is not None:
-                            self._update_p_correct.step(reward, meta_state['num_junctions'],
-                                                        meta_state['num_amb_junctions'],
-                                                        meta_state['id_correct_offline'],
-                                                        )
-                        if self._repeat_incorrect_trial is not None:
-                            self._repeat_incorrect_trial.step(reward,meta_state['id_correct_offline'])
-                        if self._prey_opacity_staircase is not None:
-                            self._prey_opacity_staircase.step(reward)
+                        self._reward_given = True
 
-                        self._reward_given=True
+            # custom staircase
+            if self._update_p_correct is not None:
+                self._update_p_correct.step(reward, meta_state['num_junctions'],
+                                            meta_state['num_amb_junctions'],
+                                            meta_state['id_correct_offline'],
+                                            )
+            if self._repeat_incorrect_trial is not None:
+                self._repeat_incorrect_trial.step(reward,meta_state['id_correct_offline'])
+            if self._prey_opacity_staircase is not None:
+                self._prey_opacity_staircase.step(reward)
 
 
         self._steps_until_reset -= 1
