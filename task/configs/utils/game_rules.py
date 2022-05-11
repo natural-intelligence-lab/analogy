@@ -4,7 +4,7 @@ from moog import game_rules
 import numpy as np
 
 _GAIN_AGENT_MASS = 3
-_MAX_WAIT_TIME_GAIN = 5 # 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN = 1 #  # 10 # 2 # when tp>2*ts, abort
 
 class SmallerPrey(game_rules.AbstractRule):
     def __init__(self):

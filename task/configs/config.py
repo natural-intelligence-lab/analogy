@@ -124,7 +124,8 @@ _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
 _MAZE_ON_DURATION=30  # 30 # 60 # 30 # 60 # 1s
 _PATH_PREY_DURATION=0 # np.inf # 0
 
-_MAX_WAIT_TIME_GAIN = 5 # 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN = 2 # 5 # 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN_REWARD = 1
 # _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
 # reward
@@ -1118,7 +1119,7 @@ class Config():
         )
 
         def _smaller_reward(meta_state):
-            glue_time = _MAX_WAIT_TIME_GAIN * meta_state['ts']
+            glue_time = _MAX_WAIT_TIME_GAIN_REWARD * meta_state['ts']
             meta_state['reward'] = max(0,meta_state['reward']- 1/glue_time)
         smaller_reward=gr.ConditionalRule(
             condition=_compare_tp_ts,
