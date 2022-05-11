@@ -118,7 +118,7 @@ class ContactReward(tasks.AbstractTask):
                                                         meta_state['id_correct_offline'],
                                                         )
                         if self._repeat_incorrect_trial is not None:
-                            self._repeat_incorrect_trial.step(reward)
+                            self._repeat_incorrect_trial.step(reward,meta_state['id_correct_offline'])
                         if self._prey_opacity_staircase is not None:
                             self._prey_opacity_staircase.step(reward)
 

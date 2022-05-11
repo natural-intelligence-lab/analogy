@@ -1,5 +1,9 @@
 """Common grid_chase task config.
 
+2022/5/11
+1) repeat after wrong initial direction
+2) H's issue: right-side bias for two paths, 2-turn bias for one path -> mix
+
 2022/5/10
 1) % correct initial direction (# junctions): agent.metadata['id_left0'] & meta_state['id_left0'] > meta_state['id_correct_offline']
 2) ball size/reward decreasing after glued at bottom
@@ -113,6 +117,7 @@ _P_PREY0 = 0 # 0.1  #  0.3 # 0.5   # 0.9  # prey's initial position as % of path
 _GAIN_PATH_PREY = 1  # 2.5 # 2 # 3  # 1  # speed gain for path prey
 _PATH_PREY_OPACITY = 120  # 50
 _GAIN_SLOW_OFFLINE_ERROR = 0.3 # after offline error, prey_speed is scaled by this factor
+_GAIN_AGENT_MASS = 2 # 2
 
 _ID_REPEAT_INCORRECT_TRIAL = True
 
@@ -126,7 +131,8 @@ _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
 _MAZE_ON_DURATION=30  # 30 # 60 # 30 # 60 # 1s
 _PATH_PREY_DURATION=0 # np.inf # 0
 
-_MAX_WAIT_TIME_GAIN = 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN = 2 # 5 # 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN_REWARD = _MAX_WAIT_TIME_GAIN-1
 # _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
 # reward
@@ -139,7 +145,7 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 _SLOWING_DIST=((_AGENT_SCALE)/2)+(_PREY_SCALE/2)
 _GAIN_MASS = 1.5
 _DEFAULT_MASS = 1 # 0.5
-_ACTION_SCALING_FACTOR = 0.01 # 0.015 # 0.01
+_ACTION_SCALING_FACTOR = 0.005 # 0.01 # 0.015 # 0.01
 
 # staircase
 # _staircase for prey (online)
@@ -272,11 +278,11 @@ class RepeatIncorrectTrial():
         self._id_repeat_incorrect_trial=id_repeat_incorrect_trial
         self._stimulus = None
 
-    def step(self, reward):
+    def step(self, reward,id_correct_offline):
         if self._id_repeat_incorrect_trial:
-            if reward <= 0:
+            if id_correct_offline<=0: # reward <= 0:
                 self._id_correct_offline = False
-            elif reward > 0:
+            elif id_correct_offline>0: # reward > 0:
                 self._id_correct_offline = True
         else:
             self._id_correct_offline = True
@@ -506,6 +512,7 @@ class TrialInitialization():
             'distance_to_start': distance_to_start,
             'id_left0': -1,
             'reward': 1,
+            'max_wait_time_gain': _MAX_WAIT_TIME_GAIN
         }
 
         return state
@@ -1053,9 +1060,11 @@ class Config():
                     return False
         def _should_not_update_id_correct(state, meta_state):
             return not _should_update_id_correct(state, meta_state)
+        def _make_heavy(s):
+            s.mass = _GAIN_AGENT_MASS * s.mass
         heavier_agent = gr.ConditionalRule(
             condition=_should_not_update_id_correct,
-            rules=custom_game_rules.HeavierAgent()
+            rules=gr.ModifySprites('agent', _make_heavy)
         )
         red_agent = gr.ConditionalRule(
             condition=_should_not_update_id_correct,
@@ -1082,8 +1091,8 @@ class Config():
 
         phase_motion_visible = gr.Phase(
             one_time_rules=[unglue,disappear_path_prey,update_agent_color,  # clear_prey_wall
-                            update_direction0_metastate,heavier_agent,red_agent,update_id_correct_offline],  # make_agent_red glue_agent, unglue
-            continual_rules=update_motion_steps,
+                            update_direction0_metastate,red_agent,heavier_agent],  # make_agent_red glue_agent, unglue
+            continual_rules=[update_motion_steps],
             end_condition=_end_vis_motion_phase,  # duration=10,
             name='motion_visible',
         )
@@ -1120,7 +1129,7 @@ class Config():
         )
 
         def _smaller_reward(meta_state):
-            glue_time = _MAX_WAIT_TIME_GAIN * meta_state['ts']
+            glue_time = (meta_state['max_wait_time_gain']-1) * meta_state['ts']
             meta_state['reward'] = max(0,meta_state['reward']- 1/glue_time)
         smaller_reward=gr.ConditionalRule(
             condition=_compare_tp_ts,
@@ -1136,17 +1145,17 @@ class Config():
         # end_condition
         def _end_motion_phase(state,meta_state):
             id_response_up = state['agent'][0].metadata['response_up']
-            id_late = meta_state['tp'] > _MAX_WAIT_TIME_GAIN * meta_state['ts']
+            id_late = meta_state['tp'] > meta_state['max_wait_time_gain'] * meta_state['ts']
             # if meta_state['id_correct_offline'] == 1:  # response counts only if correct offline
             #     id_response_up = state['agent'][0].metadata['response_up']
-            #     id_late = meta_state['tp'] > _MAX_WAIT_TIME_GAIN * meta_state['ts']
+            #     id_late = meta_state['tp'] > meta_state['max_wait_time_gain'] * meta_state['ts']
             # else:
             #     id_response_up = False
             #     id_late = meta_state['tp'] > (meta_state['prey_distance_invisible'] / self._prey_speed)
             return id_response_up or id_late
 
         phase_motion_invisible = gr.Phase(
-            one_time_rules=[set_prey_opacity,update_ts],
+            one_time_rules=[set_prey_opacity,update_ts,update_id_correct_offline],
             continual_rules=[update_motion_steps,increase_tp,glue_prey,update_agent_color_green,update_agent_metadata_online,
                              smaller_prey,smaller_reward,highlight_path],  # ,dim_prey], update_prey_distance
             end_condition=_end_motion_phase,
