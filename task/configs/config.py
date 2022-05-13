@@ -117,7 +117,7 @@ _P_PREY0 = 0 # 0.1  #  0.3 # 0.5   # 0.9  # prey's initial position as % of path
 _GAIN_PATH_PREY = 1  # 2.5 # 2 # 3  # 1  # speed gain for path prey
 _PATH_PREY_OPACITY = 120  # 50
 _GAIN_SLOW_OFFLINE_ERROR = 0.3 # after offline error, prey_speed is scaled by this factor
-_GAIN_AGENT_MASS = 2 # 2
+_GAIN_AGENT_MASS = 1 # 2 # 2
 
 _ID_REPEAT_INCORRECT_TRIAL = True
 
@@ -131,7 +131,7 @@ _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
 _MAZE_ON_DURATION=30  # 30 # 60 # 30 # 60 # 1s
 _PATH_PREY_DURATION=0 # np.inf # 0
 
-_MAX_WAIT_TIME_GAIN = 2 # 5 # 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN = 3 # 2 # 5 # 10 # 2 # when tp>2*ts, abort
 _MAX_WAIT_TIME_GAIN_REWARD = _MAX_WAIT_TIME_GAIN-1
 # _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
