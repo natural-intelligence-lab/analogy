@@ -13,6 +13,9 @@ _MAX_NUM_TURNS = 3 # 5 # 1 # 3 # 5 # np.inf # 0 # 2 # 6 # 4 # exclusive
 # _STEP_NUM_TURNS = 2
 _NUM_LAYERS= 2 # 2 # 3 # 5 # 4 # 3 # 2 # 50
 
+_MIN_NUM_LAYERS = 1
+_MAX_NUM_LAYERS = 2
+
 _MIN_NUM_OVERLAP= 0 # 1 # 0 # 1
 _MAX_NUM_OVERLAP= np.inf # 2 # 1 # np.inf # 2 # 1 # np.inf
 _MIN_EXIT_DISTANCE = 12 # 3 # 0.7/16*3>0.1 # 1 # 0 # 2 # 3  # GRID; if set to zero, no constraint on the exit distance
@@ -30,7 +33,7 @@ def random_16_staircase(**kwargs):
     num_turns_samplers = [
         samplers.WireMazeSampler(
             path_dir=path_dir,
-            num_layers=_NUM_LAYERS,
+            num_layers=num_layers, # _NUM_LAYERS,
             ball_path_top_bottom=True,
             distractors_top_bottom=_DISTRACTOR_TOP_BOTTOM,
             min_num_turns= _MIN_NUM_TURNS,
@@ -40,7 +43,7 @@ def random_16_staircase(**kwargs):
             min_exit_distance=_MIN_EXIT_DISTANCE, # -np.inf,
             distractors_num_turns=_DISTRACTOR_NUMBER_TURNS,
         )
-        # for i in range(_min_num_turns, max_num_turns + 1, _step_num_turns)
+        for num_layers in range(_MIN_NUM_LAYERS, _MAX_NUM_LAYERS + 1)
     ]
     stimulus_generator = samplers.MixtureSampler(*num_turns_samplers,
         num_passes=100)

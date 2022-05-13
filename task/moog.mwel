@@ -138,7 +138,7 @@ var width_per_deg = 1/(p_background*screen_width_deg) //% [maze width unit/deg]
 var eye_to_frame_coeffs = [[width_per_deg,0],[0,width_per_deg]]  //# [[1, 0], [0, 1]]
 var eye_to_frame_intercept = [0.5, 0.5]  //# [0, 0]
 
-var reward_gain = 30000 // 60000
+var reward_gain = 60000
 var max_rewarding_dist=0.1
 
 var num_trials = 0
