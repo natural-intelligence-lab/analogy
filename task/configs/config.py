@@ -119,7 +119,9 @@ _PATH_PREY_OPACITY = 120  # 50
 _GAIN_SLOW_OFFLINE_ERROR = 0.3 # after offline error, prey_speed is scaled by this factor
 _GAIN_AGENT_MASS = 1 # 2 # 2
 
+# error trials staircase
 _ID_REPEAT_INCORRECT_TRIAL = True
+_N_MAX_REPEAT = 10
 
 # fixation
 _FIXATION_THRESHOLD = 0.4
@@ -273,15 +275,22 @@ class PathPreyPositionStaircase():
 class RepeatIncorrectTrial():
     def __init__(self,
                  id_repeat_incorrect_trial=_ID_REPEAT_INCORRECT_TRIAL,
-                 id_correct_offline0=True):
+                 id_correct_offline0=True,
+                 n_max_repeat = _N_MAX_REPEAT):
         self._id_correct_offline=id_correct_offline0
         self._id_repeat_incorrect_trial=id_repeat_incorrect_trial
         self._stimulus = None
+        self._n_max_repeat = n_max_repeat
+        self._n_repeat = 0
 
     def step(self, reward,id_correct_offline):
         if self._id_repeat_incorrect_trial:
             if id_correct_offline<=0: # reward <= 0:
                 self._id_correct_offline = False
+                # put limit on repeating trials
+                self._n_repeat = self._n_repeat+1
+                if self._n_repeat >= self._n_max_repeat:
+                    self._id_correct_offline = True
             elif id_correct_offline>0: # reward > 0:
                 self._id_correct_offline = True
         else:
