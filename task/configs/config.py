@@ -133,7 +133,7 @@ _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
 _MAZE_ON_DURATION=30  # 30 # 60 # 30 # 60 # 1s
 _PATH_PREY_DURATION=0 # np.inf # 0
 
-_MAX_WAIT_TIME_GAIN = 3 # 2 # 5 # 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN = 2 # 3 # 2 # 5 # 10 # 2 # when tp>2*ts, abort
 _MAX_WAIT_TIME_GAIN_REWARD = _MAX_WAIT_TIME_GAIN-1
 # _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
