@@ -28,6 +28,7 @@ name={'ts',... % 1 from meta_state
     'p_visible_aid',... % 16
     'num_completeTrials',... % 17
     'id_correct_offline',... % 18
+    'reward_window',... % 19
     }; % 16
 
 plotNoise=0.05; % for tp-ts, RT plot; was 0.2
@@ -110,7 +111,7 @@ end
 %% MAIN
 if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(values{4}) & ~isempty(values{5}) &...
         ~isempty(values{6}) & ~isempty(values{7}) & ~isempty(values{8}) & ~isempty(values{9}) & ~isempty(values{10}) & ~isempty(values{11}) &...
-        ~isempty(values{12}) & ~isempty(values{13}) & ~isempty(values{14}) & ~isempty(values{15}) & ~isempty(values{16}) & ~isempty(values{17}) & ~isempty(values{18})
+        ~isempty(values{12}) & ~isempty(values{13}) & ~isempty(values{14}) & ~isempty(values{15}) & ~isempty(values{16}) & ~isempty(values{17}) & ~isempty(values{18}) & ~isempty(values{19})
     %     if nargin==1
     %% fig. 1: plot T vs t
     Ttmp=values{1}(end); ttmp=values{2}(end); RT_offline=values{5}(end);
@@ -201,10 +202,13 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3}) & ~isempty(va
 %     errorMetric=abs(end_x_prey-end_x_agent)./abs(end_x_distract-end_x_agent); % better if closer to 0
 %     disp([mean(errorMetric) std(errorMetric)]);
 
-%%     % fig.4: staircase
-%     figure(4); set(gcf,'position',[0 615 420 420],'color','w','resize','off'); hold on;
+     % fig.4: staircase
+     reward_window=values{19}(end);
+     figure(4); set(gcf,'position',[0 615 420 420],'color','w','resize','off'); hold on;
+     plot(num_trials,reward_window,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
 %     plot(num_trials,opacity,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
 %     plot(num_trials,path_opacity,'o','markerfacecolor','g','color','g','linewidth',1,'markersize',3); drawnow; hold on;
+    xlabel('trials'); ylabel('reward_window');
 
 %% fig. 5: p(correct)=f(# junction)
 num_trial_junction=values{12}(end,:);

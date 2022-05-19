@@ -27,7 +27,8 @@ class ContactReward(tasks.AbstractTask):
                  reset_steps_after_contact=np.inf,
                  prey_opacity_staircase=None,
                  update_p_correct=None,
-                 repeat_incorrect_trial=None
+                 repeat_incorrect_trial=None,
+                 reward_window_staircase=None,
                  ):
         """Constructor.
 
@@ -75,6 +76,7 @@ class ContactReward(tasks.AbstractTask):
         self._prey_opacity_staircase = prey_opacity_staircase
         self._update_p_correct = update_p_correct
         self._repeat_incorrect_trial = repeat_incorrect_trial
+        self._reward_window_staircase = reward_window_staircase
 
     def reset(self, state, meta_state):
         self._steps_until_reset = np.inf
@@ -125,6 +127,9 @@ class ContactReward(tasks.AbstractTask):
                     self._repeat_incorrect_trial.step(reward,meta_state['id_correct_offline'])
                 if self._prey_opacity_staircase is not None:
                     self._prey_opacity_staircase.step(reward)
+                if self._reward_window_staircase is not None:
+                    self._reward_window_staircase.step(reward)
+
                 self._staircase_updated = True
 
 

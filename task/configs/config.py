@@ -1,5 +1,9 @@
 """Common grid_chase task config.
 
+2022/5/19
+1) limit # repeat trials (_N_MAX_REPEAT)
+2) staircase on reward window: _MAX_WAIT_TIME_GAIN
+
 2022/5/11
 1) repeat after wrong initial direction
 2) H's issue: right-side bias for two paths, 2-turn bias for one path -> mix
@@ -133,6 +137,8 @@ _PATH_PREY_DURATION=0 # np.inf # 0
 
 _MAX_WAIT_TIME_GAIN = 2 # 5 # 10 # 2 # when tp>2*ts, abort
 _MAX_WAIT_TIME_GAIN_REWARD = _MAX_WAIT_TIME_GAIN-1
+_MAX_WAIT_TIME_GAIN_UP = 0.3
+_MAX_WAIT_TIME_GAIN_DOWN = 0.3
 # _JOYSTICK_FIXATION_POSTOFFLINE = 36 # 600
 
 # reward
@@ -270,6 +276,27 @@ class PathPreyPositionStaircase():
     def path_prey_position(self):
         return self._path_prey_position
 
+class RewardWindowStaircase():
+    def __init__(self,
+                 init_value=_MAX_WAIT_TIME_GAIN,
+                 failure_delta=_MAX_WAIT_TIME_GAIN_UP,
+                 success_delta=_MAX_WAIT_TIME_GAIN_DOWN,
+                 minval=1,
+                 maxval=3):
+        self._max_wait_time_gain = init_value
+        self._success_delta = success_delta
+        self._failure_delta = failure_delta
+        self._minval = minval
+        self._maxval = maxval
+    def step(self, reward):
+        if reward <= 0:
+            self._max_wait_time_gain = min(self._max_wait_time_gain + self._failure_delta, self._maxval)
+        elif reward > 0: # smaller with reward
+            self._max_wait_time_gain = max(self._max_wait_time_gain - self._success_delta, self._minval)
+    @property
+    def max_wait_time_gain(self):
+        return self._max_wait_time_gain
+
 class RepeatIncorrectTrial():
     def __init__(self,
                  id_repeat_incorrect_trial=_ID_REPEAT_INCORRECT_TRIAL,
@@ -309,7 +336,8 @@ class TrialInitialization():
 
     def __init__(self, stimulus_generator, prey_lead_in, prey_speed, static_prey=False,
                  static_agent=False,prey_opacity_staircase=None,path_prey_opacity_staircase=None,
-                 path_prey_position_staircase=None,update_p_correct=None,repeat_incorrect_trial=None,ms_per_unit=None):
+                 path_prey_position_staircase=None,update_p_correct=None,repeat_incorrect_trial=None,
+                 reward_window_staircase=None,ms_per_unit=None):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
         self._prey_speed = prey_speed
@@ -318,8 +346,10 @@ class TrialInitialization():
         self._prey_opacity_staircase=prey_opacity_staircase
         self._path_prey_opacity_staircase = path_prey_opacity_staircase
         self._path_prey_position_staircase = path_prey_position_staircase
+        self._reward_window_staircase = reward_window_staircase
         self._update_p_correct = update_p_correct
         self._repeat_incorrect_trial = repeat_incorrect_trial
+        self._reward_window_staircase = reward_window_staircase
         self._prey_factors = dict(
             shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0) # scale=0.015, c0=0, c1=255, c2=0)
         self._fixation_shape = 0.2 * np.array([
@@ -519,7 +549,7 @@ class TrialInitialization():
             'distance_to_start': distance_to_start,
             'id_left0': -1,
             'reward': 1,
-            'max_wait_time_gain': _MAX_WAIT_TIME_GAIN
+            'max_wait_time_gain': self._reward_window_staircase.max_wait_time_gain ,#_MAX_WAIT_TIME_GAIN
         }
 
         return state
@@ -589,6 +619,7 @@ class Config():
                  path_prey_opacity=0,
                  static_prey=False,
                  static_agent=False,
+                 reward_window_staircase=None,
                  ms_per_unit=2000,
                  ):
         """Constructor.
@@ -611,6 +642,8 @@ class Config():
         self._path_prey_position_staircase = path_prey_position_staircase
         self._update_p_correct = update_p_correct
         self._repeat_incorrect_trial = repeat_incorrect_trial
+
+        self._reward_window_staircase = reward_window_staircase
 
         if self._prey_opacity_staircase is not None:
             self._prey_opacity = self._prey_opacity_staircase.opacity
@@ -639,7 +672,8 @@ class Config():
             stimulus_generator, prey_lead_in=self._prey_lead_in, prey_speed=self._prey_speed,
             static_prey=static_prey, static_agent=static_agent, prey_opacity_staircase=self._prey_opacity_staircase,
             path_prey_opacity_staircase=self._path_prey_opacity_staircase,path_prey_position_staircase=self._path_prey_position_staircase,
-            update_p_correct=self._update_p_correct,repeat_incorrect_trial=self._repeat_incorrect_trial,ms_per_unit=ms_per_unit,
+            update_p_correct=self._update_p_correct,repeat_incorrect_trial=self._repeat_incorrect_trial,
+            reward_window_staircase=self._reward_window_staircase,ms_per_unit=ms_per_unit,
         )
 
         # Create renderer
@@ -708,6 +742,7 @@ class Config():
             prey_opacity_staircase = self._prey_opacity_staircase, # TBD for online
             update_p_correct=self._update_p_correct,
             repeat_incorrect_trial=self._repeat_incorrect_trial,
+            reward_window_staircase=self._reward_window_staircase,
         )
 
         timeout_task = tasks.Reset(
@@ -1137,7 +1172,8 @@ class Config():
 
         def _smaller_reward(meta_state):
             glue_time = (meta_state['max_wait_time_gain']-1) * meta_state['ts']
-            meta_state['reward'] = max(0,meta_state['reward']- 1/glue_time)
+            if glue_time != 0:
+                meta_state['reward'] = max(0,meta_state['reward']- 1/glue_time)
         smaller_reward=gr.ConditionalRule(
             condition=_compare_tp_ts,
             rules=gr.ModifyMetaState(_smaller_reward)

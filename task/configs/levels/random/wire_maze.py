@@ -52,12 +52,14 @@ def random_16_staircase(**kwargs):
     staircase_path_position = config.PathPreyPositionStaircase()
     update_p_correct = config.UpdatePercentCorrect()
     repeat_incorrect_trial = config.RepeatIncorrectTrial()
+    reward_window_staircase = config.RewardWindowStaircase()
     return config.Config(stimulus_generator,
                          prey_opacity_staircase=staircase,
                          path_prey_opacity_staircase=staircase_path,
                          path_prey_position_staircase=staircase_path_position,
                          update_p_correct=update_p_correct,
                          repeat_incorrect_trial=repeat_incorrect_trial,
+                         reward_window_staircase=reward_window_staircase,
                          **kwargs)
 
 
