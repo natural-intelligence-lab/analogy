@@ -187,6 +187,8 @@ var p_visible_aid = 0
 
 var id_correct_offline = 0
 
+var reward_window = 0
+
 var sync = 0
 
 ///////////////////////////////////////////////////////////////////////////////

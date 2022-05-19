@@ -99,6 +99,7 @@ class TaskManager:
             self._path_prey_opacity_staircase = config_class._path_prey_opacity_staircase
             self._path_prey_position_staircase = config_class._path_prey_position_staircase
             self._update_p_correct = config_class._update_p_correct
+            self._reward_window_staircase = config_class._reward_window_staircase
 
         # i_trial dynamics
         if getvar('platform') == 'laptop' or getvar('platform') == 'psychophysics' or getvar('platform') == 'desktop':
@@ -186,6 +187,7 @@ class TaskManager:
             setvar('num_correct_junction', self._update_p_correct.n_correct_n_junction)
             setvar('num_correct_amb_junction', self._update_p_correct.n_correct_n_amb_junction)
             setvar('p_visible_aid', self._path_prey_position_staircase.path_prey_position)
+            setvar('reward_window', self._reward_window_staircase._max_wait_time_gain)
 
         # TBD: debug - how to change _MAX_REWARDING_DIST during task running?
         # max_rewarding_dist = getvar('max_rewarding_dist')
