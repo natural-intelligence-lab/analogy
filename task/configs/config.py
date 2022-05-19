@@ -145,7 +145,7 @@ _TOOTH_HALF_WIDTH = 40 # 60 # 40 # 666ms
 _SLOWING_DIST=((_AGENT_SCALE)/2)+(_PREY_SCALE/2)
 _GAIN_MASS = 1.5
 _DEFAULT_MASS = 1 # 0.5
-_ACTION_SCALING_FACTOR = 0.005 # 0.01 # 0.015 # 0.01
+_ACTION_SCALING_FACTOR = 0.01 # 0.01 # 0.015 # 0.01
 
 # staircase
 # _staircase for prey (online)
