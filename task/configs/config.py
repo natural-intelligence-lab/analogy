@@ -320,6 +320,7 @@ class RepeatIncorrectTrial():
                     self._id_correct_offline = True
             elif id_correct_offline>0: # reward > 0:
                 self._id_correct_offline = True
+                self._n_repeat = 0
         else:
             self._id_correct_offline = True
     @property
