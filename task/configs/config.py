@@ -125,7 +125,7 @@ _GAIN_AGENT_MASS = 1 # 2 # 2
 
 # error trials staircase
 _ID_REPEAT_INCORRECT_TRIAL = True
-_N_MAX_REPEAT = 10
+_N_MAX_REPEAT = 2
 
 # fixation
 _FIXATION_THRESHOLD = 0.4
@@ -316,8 +316,9 @@ class RepeatIncorrectTrial():
                 self._id_correct_offline = False
                 # put limit on repeating trials
                 self._n_repeat = self._n_repeat+1
-                if self._n_repeat >= self._n_max_repeat:
+                if self._n_repeat > self._n_max_repeat:
                     self._id_correct_offline = True
+                    self._n_repeat = 0
             elif id_correct_offline>0: # reward > 0:
                 self._id_correct_offline = True
                 self._n_repeat = 0
