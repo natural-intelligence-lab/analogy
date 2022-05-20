@@ -4,6 +4,8 @@ The main class in this file is TaskManager, which is a task to be run by
 moog.mwel.
 """
 
+from mworkscore import getvar, setvar
+
 ################################################################################
 ####  Determine whether on laptop or on rig and update sys.path accordingly
 ################################################################################

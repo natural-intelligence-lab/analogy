@@ -154,16 +154,6 @@ circular_fixation_point fixation_point (
 // Protocols
 ///////////////
 
-protocol 'eyelink' {
-    eyelink_tracker_setup (
-        device = eye_tracker
-        calibration_type = HV13
-        )
-
-    start_io_device (eye_tracker)
-
-    wait (600s)
-}
 
 protocol 'Manual+Pursuit' {
     start_device_io (eye_tracker)
@@ -319,6 +309,17 @@ protocol 'Manual+Pursuit' {
             yield ()
         }
     }
+}
+
+protocol 'eyelink' {
+    eyelink_tracker_setup (
+        device = eye_tracker
+        calibration_type = HV13
+        )
+
+    start_io_device (eye_tracker)
+
+    wait (600s)
 }
 
 /* TO BE DEBUGGED

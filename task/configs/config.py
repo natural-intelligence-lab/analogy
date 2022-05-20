@@ -1,5 +1,10 @@
 """Common grid_chase task config.
 
+2022/5/20
+1) Remove gap b/t ball/paddle & maze: to reduce lapse
+2) Impose eye fixation @ ball
+3) Ball moving 1s after maze on: not contingent on initial move
+
 2022/5/19
 1) limit # repeat trials (_N_MAX_REPEAT)
 2) staircase on reward window: _MAX_WAIT_TIME_GAIN
@@ -108,8 +113,9 @@ from maze_lib.constants import max_reward, bonus_reward, reward_window
 ################################################################################################
 # stimlulus
 _AGENT_Y = 0.05
-_MAZE_Y = 0.15
-_MAZE_WIDTH = 0.7
+_MAZE_Y = 0.05 # 0.15
+_MAZE_WIDTH = 0.9 # 0.7
+_PREY_LEAD_IN = 0 # 0.15
 _IMAGE_SIZE = [24]  # [8, 16, 24]
 _AGENT_SCALE = 0.1 # 0.15  # 0.03  # 0.05 # 0.10  # 0.15
 _AGENT_ASPECT_RATIO = 0.2 # 4 # 8 # 4
@@ -128,13 +134,14 @@ _ID_REPEAT_INCORRECT_TRIAL = True
 _N_MAX_REPEAT = 2
 
 # fixation
-_FIXATION_THRESHOLD = 0.4
+_FIXATION_THRESHOLD = 0.3
 
 # time
 _ITI = 60
-_FIXATION_STEPS = 0 # 60  # 30
+_FIXATION_STEPS = 6 # 0 # 60  # 30
 _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
-_MAZE_ON_DURATION=30  # 30 # 60 # 30 # 60 # 1s
+_MAZE_ON_DURATION=60 # 30  # 30 # 60 # 30 # 60 # 1s
+_OFFLINE_DURATION = 60
 _PATH_PREY_DURATION=0 # np.inf # 0
 
 _MAX_WAIT_TIME_GAIN = 2 # 3 # 2 # 5 # 10 # 2 # when tp>2*ts, abort
@@ -452,16 +459,16 @@ class TrialInitialization():
         # fake prey
         distance_to_start = (_BALL_ON_DURATION/60) / (self._ms_per_unit/1000)   # 30/60 [s] / 2[s/unit] = 0.25
         direction_fake_prey = np.array([np.round(np.random.rand())*2-1, 0])
-        speed_fake_prey = (1/60) / (self._ms_per_unit/1000)
+        speed_fake_prey = 0 # (1/60) / (self._ms_per_unit/1000)
         fake_prey = sprite.Sprite(shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0, opacity=0,
                                   metadata={'distance_to_start': distance_to_start, 'direction_fake_prey': direction_fake_prey,'speed':speed_fake_prey})
-        fake_prey.position = [prey_path[0][0] -direction_fake_prey[0]*distance_to_start,
+        fake_prey.position = [prey_path[0][0], # -direction_fake_prey[0]*distance_to_start,
                               prey_path[0][1]+self._prey_lead_in]
 
         state = collections.OrderedDict([
-            ('agent', []),
             ('maze', tunnels),
             ('prey_wall', path_wall_sprite),
+            ('agent', []),
             ('prey', [prey]),
             ('screen', [screen]),
             ('joystick_fixation', [joystick_fixation]),
@@ -670,7 +677,7 @@ class Config():
         # Compute prey speed given ms_per_unit, assuming 60 fps
         self._prey_speed0 = 1000. / (60. * ms_per_unit) # 0.0083 frame width / refresh
         self._prey_speed = self._prey_speed0
-        self._prey_lead_in = 0.15  # 0.08
+        self._prey_lead_in = _PREY_LEAD_IN # 0.15  # 0.08
 
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in, prey_speed=self._prey_speed,
@@ -854,7 +861,8 @@ class Config():
         # continual_rules
         def _should_increase_fixation_dur(state, meta_state):
             dist = np.linalg.norm(
-                state['fixation'][0].position - state['eye'][0].position)
+                state['fake_prey'][0].position - state['eye'][0].position)
+                # state['fixation'][0].position - state['eye'][0].position)
             eye_fixating = dist < _FIXATION_THRESHOLD
             return eye_fixating
         def _increase_fixation_dur(meta_state):
@@ -884,7 +892,7 @@ class Config():
             name='fixation',
         )
         ###########################################
-        # 4. ball on (500ms)
+        # 4. ball on (500ms) now with fixation
         ###########################################
         # one_time_rules
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
@@ -912,15 +920,15 @@ class Config():
             return False
 
         phase_ball_on = gr.Phase(
-            one_time_rules=[disappear_fixation, appear_fake_prey,unglue_fake_prey],  #  create_fake_prey
-            continual_rules=[update_motion_steps_fake_prey],
+            one_time_rules=[disappear_fixation, appear_fake_prey],  #  create_fake_prey  ,unglue_fake_prey
+            continual_rules=[increase_fixation_dur, reset_fixation_dur], # update_motion_steps_fake_prey
             # duration=_BALL_ON_DURATION,  # 500 ms
-            end_condition=_end_ball_on_phase,
+            end_condition=_should_end_fixation, # _end_ball_on_phase,
             name='ball_on',
         )
 
         ###########################################
-        # 5. maze on (500 ms)
+        # 5. maze on (1000 ms)
         ###########################################
         # present maze
         glue_fake_prey = custom_game_rules.GlueFakePrey()
@@ -935,119 +943,20 @@ class Config():
         phase_maze_on = gr.Phase(
             one_time_rules=[glue_fake_prey,disappear_screen, disappear_fake_prey],
             continual_rules=[increase_RT_offline],
-            duration=_MAZE_ON_DURATION,  # 500 ms
+            duration=_MAZE_ON_DURATION,  # 1000 ms
             name='maze_on',
         )
 
-        ###########################################
-        # 6. path_prey without agent (0)
-        ###########################################
-        # # one_time_rules
-        # create_path_prey = custom_game_rules.CreatePathPrey(self._trial_init)
-        # def _unglue_path_prey(meta_state):
-        #     self._maze_walk_path.speed = self._prey_speed*_GAIN_PATH_PREY
-        #     meta_state['path_prey_speed'] = self._prey_speed*_GAIN_PATH_PREY
-        # unglue_path_prey = gr.ModifyMetaState(_unglue_path_prey)
-        #
-        # # continual_rules
-        # def _update_motion_steps_path_prey(meta_state):
-        #     meta_state['motion_steps_path_prey'] += 1 # [frames]? clock?
-        #     meta_state['prey_distance_remaining_path_prey'] -= (self._prey_speed*_GAIN_PATH_PREY)
-        # update_motion_steps_path_prey = gr.ModifyMetaState(_update_motion_steps_path_prey)
-        # highlight_path = gr.ModifyOnContact('prey_wall','path_prey',modifier_0=_make_opaque)
-        # def _decrease_path_prey_opacity(s,meta_state): #'path_prey_position'
-        #     # if meta_state['prey_distance_remaining_path_prey'] < (meta_state['prey_distance_invisible']*_P_PATHPREY_DIM_DISTANCE): # P_DIM_DISTANCE=0 -> N/A
-        #     if meta_state['prey_distance_remaining_path_prey'] < (
-        #             meta_state['prey_distance_invisible'] * meta_state['path_prey_position']):  # P_DIM_DISTANCE=0 -> N/A
-        #         s.opacity=0
-        # dim_path_prey = custom_game_rules.DimPrey('path_prey',_decrease_path_prey_opacity)
-        # glue_path_prey_conditional = gr.ConditionalRule(
-        #     condition=lambda state, x: state['path_prey'][0].opacity == 0,
-        #     rules=custom_game_rules.GluePathPrey()
-        # )
-        #
-        # # end condition
-        # def _end_path_prey_phase(state,meta_state):
-        #     if meta_state['motion_steps_path_prey'] >= (meta_state['prey_distance_remaining'] / (self._prey_speed*_GAIN_PATH_PREY)): # [frames]? clock?
-        #         return True
-        #     return False
-        #
 
-        # phase_path_prey = gr.Phase(
-        #     one_time_rules=[create_path_prey,unglue_path_prey], # disappear_screen,disappear_fake_prey,
-        #     continual_rules=[update_motion_steps_path_prey,increase_RT_offline,dim_path_prey,glue_path_prey_conditional,highlight_path],  # highlight_path
-        #     name='path_prey',
-        #     duration=_PATH_PREY_DURATION, # 0
-        #     end_condition=_end_path_prey_phase,
-        # )
         ###########################################
         # 7. Offline movement phase ([paddleOn movementDone])
         ###########################################
 
         # one_time_rules
         create_agent = custom_game_rules.CreateAgent(self._trial_init)
-        # glue_path_prey = custom_game_rules.GluePathPrey()
-        set_path_prey_opacity = gr.ModifySprites('path_prey', _set_path_prey_opacity)  # self._prey_opacity
-
-        # # continual_rules: booster away from exits
-        # def _near_exit(state, meta_state):
-        #     if len(state['agent']) > 0:
-        #         agent = state['agent'][0]
-        #         if meta_state['phase'] == 'offMove':
-        #             distance_to_exits = agent.x - meta_state['x_exit']
-        #             id_in_zone = np.any(np.abs(distance_to_exits)<_SLOWING_DIST)
-        #         else:
-        #             id_in_zone = False
-        #     else:
-        #         id_in_zone = False
-        #     return id_in_zone
-        # def _change_agent_mass(s):
-        #     s.mass = _GAIN_MASS
-        # def _change_agent_mass2(s):
-        #     s.mass = _DEFAULT_MASS
-        # update_agent_mass = gr.ConditionalRule(
-        #     condition=lambda state, x: _near_exit(state, x),
-        #     rules=gr.ModifySprites('agent', _change_agent_mass)
-        # )
-        # update_agent_mass2 = gr.ConditionalRule(
-        #     condition=lambda state, x: not _near_exit(state, x),
-        #     rules=gr.ModifySprites('agent', _change_agent_mass2)
-        # )
-
-        # continual_rules: change agent color if offline reward
-
-        # def _reward(state, meta_state):
-        #     if len(state['agent']) > 0:
-        #         agent = state['agent'][0]
-        #         if (meta_state['phase'] == 'offMove' and
-        #                 agent.metadata['moved_h'] and
-        #                 np.all(state['agent'][0].velocity == 0)): ##
-        #             id_vertical=np.mod(meta_state['correct_side'],2)  # 0 for 0/2 (bottom/top)
-        #             prey_exit_x = meta_state['prey_path'][-1][0]
-        #             error_x = agent.x - prey_exit_x
-        #             prey_exit_y = meta_state['prey_path'][-1][1]
-        #             error_y = agent.y - prey_exit_y
-        #             reward = max(0, 1 - np.abs((1-id_vertical)*error_x+id_vertical*error_y) / (_MAX_REWARDING_DIST + _EPSILON))
-        #         else:
-        #             reward = 0.
-        #     else:
-        #         reward = 0.
-        #     return reward
-        # def _offline_reward(state, meta_state):
-        #     return _reward(state, meta_state) > 0
-        # update_agent_color = gr.ConditionalRule(
-        #     condition=lambda state, x: _offline_reward(state, x)>0,
-        #     rules=gr.ModifySprites('agent', _make_green)
-        # )
-        # def _update_id_correct_offline(meta_state):
-        #     meta_state['id_correct_offline'] = 1
-        # update_id_correct_offline = gr.ConditionalRule(
-        #     condition=lambda state, x: _offline_reward(state, x)>0,
-        #     rules=gr.ModifyMetaState(_update_id_correct_offline)
-        # )
 
         def _track_moved_h(s):
-            if not np.all(s.velocity == 0): ##  # if not np.all(s.velocity[0] == 0): ##
+            if not np.all(s.velocity == 0) and not s.metadata['moved_h']: ##  # if not np.all(s.velocity[0] == 0): ##
                 s.metadata['moved_h'] = True
                 if s.velocity[0]<0:
                     s.metadata['id_left0'] = 1
@@ -1074,7 +983,8 @@ class Config():
             # [disappear_screen,disappear_fake_prey,create_agent,set_path_prey_opacity,glue_path_prey], # [disappear_fixation, disappear_screen, create_agent],
             continual_rules=[update_agent_metadata, update_RT_offline], # update_agent_mass,update_agent_mass2,update_id_correct_offline], # ,update_joystick_fixation_dur],  # update_agent_color
             name='offMove',
-            end_condition=_end_offline_phase,  #  duration=10,
+            duration=_OFFLINE_DURATION,  # 1000 ms
+            # end_condition=_end_offline_phase,  #  duration=10,
         )
         ###########################################
         # 8. Visible motion phase
@@ -1203,7 +1113,7 @@ class Config():
 
         phase_motion_invisible = gr.Phase(
             one_time_rules=[set_prey_opacity,update_ts,update_id_correct_offline],
-            continual_rules=[update_motion_steps,increase_tp,glue_prey,update_agent_color_green,update_agent_metadata_online,
+            continual_rules=[update_motion_steps,increase_tp,update_agent_color_green,update_agent_metadata_online, # glue_prey,
                              smaller_prey,smaller_reward,highlight_path],  # ,dim_prey], update_prey_distance
             end_condition=_end_motion_phase,
             name='motion_invisible',
