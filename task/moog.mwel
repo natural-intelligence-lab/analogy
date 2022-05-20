@@ -87,7 +87,7 @@ stimulus/python_image image (
     y_position = image_pos_y
     )
 
-iodevice/stimulus_display(
+iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(height/2/distance)*2; % 25.6 deg
     background_color = 0,0,0
     )
 
