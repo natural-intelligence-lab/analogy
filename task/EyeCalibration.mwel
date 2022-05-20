@@ -61,7 +61,7 @@ group Global {
 }
 group 'Fixation+Pursuit' {
     var pursuitTheta = 0 (groups = Fixation)
-    var nRep = 3 (groups = Fixation)
+    var nRep = 1 (groups = Fixation) // 3
     var trialNum = 20  (groups = Fixation)
     var on_fix_dyn = 0 (groups = Fixation)
     var fixHz = 0.25 (groups = Fixation)
