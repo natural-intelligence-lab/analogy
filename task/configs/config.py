@@ -132,11 +132,11 @@ _ID_REPEAT_INCORRECT_TRIAL = True
 _N_MAX_REPEAT = 10
 
 # fixation
-_FIXATION_THRESHOLD = 0.3
+_FIXATION_THRESHOLD = 0.2
 
 # time
 _ITI = 60
-_FIXATION_STEPS = 6 # 0 # 60  # 30
+_FIXATION_STEPS = 12 # 6 # 0 # 60  # 30
 _BALL_ON_DURATION=30 # 500ms # 20 # 333 ms # 0 # 30 # 500ms
 _MAZE_ON_DURATION=60 # 30  # 30 # 60 # 30 # 60 # 1s
 _OFFLINE_DURATION = 60
@@ -458,7 +458,7 @@ class TrialInitialization():
         distance_to_start = (_BALL_ON_DURATION/60) / (self._ms_per_unit/1000)   # 30/60 [s] / 2[s/unit] = 0.25
         direction_fake_prey = np.array([np.round(np.random.rand())*2-1, 0])
         speed_fake_prey = 0 # (1/60) / (self._ms_per_unit/1000)
-        fake_prey = sprite.Sprite(shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0, opacity=0,
+        fake_prey = sprite.Sprite(shape='circle', scale=_PREY_SCALE, c0=255, c1=255, c2=255, opacity=0,
                                   metadata={'distance_to_start': distance_to_start, 'direction_fake_prey': direction_fake_prey,'speed':speed_fake_prey})
         fake_prey.position = [prey_path[0][0], # -direction_fake_prey[0]*distance_to_start,
                               prey_path[0][1]+self._prey_lead_in]
@@ -579,19 +579,6 @@ class TrialInitialization():
             agent.mass = np.inf
 
         state['agent'] = [agent]
-
-    # def create_fake_prey(self, state):
-    #
-    #     distance_to_start = (_BALL_ON_DURATION/60) / (self._ms_per_unit/1000)   # 30/60 [s] / 2[s/unit] = 0.25
-    #     direction_fake_prey = np.round(np.random.rand())*2-1
-    #     speed = (1/60) / (self._ms_per_unit/1000)
-    #
-    #     fake_prey = sprite.Sprite(shape='circle', scale=_PREY_SCALE, c0=0, c1=255, c2=0,
-    #                               metadata={'distance_to_start': distance_to_start, 'direction_fake_prey': direction_fake_prey,'speed':speed})
-    #     fake_prey.position = [self._meta_state['prey_path'][0][0] +direction_fake_prey*distance_to_start,
-    #                           self._meta_state['prey_path'][0][1]+self._prey_lead_in]
-    #
-    #     state['fake_prey'] = [fake_prey]
 
     def create_path_prey(self, state):
         path_prey = sprite.Sprite(shape='square', scale=0.04, 
@@ -869,9 +856,17 @@ class Config():
             condition=_should_increase_fixation_dur,
             rules=gr.ModifyMetaState(_increase_fixation_dur)
         )
+        change_fixation_color = gr.ConditionalRule(
+            condition=_should_increase_fixation_dur,
+            rules=gr.ModifySprites('fake_prey', _make_green)
+        )
         reset_fixation_dur = gr.ConditionalRule(
             condition=lambda state, x: not _should_increase_fixation_dur(state, x),
             rules=gr.UpdateMetaStateValue('fix_dur', 0)
+        )
+        change_fixation_color2 = gr.ConditionalRule(
+            condition=lambda state, x: not _should_increase_fixation_dur(state, x),
+            rules=gr.ModifySprites('fake_prey', _make_bright)
         )
 
         # end_condition
@@ -919,7 +914,7 @@ class Config():
 
         phase_ball_on = gr.Phase(
             one_time_rules=[disappear_fixation, appear_fake_prey],  #  create_fake_prey  ,unglue_fake_prey
-            continual_rules=[increase_fixation_dur, reset_fixation_dur], # update_motion_steps_fake_prey
+            continual_rules=[increase_fixation_dur, reset_fixation_dur,change_fixation_color,change_fixation_color2], # update_motion_steps_fake_prey
             # duration=_BALL_ON_DURATION,  # 500 ms
             end_condition=_should_end_fixation, # _end_ball_on_phase,
             name='ball_on',
