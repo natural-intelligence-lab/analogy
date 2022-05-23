@@ -12,7 +12,8 @@ class SmallerPrey(game_rules.AbstractRule):
 
         if not self._done:
             glue_time = (meta_state['max_wait_time_gain']-1) * meta_state['ts']
-            self._decrement = agent.scale/glue_time
+            if glue_time != 0:
+                self._decrement = agent.scale/glue_time
             self._done = True
 
         agent.scale = max(0,agent.scale - self._decrement)
