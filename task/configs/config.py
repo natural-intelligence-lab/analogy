@@ -129,7 +129,7 @@ _GAIN_AGENT_MASS = 2 # 2
 
 # error trials staircase
 _ID_REPEAT_INCORRECT_TRIAL = True
-_N_MAX_REPEAT = 10
+_N_MAX_REPEAT = 2 # 10
 
 # fixation
 _FIXATION_THRESHOLD = 0.3
