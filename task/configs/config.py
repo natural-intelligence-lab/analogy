@@ -1,5 +1,9 @@
 """Common grid_chase task config.
 
+TBD
+1) repeat trials after no final reward
+2) exclude trials whose target path overlaps with initial paddle (no need to move)
+
 2022/5/20
 1) Remove gap b/t ball/paddle & maze: to reduce lapse
 2) Impose eye fixation @ ball
