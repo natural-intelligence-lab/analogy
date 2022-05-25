@@ -14,8 +14,8 @@
 
 // Include one of the following eye interfaces
 
-%include 'eye_interfaces/mouse'
-// %include 'eye_interfaces/eyelink'
+// %include 'eye_interfaces/mouse'
+%include 'eye_interfaces/eyelink'
 
 // Nidaq interface and reward variable
 // %include 'nidaq'
