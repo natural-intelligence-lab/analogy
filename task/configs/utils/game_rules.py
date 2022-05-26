@@ -6,6 +6,7 @@ import numpy as np
 class SmallerPrey(game_rules.AbstractRule):
     def __init__(self):
         self._done = False
+        self._decrement = 0
 
     def step(self, state, meta_state):
         agent = state['prey'][0]

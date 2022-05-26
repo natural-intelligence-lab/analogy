@@ -13,7 +13,7 @@ _MAX_NUM_TURNS = 3 # 5 # 1 # 3 # 5 # np.inf # 0 # 2 # 6 # 4 # exclusive
 # _STEP_NUM_TURNS = 2
 _NUM_LAYERS= 2 # 2 # 3 # 5 # 4 # 3 # 2 # 50
 
-_MIN_NUM_LAYERS = 1
+_MIN_NUM_LAYERS = 2 # 1
 _MAX_NUM_LAYERS = 2
 
 _MIN_NUM_OVERLAP= 0 # 1 # 0 # 1
