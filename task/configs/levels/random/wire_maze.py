@@ -8,12 +8,12 @@ from configs.levels import get_stimuli_dir
 import numpy as np
 
 # for 16 grid
-_MIN_NUM_TURNS = 0 #    2 # 0 # 2 # inclusive
-_MAX_NUM_TURNS = 3 # 5 # 1 # 3 # 5 # np.inf # 0 # 2 # 6 # 4 # exclusive
+_MIN_NUM_TURNS = [0, 0] #    2 # 0 # 2 # inclusive
+_MAX_NUM_TURNS = [5, 3] # 5 # 1 # 3 # 5 # np.inf # 0 # 2 # 6 # 4 # exclusive
 # _STEP_NUM_TURNS = 2
 _NUM_LAYERS= 2 # 2 # 3 # 5 # 4 # 3 # 2 # 50
 
-_MIN_NUM_LAYERS = 2 # 1
+_MIN_NUM_LAYERS = 1
 _MAX_NUM_LAYERS = 2
 
 _MIN_NUM_OVERLAP= 0 # 1 # 0 # 1
@@ -36,8 +36,8 @@ def random_16_staircase(**kwargs):
             num_layers=num_layers, # _NUM_LAYERS,
             ball_path_top_bottom=True,
             distractors_top_bottom=_DISTRACTOR_TOP_BOTTOM,
-            min_num_turns= _MIN_NUM_TURNS,
-            max_num_turns=_MAX_NUM_TURNS,
+            min_num_turns= _MIN_NUM_TURNS[num_layers-1],
+            max_num_turns=_MAX_NUM_TURNS[num_layers-1],
             min_num_overlap=_MIN_NUM_OVERLAP,
             max_num_overlap=_MAX_NUM_OVERLAP,
             min_exit_distance=_MIN_EXIT_DISTANCE, # -np.inf,
