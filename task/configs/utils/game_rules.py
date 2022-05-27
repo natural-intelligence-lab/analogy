@@ -6,13 +6,15 @@ import numpy as np
 class SmallerPrey(game_rules.AbstractRule):
     def __init__(self):
         self._done = False
+        self._decrement = 0
 
     def step(self, state, meta_state):
         agent = state['prey'][0]
 
         if not self._done:
             glue_time = (meta_state['max_wait_time_gain']-1) * meta_state['ts']
-            self._decrement = agent.scale/glue_time
+            if glue_time != 0:
+                self._decrement = agent.scale/glue_time
             self._done = True
 
         agent.scale = max(0,agent.scale - self._decrement)
