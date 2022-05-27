@@ -129,7 +129,7 @@ _P_PREY0 = 0 # 0.1  #  0.3 # 0.5   # 0.9  # prey's initial position as % of path
 _GAIN_PATH_PREY = 1  # 2.5 # 2 # 3  # 1  # speed gain for path prey
 _PATH_PREY_OPACITY = 120  # 50
 _GAIN_SLOW_OFFLINE_ERROR = 0.3 # after offline error, prey_speed is scaled by this factor
-_GAIN_AGENT_MASS = 2 # 2
+_GAIN_AGENT_MASS = 1 # 2 # 2
 
 # error trials staircase
 _ID_REPEAT_INCORRECT_TRIAL = True
