@@ -177,6 +177,8 @@ class TaskManager:
         self.flag8 = True
         self.flag9 = True
 
+        self.flag_turnpoint = 0
+
         if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train' or getvar('platform') == 'laptop':
             setvar('prey_opacity',self._prey_opacity_staircase.opacity)
             setvar('path_prey_opacity', self._path_prey_opacity_staircase.opacity)
@@ -331,7 +333,13 @@ class TaskManager:
         if self.env.meta_state['phase'] == 'motion_invisible':
             if getvar('platform') == 'monkey_ephys' or getvar('platform') == 'monkey_train':
                 setvar('slope_opacity',self.env.meta_state['slope_opacity'])
-                # setvar('prey_opacity',self.env.state['prey'][0].opacity) 
+                # turnpoint
+                turnpoint = self.env.state['turnpoint']
+                if len(turnpoint) > 0:
+                    if turnpoint[self.flag_turnpoint].metadata['contacted'] == 1:
+                        setvar('id_turn', 1)
+                        self.flag_turnpoint += 1
+                # setvar('prey_opacity',self.env.state['prey'][0].opacity)
 
         # 10. phase_reward, 'reward'
         if self.env.meta_state['phase'] == 'reward' and self.flag9:

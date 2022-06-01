@@ -101,7 +101,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
 wav_file success_sound ('sounds/success.wav')
 wav_file failure_sound ('sounds/failure.wav')
-
+wav_file pong_sound ('sounds/pong.wav')
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -189,6 +189,8 @@ var id_correct_offline = 0
 
 var reward_window = 0
 
+var id_turn=0
+
 var sync = 0
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -232,6 +234,10 @@ var sync = 0
             }
 
             state 'Wait for completion' {
+                if (id_turn){
+                    play_sound (pong_sound)
+                    id_turn=0
+                }
                 goto (
                     target = 'Success'
                     when = reward_duration > 0
