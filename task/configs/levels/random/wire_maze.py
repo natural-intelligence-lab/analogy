@@ -17,7 +17,7 @@ _MIN_NUM_LAYERS = 2 # 1
 _MAX_NUM_LAYERS = 2
 
 _MIN_NUM_OVERLAP= 1 # 1 # 0 # 1
-_MAX_NUM_OVERLAP= 0 # np.inf # 2 # 1 # np.inf # 2 # 1 # np.inf
+_MAX_NUM_OVERLAP= np.inf # 2 # 1 # np.inf # 2 # 1 # np.inf
 _MIN_EXIT_DISTANCE = 12 # 3 # 0.7/16*3>0.1 # 1 # 0 # 2 # 3  # GRID; if set to zero, no constraint on the exit distance
 
 _DISTRACTOR_NUMBER_TURNS=[0,2]  # [0]  # [0,2]
