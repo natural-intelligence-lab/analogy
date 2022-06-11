@@ -100,6 +100,11 @@ class MazeComposer():
                 return False
         return True
 
+    def _exit_bottom(self,maze,path):
+        """check if maze has exit at bottom"""
+        end_bottom = path[-1][0]== maze.shape[0] - 1
+        return end_bottom
+
     def _num_turns(self, maze):
         """Get number of turns in a maze."""
         return np.sum(maze[0] == -1)
@@ -242,7 +247,7 @@ class MazeComposer():
                             if self._min_exit_distance > 0:
                                 exit_distance = np.linalg.norm(distractor[-1]-path[-1])/2 # in maze unit
                                 _min_dist_maze = self._min_exit_distance
-                                if exit_distance > _min_dist_maze:
+                                if exit_distance > _min_dist_maze and self._exit_bottom(new_maze,distractor):
                                     # impose num_overlap constraints
                                     if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
                                         # compute number of overlap
@@ -290,7 +295,7 @@ class MazeComposer():
                         if self._min_exit_distance > 0:
                             exit_distance = np.linalg.norm(distractor[-1] - path[-1])/2  # in maze unit
                             _min_dist_maze = self._min_exit_distance
-                            if exit_distance > _min_dist_maze:
+                            if exit_distance > _min_dist_maze  and self._exit_bottom(new_maze):
                                 # impose num_overlap constraints
                                 if self._min_num_overlap > 0 or (not np.isinf(self._max_num_overlap)):
                                     # compute number of overlap
