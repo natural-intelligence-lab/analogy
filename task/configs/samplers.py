@@ -416,18 +416,38 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         identify walls near turnpoints and return wall coordinate and indices
         indicies:
         UpRight:1, UpLeft:2, DownRight:3, DownLeft:4,
-        U/R:5, U/L:6, D/R:7, D/L: 8
         """
 
         # deal with turnpoints
-        kernel1 = np.array([[0, 10, 0], [0, 0, 0], [0, 2, 0]])
-        kernel2 = np.array([[0, 2, 0], [1, 0, 1], [0, 2, 0]])
-        kernel3 = np.array([[0, 2, 0], [1, 0, 1], [0, 2, 0]])
-        kernel4 = np.array([[0, 2, 0], [1, 0, 1], [0, 2, 0]])
+        kernel_ur = np.flipud(np.fliplr(np.array([[10, 0, 0, 0], [0, 0, 0, 0], [10, 0, 0, 0], [0, 10, 0, 10]])))
+        kernel_ul = np.flipud(np.fliplr(np.array([[0, 0, 0, 10], [0, 0, 0, 0], [0, 0, 0, 10], [10, 0, 10, 0]])))
+        kernel_dr = np.flipud(np.fliplr(np.array([[0, 10, 0, 10], [10, 0, 0, 0], [0, 0, 0, 0], [10, 0, 0, 0]])))
+        kernel_dl = np.flipud(np.fliplr(np.array([[10, 0, 10, 0], [0, 0, 0, 10], [0, 0, 0, 0], [0, 0, 0, 10]])))
 
-        conv_maze = scipy_signal.convolve2d(
-            sum_maze,kernel,mode='valid', boundary='symm').astype(int)
-        num_overlap = np.count_nonzero(conv_maze==10)
+        conv_maze_ur = scipy_signal.convolve2d(
+            maze,kernel_ur,mode='same', boundary='symm').astype(int)
+        xy_ur = np.where(conv_maze_ur == 40)
+
+        conv_maze_ul = scipy_signal.convolve2d(
+            maze, kernel_ul, mode='same', boundary='symm').astype(int)
+        xy_ul = np.where(conv_maze_ul == 40)
+
+        conv_maze_dr = scipy_signal.convolve2d(
+            maze, kernel_dr, mode='same', boundary='symm').astype(int)
+        xy_dr = np.where(conv_maze_dr == 40)
+
+        conv_maze_dl = scipy_signal.convolve2d(
+            maze, kernel_dl, mode='same', boundary='symm').astype(int)
+        xy_dl = np.where(conv_maze_dl == 40)
+
+
+        i=xy_ur[0]-7
+        j=xy_ur[0]-3
+        start = (i / 2, (j - 1) / 2)
+        end = (i / 2, (j + 1) / 2)
+
+
+        ((xy_ur-7)/2,xy_ur-3)
 
 
 
