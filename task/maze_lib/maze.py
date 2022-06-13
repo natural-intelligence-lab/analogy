@@ -437,7 +437,13 @@ class Maze():
             [0.5 * wall_width, -0.5 * wall_width],
         ])
         sprites = []
-        for (v_start, v_end) in self._walls_temporary + self._walls_frozen:
+        all_walls = self._walls_temporary + self._walls_frozen
+        # identify turnpoints
+        # if i != 0 and i != len(all_walls) - 1:
+
+
+
+        for i,(v_start, v_end) in enumerate(all_walls):
             start_box = wall_width_box + np.array([v_start])
             end_box = wall_width_box + np.array([v_end])
             bounds = np.concatenate((start_box, end_box), axis=0)
@@ -449,6 +455,13 @@ class Maze():
                 [x_max, y_max],
                 [x_max, y_min],
             ])
+
+
+
+
+
+
+
             # Shrink sprite to cell_size
             sprite_shape *= cell_size
             # Move sprite right to center maze on the x axis and up by
