@@ -411,6 +411,19 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
                     walls.append((start, end))
         return walls
 
+    def _get_edge(self,xy):
+        # get edge of the wall given xy (array[],array[])
+        edge=[]
+        for k, (i, j) in enumerate(zip(xy[0], xy[1])):
+            if i % 2 == 1:  # Vertical wall
+                start = (i / 2, (j - 1) / 2)
+                end = (i / 2, (j + 1) / 2)
+            else:  # Horizontal wall
+                start = ((i - 1) / 2, j / 2)
+                end = ((i + 1) / 2, j / 2)
+            edge.append((start,end))
+        return edge
+
     def _get_maze_walls_near_turn(self, maze, wall_touch_path_0, wall_touch_path_1):
         """
         identify walls near turnpoints and return wall coordinate and indices
@@ -440,49 +453,30 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             maze, kernel_dl, mode='same', boundary='symm').astype(int)
         xy_dl = np.where(conv_maze_dl == 40)
 
+        # find actual wall near turnpoints
+        xy_ur_u = (xy_ur[0], xy_ur[1]-2)
+        xy_ur_r = (xy_ur[0]+1, xy_ur[1] - 1)
 
-        i=xy_ur[0]-7
-        j=xy_ur[0]-3
-        start = (i / 2, (j - 1) / 2)
-        end = (i / 2, (j + 1) / 2)
+        xy_ul_u = (xy_ul[0], xy_ul[1]+1)
+        xy_ul_l = (xy_ul[0] + 1, xy_ul[1])
 
+        xy_dr_r = (xy_dr[0]-2, xy_dr[1] - 1)
+        xy_dr_d = (xy_dr[0]-1, xy_dr[1] - 2)
 
-        ((xy_ur-7)/2,xy_ur-3)
+        xy_dl_l = (xy_dl[0]-2, xy_dl[1])
+        xy_dl_d = (xy_dl[0] - 1, xy_dl[1]+1)
 
+        # get edge
+        ur_u = self._get_edge(xy_ur_u)
+        ur_r = self._get_edge(xy_ur_r)
+        ul_u = self._get_edge(xy_ul_u)
+        ul_l = self._get_edge(xy_ul_l)
+        dr_r = self._get_edge(xy_dr_r)
+        dr_d = self._get_edge(xy_dr_d)
+        dl_l = self._get_edge(xy_dl_l)
+        dl_d = self._get_edge(xy_dl_d)
 
-
-        walls = []
-        for i, row in enumerate(maze):
-            for j, x in enumerate(row):
-                if x > 0:  # == 1:  # Wall exists here
-                    if i % 2 == 1:  # Vertical wall
-                        if [i,j] in wall_touch_path_0:  # shorter start
-                            start = (i / 2, (j - 1) / 2 + self._gap_size)
-                            end = (i / 2, (j + 1) / 2)
-                        elif [i, j] in wall_touch_path_1:  # shorter end
-                            start = (i / 2, (j - 1) / 2)
-                            end = (i / 2, (j + 1) / 2 - self._gap_size)
-                        else:
-                            start = (i / 2, (j - 1) / 2)
-                            end = (i / 2, (j + 1) / 2)
-                    else:  # Horizontal wall
-                        if [i,j] in wall_touch_path_0:  # shorter start
-                            start = ((i - 1) / 2 + self._gap_size, j / 2)
-                            end = ((i + 1) / 2, j / 2)
-                        elif [i, j] in wall_touch_path_1:  # shorter end
-                            start = ((i - 1) / 2, j / 2)
-                            end = ((i + 1) / 2 - self._gap_size, j / 2)
-                        else:  # for distractors
-                            start = ((i - 1) / 2, j / 2)
-                            end = ((i + 1) / 2, j / 2)
-
-                    # # Adjust for offset to make walls in the middle of the maze
-                    # start = (start[0], start[1] + 0.5)
-                    # end = (end[0], end[1] + 0.5)
-
-                    # Append wall
-                    walls.append((start, end))
-        return walls
+        return ur_u,ur_r,ul_u,ul_l,dr_r,dr_d,dl_l,dl_d
 
     def _get_maze_walls_from_path(self, path):
         walls = []
@@ -609,6 +603,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             'x_overlap' : x_overlap,
             'maze_prey_walls': maze_prey_walls,
             'distractor_path':distractors,
+            'maze_walls_near_turn': maze_walls_near_turn,
         }
 
         stimulus = dict(

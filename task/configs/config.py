@@ -122,7 +122,7 @@ _IMAGE_SIZE = [24]  # [8, 16, 24]
 _AGENT_SCALE = 0.1 # 0.15  # 0.03  # 0.05 # 0.10  # 0.15
 _AGENT_ASPECT_RATIO = 0.2 # 4 # 8 # 4
 _PREY_SCALE = 0.03
-_WALL_WIDTH = 12*0.05
+_WALL_WIDTH = 1 # 12*0.05
 # _MIN_DIST_AGENT = 0.1 # /2  # minimum distance between initial agent position and target exit
 # _MAX_DIST_AGENT = 0.3 # 0.5
 _P_PREY0 = 0 # 0.1  #  0.3 # 0.5   # 0.9  # prey's initial position as % of path
@@ -391,8 +391,8 @@ class TrialInitialization():
         maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
         cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
-            wall_width=_WALL_WIDTH, cell_size=cell_size, bottom_border=_MAZE_Y, c0=128,
-            c1=128, c2=128)
+            wall_width=_WALL_WIDTH, cell_size=cell_size, bottom_border=_MAZE_Y, maze_walls_near_turn=stimulus['features']['maze_walls_near_turn'],
+            c0=128, c1=128, c2=128)
         # to highlight path touched by path aid
         maze_prey_walls = maze_lib.Maze(maze_width, maze_height, all_walls=path_walls)
         path_wall_sprite = maze_prey_walls.to_sprites(
