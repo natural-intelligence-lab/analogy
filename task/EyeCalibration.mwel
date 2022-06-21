@@ -24,6 +24,8 @@
 %include 'eye_interfaces/eyelink'
 //%include 'eye_interfaces/mouse'
 
+%include 'firmata_train'
+
 /////////////////
 // Variables
 /////////////////
@@ -31,14 +33,14 @@
     // var space_pressed = 0 (groups = I/O)
 
 group Reward {
-    var rewardOut = 0 (groups = Reward)
-    var rewardDur = 200 (groups = Reward)
-    var bonusRewDur = 200  (groups = Reward)
+    var reward_line = 0 (groups = Reward)
+    var rewardDur = 20 (groups = Reward)
+    var bonusRewDur = 0  (groups = Reward)
 }
 group Fixation {
     var fixY = 0 (groups = Fixation)
     var fixX = 0 (groups = Fixation)
-    var fix_win = 10 (
+    var fix_win = 7 (
         groups = Fixation
         persistant = 1
         )
@@ -62,7 +64,7 @@ group Global {
 group 'Fixation+Pursuit' {
     var pursuitTheta = 0 (groups = Fixation)
     var nRep = 1 (groups = Fixation) // 3
-    var trialNum = 20  (groups = Fixation)
+    var trialNum = 1e6  (groups = Fixation)
     var on_fix_dyn = 0 (groups = Fixation)
     var fixHz = 0.25 (groups = Fixation)
     var fixDynMag = 8 (groups = Fixation)
@@ -112,7 +114,7 @@ group EyeCalibrator {
 
 group 'Global' {
     white_noise_background 'White Noise Background' ()
-    blank_screen 'New Blank Screen' (color = .3,.3,.3)
+    blank_screen 'New Blank Screen' (color = 0,0,0)
 }
 group 'Fixation+Pursuit 2' {
     frame_list dynamicFix (
@@ -160,10 +162,11 @@ protocol 'Manual+Pursuit' {
     queue_stimulus ('New Blank Screen')
     update_stimulus_display ()
     task Trials {
-        state Initial {
+        state 'Initial' {
             localTrials = 0
             CorrectTrials = 0
-            goto ('Fix On')
+            start_io_device (firmata)
+            goto ('Fix On')            
         }
         state 'Fix On' {
             fix_red = 1
@@ -210,10 +213,8 @@ protocol 'Manual+Pursuit' {
             fix_red = 0
             fix_blue = 0
 
-            pulse (
-                variable = rewardOut
-                duration = (rewardDur+bonusRewDur)*1000
-                )
+            reward_line = true
+
             start_timer (
                 timer = GreenTime
                 duration = rewardDur+bonusRewDur
@@ -226,6 +227,7 @@ protocol 'Manual+Pursuit' {
         }
         state 'End Trial' {
             report ('Ending Trial.')
+            reward_line = false
             dequeue_stimulus (dynamicFix)
             update_stimulus_display ()
 
@@ -321,186 +323,3 @@ protocol 'eyelink' {
 
     wait (600s)
 }
-
-/* TO BE DEBUGGED
-
-protocol 'Eye Calibrator' {
-
-    start_device_io (eye_tracker)
-    queue_stimulus ('New Blank Screen')
-    update_stimulus_display ()
-
-    report ('******** STARTING CALIBRATION ********')
-    clear_calibration (eye_calibrator)
-    num_stims_shown = 0
-    miss_count = 0
-
-    list calibration_list (selection = random_without_replacement) {
-        range_replicator (
-            variable = cal_fix_pos_x
-            from = -fixDynMag
-            to = fixDynMag
-            step = fixDynMag
-        ) {
-            range_replicator (
-                variable = cal_fix_pos_y
-                from = -fixDynMag
-                to = fixDynMag
-                step = fixDynMag
-            ) {
-                trial {
-                    task {
-
-                        state 'cal wait' {
-                            wait (1000ms)
-                            fixation_pos_x = cal_fix_pos_x
-                            fixation_pos_y = cal_fix_pos_y
-                            fixation_point_size = 0
-                            live_queue_stimulus (fixation_point)
-                            update_display ()
-                            goto (
-                                target = 'cal prefixation'
-                                when = not eye_on_fixation_point    //Y: ADDED
-                                )
-                        }
-
-                        state 'cal prefixation' {
-                            fixation_point_size = 2           //Y: was 0.4
-                            update_display ()
-                            start_timer (
-                                timer = cal_timer
-                                duration = 1500ms
-                                )
-
-                            goto (
-                                target = 'cal ignore'
-                                when = timer_expired(cal_timer)
-                                )
-                            goto (
-                                target = 'cal acquire'
-                                when = space_pressed and (not eye_in_saccade)   //eye_on_fixation_point
-                                )
-                        }
-
-                        state 'cal acquire' {
-                            start_timer (
-                                timer = cal_timer
-                                duration = cal_fixation_duration
-                                )
-                            goto ('cal fixation')
-                        }
-
-                        state 'cal fixation' {
-                            begin_calibration_average (eye_calibrator)
-                            goto (
-                                target = 'cal failure'
-                                when = not eye_on_fixation_point
-                                )
-                            goto (
-                                target = 'cal fixation monitor'
-                                when = eye_in_saccade
-                                )
-                            goto (
-                                target = 'cal success'
-                                when = timer_expired(cal_timer)
-                                )
-                        }
-
-                        state 'cal fixation monitor' {
-                            end_calibration_average_and_ignore (eye_calibrator)
-                            goto (
-                                target = 'cal fixation'
-                                when = eye_on_fixation_point and (not eye_in_saccade)
-                                )
-                            goto (
-                                target = 'cal failure'
-                                when = (not eye_on_fixation_point) and (not eye_in_saccade)
-                                )
-                        }
-
-
-                        state 'cal success' {
-                            report ('************** HIT!!!!! **************')
-                            end_calibration_average_and_take_sample (
-                                calibrator = eye_calibrator
-                                calibratable_object = fixation_point
-                                )
-                            success += 1
-
-                            fixation_point_r = 0
-                            fixation_point_b = 0
-                            update_display ()
-
-                            num_stims_shown += 1                    //Y: COMMENTED
-                            miss_count = 0                          //Y: COMMENTED
-                            accept_selections (calibration_list)
-
-                            pulse (
-                                variable = rewardOut
-                                duration = (rewardDur+bonusRewDur)*1000
-                                )
-                            start_timer (
-                                timer = GreenTime
-                                duration = rewardDur+bonusRewDur
-                                duration_units = ms
-                                )
-
-                            goto (
-                                target = 'Exit System'
-                                when = timer_expired(GreenTime)
-                                )
-                        }
-
-                        state 'cal failure' {
-                            report ('************** MISS!!!! **************')
-                            end_calibration_average_and_ignore (eye_calibrator)
-                            wait (100ms)                                  //Y: was 500
-                            dequeue_stimulus (fixation_point)
-                            update_display ()
-                            failure += 1
-                            miss_count += 1
-                            reject_selections (calibration_list)
-                            goto (
-                                target = 'cal break'
-                                when = miss_count == 7
-                                )
-                            yield ()
-                        }
-
-                        state 'cal ignore' {
-                            report ('************* IGNORE!!!! *************')
-                            dequeue_stimulus (fixation_point)
-                            update_display ()
-                            ignore += 1
-                            miss_count += 1
-                            reject_selections (calibration_list)
-                            goto (
-                                target = 'cal break'
-                                when = miss_count == 7
-                                )
-                            yield ()
-                        }
-
-                        state 'cal break' {
-                            miss_count = 0
-                            wait (1s)
-                            yield ()
-
-                        state 'Exit System' {
-                            report ('Leaving state system')
-                            yield ()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    report ('******** CALIBRATION FINISHED ********')
-    update_calibration (eye_calibrator)
-
-}
-
-
-
-*/
