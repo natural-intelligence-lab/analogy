@@ -450,7 +450,7 @@ class Maze():
         sprites = []
         all_walls = self._walls_temporary + self._walls_frozen
 
-        fig1, ax = plt.subplots(figsize=(5, 5))
+        # fig1, ax = plt.subplots(figsize=(5, 5))
 
         for i,(v_start, v_end) in enumerate(all_walls):
             start_box = wall_width_box + np.array([v_start])
@@ -469,10 +469,9 @@ class Maze():
 
                             if k==0: # ur_u > ul with 270 deg rotation
                                 sprite_shape = np.array([
-                                    [x_min, y_max], # top left
-                                    [x_min, y_min], # bottom left
-                                    [x_max, y_max+(y_max-y_min)], # bottom right
-                                    [(x_min+x_max)/2, y_max+(y_max-y_min)], # top right
+                                    [x_max, y_max], #
+                                    [(x_min+x_max)/2, y_max], #
+                                    [(x_min+x_max)/2, y_min],
                                 ])
                                 done = True
                             elif k==1: # ur_r,
@@ -480,10 +479,9 @@ class Maze():
                                 done = True
                             elif k==2: # ul_u > DL
                                 sprite_shape = np.array([
-                                    [x_min, y_max],
-                                    [x_min, y_min],
-                                    [(x_min + x_max) / 2, y_min - (y_max - y_min)],
-                                    [x_max, y_min - (y_max - y_min)],
+                                    [x_max, y_min],
+                                    [(x_min + x_max) / 2, y_min],
+                                    [(x_min + x_max) / 2, y_max],
                                 ])
                                 done = True
                             elif k==3: # ul_l,
@@ -491,10 +489,9 @@ class Maze():
                                 done = True
                             elif k==4: # dr_r > UR
                                 sprite_shape = np.array([
-                                    [x_min, y_max],
-                                    [x_max+(x_max-x_min), y_min],
-                                    [x_max+(x_max-x_min), (y_max + y_min)/2],
-                                    [x_max, y_max],
+                                    [x_min, (y_max + y_min)/2],
+                                    [x_max, y_min],
+                                    [x_max, (y_max + y_min)/2],
                                 ])
                                 done = True
                             elif k==5: # dr_d,
@@ -502,10 +499,9 @@ class Maze():
                                 done = True
                             elif k==6: # dl_l > DR
                                 sprite_shape = np.array([
-                                    [x_min, y_min],
-                                    [x_max, y_min],
-                                    [x_max + (x_max - x_min), (y_max + y_min) / 2],
-                                    [x_max + (x_max - x_min), y_max],
+                                    [x_min, (y_max + y_min) / 2],
+                                    [x_max, (y_max + y_min) / 2],
+                                    [x_max, y_max],
                                 ])
                                 done = True
                             elif k==7: # dl_d
@@ -535,16 +531,11 @@ class Maze():
             if sprite_shape.shape[0]!=0:
                 sprite_shape += np.array([[0.5 * (1 - total_width), bottom_border]])
 
-                # plt.figure(1)
-                ax.plot(np.append(sprite_shape[:,0],sprite_shape[0,0]), np.append(sprite_shape[:,1],sprite_shape[0,1]))
-                ax.set_xlim([0, 1])
-                ax.set_ylim([0, 1])
-                fig1.show()
-                # fig1.canvas.draw()
-                # fig1.canvas.flush_events()
-                # time.sleep(0.1)
-                # plt.show()
-                # # patches.Polygon(sprite_shape)
+                # # for debuging
+                # ax.plot(np.append(sprite_shape[:,0],sprite_shape[0,0]), np.append(sprite_shape[:,1],sprite_shape[0,1]))
+                # ax.set_xlim([0, 1])
+                # ax.set_ylim([0, 1])
+                # fig1.show()
 
                 new_sprite = sprite.Sprite(
                     x=0., y=0., shape=sprite_shape, **sprite_factors)
