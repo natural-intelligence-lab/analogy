@@ -59,8 +59,8 @@
 // Choose platform
 //
 ///////////////////////////////////////////////////////////////////////////////
-var platform = 'monkey_ephys'
-// var platform = 'monkey_train'
+// var platform = 'monkey_ephys'
+var platform = 'monkey_train'
 // var platform = 'psychophysics'
 // var platform = 'laptop'
 // var platform = 'desktop'
