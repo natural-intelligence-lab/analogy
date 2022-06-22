@@ -4,6 +4,11 @@ import copy
 from moog import sprite
 import numpy as np
 from matplotlib import pyplot as plt
+<<<<<<< HEAD
+=======
+import time
+from matplotlib import patches as patches
+>>>>>>> monkeyEphys
 
 _DIRECTIONS_NAMED = {
     'N': (0, 1),
@@ -416,6 +421,7 @@ class Maze():
         
         self._walls_frozen.extend(walls_to_freeze)
 
+<<<<<<< HEAD
 
     def plot(self):
         """
@@ -431,6 +437,12 @@ class Maze():
             plt.plot(x,y,'k-')
 
         plt.show()
+=======
+    def to_circle(self,edge1,edge2,n_point):
+        """generate circular path from edge1 [x,y] to edge 2 [x,y] in n_point
+        """
+        radius=abs(edge1[0]-edge2[0])
+>>>>>>> monkeyEphys
 
 
 
@@ -438,6 +450,7 @@ class Maze():
                    wall_width,
                    cell_size,
                    bottom_border,
+                   maze_walls_near_turn=None,
                    **sprite_factors):
         """Convert maze to list of sprites.
 
@@ -456,28 +469,99 @@ class Maze():
             [0.5 * wall_width, -0.5 * wall_width],
         ])
         sprites = []
-        for (v_start, v_end) in self._walls_temporary + self._walls_frozen:
+        all_walls = self._walls_temporary + self._walls_frozen
+
+        # fig1, ax = plt.subplots(figsize=(5, 5))
+
+        for i,(v_start, v_end) in enumerate(all_walls):
             start_box = wall_width_box + np.array([v_start])
             end_box = wall_width_box + np.array([v_end])
             bounds = np.concatenate((start_box, end_box), axis=0)
             x_min, y_min = np.min(bounds, axis=0)
             x_max, y_max = np.max(bounds, axis=0)
-            sprite_shape = np.array([
-                [x_min, y_min],
-                [x_min, y_max],
-                [x_max, y_max],
-                [x_max, y_min],
-            ])
+
+            if maze_walls_near_turn is not None:
+                done=False
+                for k,near_turn_wall in enumerate(maze_walls_near_turn):
+                    id_near_turn = (v_start, v_end) in near_turn_wall
+                    if not done:
+                        if id_near_turn:
+                            tmp_index = near_turn_wall.index((v_start, v_end))
+
+                            if k==0: # ur_u > ul with 270 deg rotation
+                                sprite_shape = np.array([
+                                    [x_max, y_max], #
+                                    [(x_min+x_max)/2, y_max], #
+                                    [(x_min+x_max)/2, y_min],
+                                ])
+                                done = True
+                            elif k==1: # ur_r,
+                                sprite_shape = np.array([])
+                                done = True
+                            elif k==2: # ul_u > DL
+                                sprite_shape = np.array([
+                                    [x_max, y_min],
+                                    [(x_min + x_max) / 2, y_min],
+                                    [(x_min + x_max) / 2, y_max],
+                                ])
+                                done = True
+                            elif k==3: # ul_l,
+                                sprite_shape = np.array([])
+                                done = True
+                            elif k==4: # dr_r > UR
+                                sprite_shape = np.array([
+                                    [x_min, (y_max + y_min)/2],
+                                    [x_max, y_min],
+                                    [x_max, (y_max + y_min)/2],
+                                ])
+                                done = True
+                            elif k==5: # dr_d,
+                                sprite_shape = np.array([])
+                                done = True
+                            elif k==6: # dl_l > DR
+                                sprite_shape = np.array([
+                                    [x_min, (y_max + y_min) / 2],
+                                    [x_max, (y_max + y_min) / 2],
+                                    [x_max, y_max],
+                                ])
+                                done = True
+                            elif k==7: # dl_d
+                                sprite_shape =np.array([])
+                                done = True
+                        else: # id_near_turn
+                            sprite_shape = np.array([
+                                [x_min, y_min],
+                                [x_min, y_max],
+                                [x_max, y_max],
+                                [x_max, y_min],
+                            ])
+
+            else:
+                sprite_shape = np.array([
+                    [x_min, y_min],
+                    [x_min, y_max],
+                    [x_max, y_max],
+                    [x_max, y_min],
+                ])
+
             # Shrink sprite to cell_size
             sprite_shape *= cell_size
             # Move sprite right to center maze on the x axis and up by
             # bottom_border
             total_width = cell_size * self._width
-            sprite_shape += np.array([[0.5 * (1 - total_width), bottom_border]])
-            new_sprite = sprite.Sprite(
-                x=0., y=0., shape=sprite_shape, **sprite_factors)
-            sprites.append(new_sprite)
-        
+            if sprite_shape.shape[0]!=0:
+                sprite_shape += np.array([[0.5 * (1 - total_width), bottom_border]])
+
+                # # for debuging
+                # ax.plot(np.append(sprite_shape[:,0],sprite_shape[0,0]), np.append(sprite_shape[:,1],sprite_shape[0,1]))
+                # ax.set_xlim([0, 1])
+                # ax.set_ylim([0, 1])
+                # fig1.show()
+
+                new_sprite = sprite.Sprite(
+                    x=0., y=0., shape=sprite_shape, **sprite_factors)
+                sprites.append(new_sprite)
+
         return sprites
 
     @property
