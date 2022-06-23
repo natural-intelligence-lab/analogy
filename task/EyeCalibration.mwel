@@ -166,7 +166,7 @@ protocol 'Manual+Pursuit' {
             localTrials = 0
             CorrectTrials = 0
             start_io_device (firmata)
-            goto ('Fix On')            
+            goto ('Fix On')
         }
         state 'Fix On' {
             fix_red = 1
@@ -322,4 +322,3 @@ protocol 'eyelink' {
     start_io_device (eye_tracker)
 
     wait (600s)
-}
