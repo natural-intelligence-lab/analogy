@@ -14,7 +14,13 @@
   - id_turn: 3/4 for right/left T-junction, 5 for cross (0 for no turn, 1/2 for right/left,)
 
   (TBD)
-  - random reward (or around turn?)
+  - staircase of ball opacity
+  - change initial positions
+      - random reward (or around turn?)
+
+  2022/6/25:
+    1) debug reward for id_turn=5
+    2) remove id_turn=0,3,4
    */
 
 
@@ -325,6 +331,10 @@ protocol 'Pursuit' {
             y_position_v= amp_fixY-(y_size_v/2)
 
             id_turn=disc_rand(0,5)
+            // selecting only 1 2 5
+            while (id_turn=!=1 && id_turn=!=2 && id_turn=!=5){
+                id_turn=disc_rand(0,5)
+            }
             // id_turn=disc_rand(0,4)
             // id_turn=disc_rand(0,2)
 
@@ -448,7 +458,14 @@ protocol 'Pursuit' {
 
             // play_dynamic_stimulus (dynamicFix)
 
-            dur_before_turn = y_size_v/ball_speed // seconds
+
+            if (id_turn==3 || id_turn==4 || id_turn==5){
+                dur_before_turn = (amp_fixY-y_turn)/ball_speed // seconds
+            }
+
+            if (id_turn==0 || id_turn==1 || id_turn==2){
+                dur_before_turn = y_size_v/ball_speed // seconds
+            }
 
             startTrial = 1
             start_timer (
@@ -487,7 +504,12 @@ protocol 'Pursuit' {
                 pursuitTheta=180
             }
 
-            dur_post_turn = x_size_h/ball_speed // seconds
+            if (id_turn==0 || id_turn==1 || id_turn==2){
+                dur_post_turn = x_size_h/ball_speed // seconds; x_size_h=0 for id_turn=0
+            }
+            if (id_turn==3 || id_turn==4 || id_turn==5){
+                dur_post_turn = (2*amp_fixY-(amp_fixY-y_turn))/ball_speed // seconds; x_size_h=0 for id_turn=0
+            }
 
             start_timer (
                 timer = HoldFix2
@@ -571,6 +593,10 @@ protocol 'Pursuit' {
             y_position_v= amp_fixY-(y_size_v/2)
 
             id_turn=disc_rand(0,5)
+            // selecting only 1 2 5
+            while (id_turn=!=1 && id_turn=!=2 && id_turn=!=5){
+                id_turn=disc_rand(0,5)
+            }
             // id_turn=disc_rand(0,4)
             // id_turn=disc_rand(0,2)
 
