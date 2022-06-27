@@ -14,13 +14,16 @@
   - id_turn: 3/4 for right/left T-junction, 5 for cross (0 for no turn, 1/2 for right/left,)
 
   (TBD)
-  - staircase of ball opacity
   - change initial positions
       - random reward (or around turn?)
 
   2022/6/25:
     1) debug reward for id_turn=5
     2) remove id_turn=0,3,4
+
+
+  2022/6/26
+   staircase of ball opacity
    */
 
 
@@ -229,6 +232,14 @@ group Maze {
     var dur_post_turn=0
 }
 
+group Staircase {
+    var fix_alpha_max = 1
+    var t_visible = 0.2 // sec; alpha linearly decrease from max to min
+    var fix_alpha_min = 0.5
+
+    var delta_fix_alpha_up = 0.01
+    var delta_fix_alpha_down = 0.05
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -274,7 +285,7 @@ group 'Fixation+Pursuit 2' {
             // x_position = fixX+cos(pursuitTheta*pi()/180)*fixDynMag*sin(2*pi()*fixHz*(next_frame_time() - tStart)/1e6) // set up for 1s drift to right most point (8deg)
             // y_position = fixY+sin(pursuitTheta*pi()/180)*fixDynMag*sin(2*pi()*fixHz*(next_frame_time() - tStart)/1e6)
             rotation = 0
-            alpha_multiplier = 1
+            alpha_multiplier = max(fix_alpha_min,fix_alpha_max-(fix_alpha_max-fix_alpha_min)/t_visible*((next_frame_time() - tBallOn)/1e6))
             )
     }
 
@@ -535,6 +546,9 @@ protocol 'Pursuit' {
 
             fix_green = 1
 
+            //staircase
+            fix_alpha_min=max(0,fix_alpha_min-delta_fix_alpha_down)
+
             pulse ( // micro seconds
                 variable = reward_line
                 duration = (rewardDur+bonusRewDur)*1000
@@ -659,6 +673,10 @@ protocol 'Pursuit' {
         }
         state Bad {
             report ('Trial Failed.')
+
+            //staircase
+            fix_alpha_min=min(1,fix_alpha_min+delta_fix_alpha_up)
+
             dequeue_stimulus (dynamicFix)
             update_stimulus_display ()
             start_timer (
