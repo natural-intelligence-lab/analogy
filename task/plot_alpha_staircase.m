@@ -68,7 +68,7 @@ if ~isempty(values{1}) & ~isempty(values{2}) & ~isempty(values{3})
      figure(4); set(gcf,'position',[0 615 420 420],'color','w','resize','off'); hold on;
      plot(localTrials,fix_alpha_min,'o','markerfacecolor','r','color','r','linewidth',1,'markersize',3); drawnow; hold on;
     xlabel('trials'); ylabel('fix_alpha_min');
-
+end 
 %% output
 retval = values;
 
