@@ -4,11 +4,8 @@ import copy
 from moog import sprite
 import numpy as np
 from matplotlib import pyplot as plt
-<<<<<<< HEAD
-=======
 import time
 from matplotlib import patches as patches
->>>>>>> monkeyEphys
 
 _DIRECTIONS_NAMED = {
     'N': (0, 1),
@@ -421,7 +418,6 @@ class Maze():
         
         self._walls_frozen.extend(walls_to_freeze)
 
-<<<<<<< HEAD
 
     def plot(self):
         """
@@ -437,13 +433,6 @@ class Maze():
             plt.plot(x,y,'k-')
 
         plt.show()
-=======
-    def to_circle(self,edge1,edge2,n_point):
-        """generate circular path from edge1 [x,y] to edge 2 [x,y] in n_point
-        """
-        radius=abs(edge1[0]-edge2[0])
->>>>>>> monkeyEphys
-
 
 
     def to_sprites(self,
