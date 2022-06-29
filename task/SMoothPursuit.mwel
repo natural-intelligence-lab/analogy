@@ -23,7 +23,11 @@
 
 
   2022/6/26
-   staircase of ball opacity
+   - staircase of ball opacity
+
+   2022/6/29
+   - rotation generalization: id_rotate=0, 1(-90 deg), 2(90 deg)
+
    */
 
 
@@ -230,6 +234,8 @@ group Maze {
 
     var dur_before_turn =0
     var dur_post_turn=0
+
+    var id_rotate = 0 // id_rotate=0, 1(-90 deg), 2(90 deg)
 }
 
 group Staircase {
@@ -311,21 +317,11 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Protocols
+// Sampling trials
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
-protocol 'Pursuit' {
-    start_device_io (eye_tracker)
-
-    start_io_device (firmata)
-
-    update_stimulus_display ()
-    task Trials {
-        state 'Initial' {
-            localTrials = 0
-            CorrectTrials = 0
+%define sample_trial ()
 
             // sample locations
             x_turn=rand(-amp_fixX,amp_fixX)
@@ -394,6 +390,132 @@ protocol 'Pursuit' {
                 y_size_v= amp_fixY*2
                 y_position_v= 0
             }
+
+            if (id_turn==3 || id_turn==4 || id_turn==5){
+                dur_before_turn = (amp_fixY-y_turn)/ball_speed // seconds
+                dur_post_turn = (2*amp_fixY-(amp_fixY-y_turn))/ball_speed // seconds; x_size_h=0 for id_turn=0
+            }
+
+            if (id_turn==0 || id_turn==1 || id_turn==2){
+                dur_before_turn = y_size_v/ball_speed // seconds
+                dur_post_turn = x_size_h/ball_speed // seconds; x_size_h=0 for id_turn=0
+            }
+
+%end
+
+% define random_rotate ()
+    id_rotate=disc_rand(0,2) // id_rotate=0, 1(-90 deg), 2(90 deg)
+
+    if (id_rotate == 1){ // x=-y y=x
+        x_turn=-y_turn
+        y_turn=x_turn
+
+        fixX=-fixY
+        fixY=fixX
+
+        x_size_v=y_size_h
+        y_size_v=x_size_h
+        x_position_v=-y_position_h
+        y_position_v=x_position_h
+
+        x_size_h=y_size_v
+        y_size_h=x_size_v
+        x_position_h=-y_position_v
+        y_position_h=x_position_v
+    }
+
+    if (id_rotate == 2){ // x=y y=-x
+        x_turn=y_turn
+        y_turn=-x_turn
+
+        fixX=fixY
+        fixY=-fixX
+
+        x_size_v=y_size_h
+        y_size_v=x_size_h
+        x_position_v=y_position_h
+        y_position_v=-x_position_h
+
+        x_size_h=y_size_v
+        y_size_h=x_size_v
+        x_position_h=y_position_v
+        y_position_h=-x_position_v
+    }
+% end
+
+% define update_fixation_postturn {
+        tNow = now()
+
+        if (id_rotate == 0){
+            // turn: reset fixX fixY tStart
+            fixX=x_turn+cos(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6
+            fixY=amp_fixY+sin(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6
+            tStart = now()
+
+            // pursuitTheta: -90 for down, 0/180 for right/left
+            if (id_turn==1){ // right turn
+                pursuitTheta=0
+            }
+            if (id_turn==2){ // left turn
+                pursuitTheta=180
+            }
+        }
+
+        if (id_rotate == 1){ // x=-y y=x
+            // turn: reset fixX fixY tStart
+            fixX=-(amp_fixY+sin(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6) //fixX=-fixY
+            fixY=x_turn+cos(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6 //fixY=fixX
+
+            tStart = now()
+
+            // pursuitTheta: -90 for down, 0/180 for right/left
+            if (id_turn==1){ // right turn
+                pursuitTheta=90
+            }
+            if (id_turn==2){ // left turn
+                pursuitTheta=-90
+            }
+
+        }
+
+        if (id_rotate == 2){ // x=y y=-x
+            // turn: reset fixX fixY tStart
+            fixX=(amp_fixY+sin(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6) //fixX=fixY
+            fixY=-(x_turn+cos(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6_ //fixY=-fixX
+
+            tStart = now()
+
+            // pursuitTheta: -90 for down, 0/180 for right/left
+            if (id_turn==1){ // right turn
+                pursuitTheta=-90
+            }
+            if (id_turn==2){ // left turn
+                pursuitTheta=90
+            }
+        }
+    }
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Protocols
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+protocol 'Pursuit' {
+    start_device_io (eye_tracker)
+
+    start_io_device (firmata)
+
+    update_stimulus_display ()
+    task Trials {
+        state 'Initial' {
+            localTrials = 0
+            CorrectTrials = 0
+
+            sample_trial ()
+
+            random_rotate ()
 
             goto ('Fix On')
         }
@@ -474,14 +596,6 @@ protocol 'Pursuit' {
             // play_dynamic_stimulus (dynamicFix)
 
 
-            if (id_turn==3 || id_turn==4 || id_turn==5){
-                dur_before_turn = (amp_fixY-y_turn)/ball_speed // seconds
-            }
-
-            if (id_turn==0 || id_turn==1 || id_turn==2){
-                dur_before_turn = y_size_v/ball_speed // seconds
-            }
-
             startTrial = 1
             start_timer (
                 timer = HoldFix
@@ -505,26 +619,7 @@ protocol 'Pursuit' {
             if (id_turn==1 || id_turn==2){ // (id_turn!=0){
                 play_sound(pong_sound)
             }
-            // turn: reset fixX fixY tStart
-            tNow = now()
-            fixX=x_turn+cos(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6
-            fixY=amp_fixY+sin(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6
-            tStart = now()
-
-            // pursuitTheta: -90 for down, 0/180 for right/left
-            if (id_turn==1){ // right turn
-                pursuitTheta=0
-            }
-            if (id_turn==2){ // left turn
-                pursuitTheta=180
-            }
-
-            if (id_turn==0 || id_turn==1 || id_turn==2){
-                dur_post_turn = x_size_h/ball_speed // seconds; x_size_h=0 for id_turn=0
-            }
-            if (id_turn==3 || id_turn==4 || id_turn==5){
-                dur_post_turn = (2*amp_fixY-(amp_fixY-y_turn))/ball_speed // seconds; x_size_h=0 for id_turn=0
-            }
+            update_fixation_postturn ()
 
             start_timer (
                 timer = HoldFix2
@@ -596,74 +691,9 @@ protocol 'Pursuit' {
 
             pursuitTheta = -90
 
-            // sample locations
-            x_turn=rand(-amp_fixX,amp_fixX)
-            y_turn=rand(-amp_y_turn,0)
+            sample_trial ()
 
-            // set fixations
-            fixX=x_turn
-            fixY=amp_fixY
-
-            // set path
-            x_size_v=path_width
-            y_size_v= amp_fixY-y_turn
-            x_position_v=x_turn
-            y_position_v= amp_fixY-(y_size_v/2)
-
-            id_turn=disc_rand(0,5)
-            // selecting only 1 2 5
-            while (id_turn!=1 && id_turn!=2 && id_turn!=5){
-                id_turn=disc_rand(0,5)
-            }
-            // id_turn=disc_rand(0,4)
-            // id_turn=disc_rand(0,2)
-
-            if (id_turn==0){ // no turn
-                x_size_h=0
-                y_size_h=0
-                x_position_h=0
-                y_position_h=0
-            }
-            if (id_turn==1){ // right turn
-                x_size_h=tmp_seg_length
-                y_size_h=path_width
-                x_position_h=x_turn+tmp_seg_length/2-path_width/2
-                y_position_h=y_turn
-            }
-            if (id_turn==2){ // left turn
-                x_size_h=tmp_seg_length
-                y_size_h=path_width
-                x_position_h=x_turn-tmp_seg_length/2+path_width/2
-                y_position_h=y_turn
-            }
-            if (id_turn==3){ // T-junction with right
-                x_size_h=tmp_seg_length
-                y_size_h=path_width
-                x_position_h=x_turn+tmp_seg_length/2-path_width/2
-                y_position_h=y_turn
-
-                y_size_v= amp_fixY*2
-                y_position_v= 0
-            }
-            if (id_turn==4){ // T-junction with left
-                x_size_h=tmp_seg_length
-                y_size_h=path_width
-                x_position_h=x_turn-tmp_seg_length/2+path_width/2
-                y_position_h=y_turn
-
-                y_size_v= amp_fixY*2
-                y_position_v= 0
-            }
-            if (id_turn==5){ // cross junction
-                x_size_h=tmp_seg_length*2
-                y_size_h=path_width
-                x_position_h=x_turn
-                y_position_h=y_turn
-
-                y_size_v= amp_fixY*2
-                y_position_v= 0
-            }
-
+            random_rotate ()
 
             start_timer (
                 timer = fix_pur_ITI
