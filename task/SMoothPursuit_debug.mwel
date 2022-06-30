@@ -39,18 +39,18 @@
 
 // Include one of the following hand interfaces:
 
-// %include 'hand_interfaces/keyboard'
+%include 'hand_interfaces/keyboard'
 // %include 'hand_interfaces/gamepad'
 // %include 'hand_interfaces/joystick'
-%include 'hand_interfaces/joystick_monkey'
+// %include 'hand_interfaces/joystick_monkey'
 
 
 // Include one of the following eye interfaces
 
-// %include 'eye_interfaces/mouse'
-%include 'eye_interfaces/eyelink'
+%include 'eye_interfaces/mouse'
+// %include 'eye_interfaces/eyelink'
 
-%include 'firmata_ephys'
+// %include 'firmata_ephys'
 // %include 'firmata_train'
 
 // fake monkey: not used
@@ -515,7 +515,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 protocol 'Pursuit' {
     start_device_io (eye_tracker)
 
-    start_io_device (firmata)
+    // start_io_device (firmata)
 
     update_stimulus_display ()
     task Trials {
