@@ -393,7 +393,7 @@ class TrialInitialization():
         maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
         cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
-            wall_width=_WALL_WIDTH, cell_size=cell_size, bottom_border=_MAZE_Y,maze_walls_near_turn=None,
+            wall_width=_WALL_WIDTH, cell_size=cell_size, bottom_border=_MAZE_Y, # ,maze_walls_near_turn=None,
             # maze_walls_near_turn=stimulus['features']['maze_walls_near_turn'],
             c0=128, c1=128, c2=128)
         # to highlight path touched by path aid
@@ -470,18 +470,18 @@ class TrialInitialization():
         fake_prey.position = [prey_path[0][0], # -direction_fake_prey[0]*distance_to_start,
                               prey_path[0][1]+self._prey_lead_in]
 
-        # turn points
-        turnpoint_sprites = []
-        directions = prey_path[1:] - prey_path[:-1]
-        prev_direction = directions[0]
-        for i, d in enumerate(directions):
-            if not np.array_equal(d, prev_direction):
-                turn_sprite = sprite.Sprite(
-                    x=prey_path[i][0],y=prey_path[i][1],shape='circle',scale=0.001,c0=255, c1=255, c2=255, opacity=0,
-                    metadata={'contacted': 0},
-                )
-                turnpoint_sprites.append(turn_sprite)
-            prev_direction = d
+        # # turn points
+        # turnpoint_sprites = []
+        # directions = prey_path[1:] - prey_path[:-1]
+        # prev_direction = directions[0]
+        # for i, d in enumerate(directions):
+        #     if not np.array_equal(d, prev_direction):
+        #         turn_sprite = sprite.Sprite(
+        #             x=prey_path[i][0],y=prey_path[i][1],shape='circle',scale=0.001,c0=255, c1=255, c2=255, opacity=0,
+        #             metadata={'contacted': 0},
+        #         )
+        #         turnpoint_sprites.append(turn_sprite)
+        #     prev_direction = d
 
         state = collections.OrderedDict([
             ('maze', tunnels),
@@ -496,7 +496,7 @@ class TrialInitialization():
             ('fake_prey', [fake_prey]),
             ('prey_path', []),
             ('path_prey', []),
-            ('turnpoint', turnpoint_sprites),
+            # ('turnpoint', turnpoint_sprites),
         ])
 
         # Prey distance remaining is how far prey has to go to reach agent
@@ -1107,10 +1107,10 @@ class Config():
             rules=gr.ModifyMetaState(_smaller_reward)
         )
 
-        # turnpoints
-        def _update_turnpoint_metadata(s):
-            s.metadata['contacted']=1
-        update_turnpoint_metadata = gr.ModifyOnContact('turnpoint', 'prey', modifier_0=_update_turnpoint_metadata)
+        # # turnpoints
+        # def _update_turnpoint_metadata(s):
+        #     s.metadata['contacted']=1
+        # update_turnpoint_metadata = gr.ModifyOnContact('turnpoint', 'prey', modifier_0=_update_turnpoint_metadata)
 
         update_agent_color_green = gr.ModifyOnContact('agent','prey',modifier_0=_make_green)
 
@@ -1133,7 +1133,7 @@ class Config():
         phase_motion_invisible = gr.Phase(
             one_time_rules=[set_prey_opacity,update_ts,update_id_correct_offline],
             continual_rules=[update_motion_steps,increase_tp,update_agent_color_green,update_agent_metadata_online, # glue_prey,
-                             smaller_prey,smaller_reward,highlight_path,update_turnpoint_metadata],  # ,dim_prey], update_prey_distance
+                             smaller_prey,smaller_reward,highlight_path], # ,update_turnpoint_metadata],  # ,dim_prey], update_prey_distance
             end_condition=_end_motion_phase,
             name='motion_invisible',
         )
