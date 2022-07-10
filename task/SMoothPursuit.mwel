@@ -20,13 +20,14 @@
   2022/6/25:
     1) debug reward for id_turn=5
     2) remove id_turn=0,3,4
-
-
   2022/6/26
    - staircase of ball opacity
-
-   2022/6/29
+  2022/6/29
    - rotation generalization: id_rotate=0, 1(-90 deg), 2(90 deg)
+  2022/7/10
+    - resume id_turn=3/4 for right-facing,left-facing T-junction
+    - implement bumper (only for straight path)
+    - mix visible & invisible trials randomly
 
    */
 
