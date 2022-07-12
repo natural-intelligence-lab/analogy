@@ -29,6 +29,10 @@
     - implement bumper (only for straight path)
     - mix visible & invisible trials randomly
 
+    - feedback for incorrect
+    - choice
+
+
    */
 
 
@@ -240,6 +244,11 @@ group Maze {
     var id_rotate = 0 // id_rotate=0, 1(-90 deg), 2(90 deg)
 }
 
+group bumper {
+    var
+
+}
+
 group Staircase {
     var fix_alpha_max = 1
     var t_visible = 0.5 // sec; alpha linearly decrease from max to min
@@ -255,6 +264,7 @@ group Staircase {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+grup
 
 group 'path' {
     stimulus/rectangle horizon_path(
@@ -341,7 +351,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
             id_turn=disc_rand(0,5)
             // selecting only 1 2 5
-            while (id_turn!=1 && id_turn!=2 && id_turn!=5){
+            while (id_turn!=1 && id_turn!=2 && id_turn!=3 && id_turn!=4 && id_turn!=5){
                 id_turn=disc_rand(0,5)
             }
             // id_turn=disc_rand(0,4)
