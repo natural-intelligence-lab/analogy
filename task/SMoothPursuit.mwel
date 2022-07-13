@@ -24,13 +24,14 @@
    - staircase of ball opacity
   2022/6/29
    - rotation generalization: id_rotate=0, 1(-90 deg), 2(90 deg)
-  2022/7/10
+  2022/7/13
+    - mix visible & invisible trials randomly (id_visible)
+    - implement 2-turns
+
     - resume id_turn=3/4 for right-facing,left-facing T-junction
-    - implement bumper (only for straight path)
-    - mix visible & invisible trials randomly
 
     - feedback for incorrect
-    - choice
+    - choice version (rewarded if choose correct exit)
 
 
    */
@@ -244,15 +245,14 @@ group Maze {
     var id_rotate = 0 // id_rotate=0, 1(-90 deg), 2(90 deg)
 }
 
-group bumper {
-    var
-
-}
 
 group Staircase {
     var fix_alpha_max = 1
     var t_visible = 0.5 // sec; alpha linearly decrease from max to min
     var fix_alpha_min = 0.5
+    var fix_alpha_min0 = 0.5
+    var id_visible = 0
+    var p_visible = 0.2
 
     var delta_fix_alpha_up = 0.01
     var delta_fix_alpha_down = 0.05
@@ -333,7 +333,27 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+% define sample_visiblity ()
+
+if_else{
+    if (rand() > p_visible){
+        id_visible = 0
+        fix_alpha_min = fix_alpha_min0 // keeping staircase
+
+    }
+    else {
+            id_visible = 1
+            fix_alpha_min0 = fix_alpha_min
+            fix_alpha_min = 1
+        }
+    }
+
+% end
+
+
 %define sample_trial ()
+
+            sample_visiblity ()
 
             // sample locations
             x_turn=rand(-amp_fixX,amp_fixX)

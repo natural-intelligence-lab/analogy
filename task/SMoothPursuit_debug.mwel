@@ -243,6 +243,9 @@ group Staircase {
     var fix_alpha_max = 1
     var t_visible = 0.5 // sec; alpha linearly decrease from max to min
     var fix_alpha_min = 0.5
+    var fix_alpha_min0 = 0.5
+    var id_visible = 0
+    var p_visible = 0.2
 
     var delta_fix_alpha_up = 0.01
     var delta_fix_alpha_down = 0.05
@@ -322,7 +325,26 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+% define sample_visiblity ()
+
+if_else{
+    if (rand() > p_visible){
+        id_visible = 0
+        fix_alpha_min = fix_alpha_min0 // keeping staircase
+
+    }
+    else {
+            id_visible = 1
+            fix_alpha_min0 = fix_alpha_min
+            fix_alpha_min = 1
+        }
+    }
+
+% end
+
 %define sample_trial ()
+
+            sample_visiblity ()
 
             // sample locations
             x_turn=rand(-amp_fixX,amp_fixX)
