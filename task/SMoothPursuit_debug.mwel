@@ -27,6 +27,16 @@
 
    2022/6/29
    - rotation generalization: id_rotate=0, 1(-90 deg), 2(90 deg)
+  2022/7/13
+    - mix visible & invisible trials randomly (id_visible)
+    - implement 2-turns
+
+    - (can be done) resume id_turn=3/4 for right-facing,left-facing T-junction; && id_turn!=3 && id_turn!=4
+
+  (TBD)
+    - feedback for incorrect
+    - choice version (rewarded if choose correct exit)
+
 
    */
 
@@ -175,6 +185,7 @@ group Global {
     var endTrial = 0 (groups = Trial)
     var localTrials = 0 (groups = Trial)
     var CorrectTrials = 0 (groups = Trial)
+    var CorrectInvisibleTrials = 0 (groups = Trial)
 }
 group 'Fixation+Pursuit' {
     var pursuitTheta = -90 (groups = Fixation) // down; if 0, horizontal
@@ -204,6 +215,7 @@ group Time {
     var tFix = 0
     var tBallOn = 0
     var tTurn = 0
+    var tTurn_2 = 0
     var tRew = 0
 
     var t_static_fix = 500
@@ -235,20 +247,31 @@ group Maze {
 
     var dur_before_turn =0
     var dur_post_turn=0
+    var dur_post_turn_2=0
 
     var id_rotate = 0 // id_rotate=0, 1(-90 deg), 2(90 deg)
+
+    var id_arm=0 // 1 or 2 for arm added
+    var x_turn2=0
+    var y_turn2=0
+
+    var x_size_3=0
+    var y_size_3=0
+    var x_position_3=0
+    var y_position_3=0
 }
+
 
 group Staircase {
     var fix_alpha_max = 1
     var t_visible = 0.5 // sec; alpha linearly decrease from max to min
-    var fix_alpha_min = 0.5
-    var fix_alpha_min0 = 0.5
+    var fix_alpha_min = 0 // 0.5
+    var fix_alpha_min0 = 0// 0.5
     var id_visible = 0
-    var p_visible = 0.2
+    var p_visible = 0.333
 
-    var delta_fix_alpha_up = 0.01
-    var delta_fix_alpha_down = 0.05
+    var delta_fix_alpha_up = 0 // 0.01
+    var delta_fix_alpha_down = 0 // 0.05
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -272,6 +295,13 @@ group 'path' {
         y_size=y_size_v
         x_position=x_position_v
         y_position=y_position_v
+    )
+    stimulus/rectangle arm(
+        color = path_red, path_green, path_blue
+        x_size=x_size_3
+        y_size=y_size_3
+        x_position=x_position_3
+        y_position=y_position_3
     )
 }
 
@@ -354,7 +384,7 @@ if_else{
             fixX=x_turn
             fixY=amp_fixY
 
-            // set path
+            // set initial path
             x_size_v=path_width
             y_size_v= amp_fixY-y_turn
             x_position_v=x_turn
@@ -362,11 +392,14 @@ if_else{
 
             id_turn=disc_rand(0,5)
             // selecting only 1 2 5
-            while (id_turn!=1 && id_turn!=2 && id_turn!=3 && id_turn!=4 && id_turn!=5){
+            while (id_turn!=1 && id_turn!=2 && id_turn!=5){ // && id_turn!=3 && id_turn!=4
                 id_turn=disc_rand(0,5)
             }
             // id_turn=disc_rand(0,4)
             // id_turn=disc_rand(0,2)
+
+            // arm
+            id_arm = disc_rand(1, 2) // for now, always add 3rd arm
 
             if (id_turn==0){ // no turn
                 x_size_h=0
@@ -379,12 +412,44 @@ if_else{
                 y_size_h=path_width
                 x_position_h=x_turn+tmp_seg_length/2-path_width/2
                 y_position_h=y_turn
+
+                // arm
+                x_turn2=x_turn+x_size_h
+                y_turn2=y_turn
+                if (id_arm==1){ // down
+                    x_size_3=path_width
+                    y_size_3=tmp_seg_length
+                    x_position_3=x_turn2
+                    y_position_3=y_turn2-y_size_3/2+path_width/2
+                }
+                if (id_arm==2){ // up
+                    x_size_3=path_width
+                    y_size_3=tmp_seg_length
+                    x_position_3=x_turn2
+                    y_position_3=y_turn2+y_size_3/2-path_width/2
+                }
             }
             if (id_turn==2){ // left turn
                 x_size_h=tmp_seg_length
                 y_size_h=path_width
                 x_position_h=x_turn-tmp_seg_length/2+path_width/2
                 y_position_h=y_turn
+
+                // arm
+                x_turn2=x_turn-x_size_h
+                y_turn2=y_turn
+                if (id_arm==1){ // down
+                    x_size_3=path_width
+                    y_size_3=tmp_seg_length
+                    x_position_3=x_turn2
+                    y_position_3=y_turn2-y_size_3/2+path_width/2
+                }
+                if (id_arm==2){ // up
+                    x_size_3=path_width
+                    y_size_3=tmp_seg_length
+                    x_position_3=x_turn2
+                    y_position_3=y_turn2+y_size_3/2-path_width/2
+                }
             }
             if (id_turn==3){ // T-junction with right
                 x_size_h=tmp_seg_length
@@ -412,16 +477,36 @@ if_else{
 
                 y_size_v= amp_fixY*2
                 y_position_v= 0
+
+                // arm
+                x_turn2=x_turn
+                y_turn2=-amp_fixY
+                if (id_arm==1){ // left
+                    x_size_3=tmp_seg_length
+                    y_size_3=path_width
+                    x_position_3=x_turn2-x_size_3/2+path_width/2
+                    y_position_3=y_turn2
+                }
+                if (id_arm==2){ // right
+                    x_size_3=tmp_seg_length
+                    y_size_3=path_width
+                    x_position_3=x_turn2+x_size_3/2-path_width/2
+                    y_position_3=y_turn2
+                }
             }
 
             if (id_turn==3 || id_turn==4 || id_turn==5){
                 dur_before_turn = (amp_fixY-y_turn)/ball_speed // seconds
                 dur_post_turn = (2*amp_fixY-(amp_fixY-y_turn))/ball_speed // seconds; x_size_h=0 for id_turn=0
+
+                dur_post_turn_2 = x_size_3/ball_speed
             }
 
             if (id_turn==0 || id_turn==1 || id_turn==2){
                 dur_before_turn = y_size_v/ball_speed // seconds
                 dur_post_turn = x_size_h/ball_speed // seconds; x_size_h=0 for id_turn=0
+
+                dur_post_turn_2 = y_size_3/ball_speed
             }
 
 %end
@@ -455,6 +540,19 @@ if_else{
         tmp=x_position_v
         x_position_v=-y_position_h
         y_position_h=tmp
+
+        //arm
+        tmp=x_turn2
+        x_turn2=-y_turn2
+        y_turn2=tmp
+
+        tmp=x_size_3
+        x_size_3=y_size_3
+        y_size_3=tmp
+
+        tmp=y_position_3
+        y_position_3=x_position_3
+        x_position_3=-tmp
     }
 
     if (id_rotate == 2){ // x=y y=-x
@@ -483,6 +581,19 @@ if_else{
         tmp=x_position_h
         x_position_h=y_position_v
         y_position_v=-tmp
+
+        //arm
+        tmp=x_turn2
+        x_turn2=y_turn2
+        y_turn2=-tmp
+
+        tmp=x_size_3
+        x_size_3=y_size_3
+        y_size_3=tmp
+
+        tmp=y_position_3
+        y_position_3=-x_position_3
+        x_position_3=tmp
 
     }
 % end
@@ -527,6 +638,96 @@ if_else{
         }
 % end
 
+% define update_fixation_postturn_2 ()
+        tNow = now()
+
+        // turn: reset fixX fixY tStart
+        fixX=fixX+cos(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6
+        fixY=fixY+sin(pursuitTheta*pi()/180)*ball_speed*(tNow - tStart)/1e6
+        tStart = now()
+
+        // pursuitTheta: -90 for down, 0/180 for right/left
+
+                if (id_turn == 5){
+            if (id_arm==1){
+                if (id_rotate==0){
+                    pursuitTheta=180
+                } // L
+                if (id_rotate==1){
+                    pursuitTheta=-90
+                } // D
+                if (id_rotate==2){
+                    pursuitTheta=90
+                } // U
+            }
+            if (id_arm==2){
+                if (id_rotate==0){
+                    pursuitTheta=0
+                } // R
+                if (id_rotate==1){
+                    pursuitTheta=90
+                } // U
+                if (id_rotate==2){
+                    pursuitTheta=-90
+                } // D
+            }
+        }
+
+        if (id_turn == 1){
+            if (id_arm==1){
+                if (id_rotate==0){
+                    pursuitTheta=-90
+                } // D
+                if (id_rotate==1){
+                    pursuitTheta=0
+                } // R
+                if (id_rotate==2){
+                    pursuitTheta=180
+                } // L
+            }
+            if (id_arm==2){
+                if (id_rotate==0){
+                    pursuitTheta=90
+                } // U
+                if (id_rotate==1){
+                    pursuitTheta=180
+                } // L
+                if (id_rotate==2){
+                    pursuitTheta=0
+                } // R
+            }
+
+        }
+
+        if (id_turn == 2){
+            if (id_arm==1){
+                if (id_rotate==0){
+                    pursuitTheta=-90
+                } // D
+                if (id_rotate==1){
+                    pursuitTheta=0
+                } // R
+                if (id_rotate==2){
+                    pursuitTheta=180
+                } // L
+            }
+            if (id_arm==2){
+                if (id_rotate==0){
+                    pursuitTheta=90
+                } // U
+                if (id_rotate==1){
+                    pursuitTheta=180
+                } // L
+                if (id_rotate==2){
+                    pursuitTheta=0
+                } // R
+            }
+        }
+
+
+
+% end
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Protocols
@@ -544,6 +745,7 @@ protocol 'Pursuit' {
         state 'Initial' {
             localTrials = 0
             CorrectTrials = 0
+            CorrectInvisibleTrials = 0
 
             sample_trial ()
 
@@ -561,6 +763,7 @@ protocol 'Pursuit' {
 
             queue_stimulus(horizon_path)
             queue_stimulus(vertical_path)
+            queue_stimulus(arm)
             queue_stimulus(fixCircleStatic)
 
             update_stimulus_display ()
@@ -663,6 +866,30 @@ protocol 'Pursuit' {
                 when = !on_fix_dyn
                 )
             timer_expired (
+                target = 'Postturn2' // 'Reward'
+                timer = HoldFix2
+                )
+        }
+
+        state 'Postturn2' {
+            report ('Postturn')
+            tTurn_2 = now()
+
+            if (id_turn==1 || id_turn==2 || id_turn==5){ // (id_turn!=0){
+                play_sound(pong_sound)
+            }
+            update_fixation_postturn_2 ()
+
+            start_timer (
+                timer = HoldFix2
+                duration = dur_post_turn_2*1e3 // fix_pur_HoldDur 2500
+                duration_units = ms
+                )
+            goto (
+                target = Bad
+                when = !on_fix_dyn
+                )
+            timer_expired (
                 target = 'Reward'
                 timer = HoldFix2
                 )
@@ -674,6 +901,9 @@ protocol 'Pursuit' {
             tRew = now()
 
             CorrectTrials = CorrectTrials+1
+            if (id_visible==0){
+                CorrectInvisibleTrials=CorrectInvisibleTrials+1
+            }
 
             fix_green = 1
 
