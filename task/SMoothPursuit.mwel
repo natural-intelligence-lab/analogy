@@ -365,12 +365,12 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 if_else{
     if (rand() > p_visible){
         id_visible = 0
-        fix_alpha_min = fix_alpha_min0 // keeping staircase
+        fix_alpha_min = fix_alpha_min0
 
     }
     else {
             id_visible = 1
-            fix_alpha_min0 = fix_alpha_min
+            // fix_alpha_min0 = fix_alpha_min // keeping staircase (debug TBD)
             fix_alpha_min = 1
         }
     }
