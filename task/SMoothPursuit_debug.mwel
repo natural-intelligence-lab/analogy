@@ -20,21 +20,26 @@
   2022/6/25:
     1) debug reward for id_turn=5
     2) remove id_turn=0,3,4
-
-
   2022/6/26
    - staircase of ball opacity
-
-   2022/6/29
+  2022/6/29
    - rotation generalization: id_rotate=0, 1(-90 deg), 2(90 deg)
   2022/7/13
     - mix visible & invisible trials randomly (id_visible)
     - implement 2-turns
 
     - (can be done) resume id_turn=3/4 for right-facing,left-facing T-junction; && id_turn!=3 && id_turn!=4
-
+  2022/7/15
+    - new set but now only with 1 turn (id_turn=5)
+    - generalization plan ([id_turn id_rotate id_arm])
+        1) [5 0/1/2 1/2]
+        2) [1 0 1]: 2-turn
+        3) [2 0 1]: mirror of 2)
+        4) [1 1/2 1] [2 1/2 1]: +/- 90 deg rotation
+        5) [1 0/1/2 2] [2 0/1/2 2]:ㄷ
+        6) 180 deg rotation: not implemented yet
   (TBD)
-    - feedback for incorrect
+    - feedback for incorrect: show moving ball but in red
     - choice version (rewarded if choose correct exit)
 
 
@@ -392,7 +397,7 @@ if_else{
 
             id_turn=disc_rand(0,5)
             // selecting only 1 2 5
-            while (id_turn!=1 && id_turn!=2 && id_turn!=5){ // && id_turn!=3 && id_turn!=4
+            while (id_turn!=5){ // && id_turn!=1 && id_turn!=2 && id_turn!=3 && id_turn!=4
                 id_turn=disc_rand(0,5)
             }
             // id_turn=disc_rand(0,4)
@@ -648,7 +653,7 @@ if_else{
 
         // pursuitTheta: -90 for down, 0/180 for right/left
 
-                if (id_turn == 5){
+        if (id_turn == 5){
             if (id_arm==1){
                 if (id_rotate==0){
                     pursuitTheta=180
