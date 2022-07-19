@@ -322,3 +322,4 @@ protocol 'eyelink' {
     start_io_device (eye_tracker)
 
     wait (600s)
+}
