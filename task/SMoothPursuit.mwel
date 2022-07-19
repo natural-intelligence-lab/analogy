@@ -38,6 +38,10 @@
         4) [1 1/2 1] [2 1/2 1]: +/- 90 deg rotation
         5) [1 0/1/2 2] [2 0/1/2 2]:ㄷ
         6) 180 deg rotation: not implemented yet
+
+    2022/7/19
+    - turn off random selection of visible (H skipped invisible trials)
+    - turn on staircase
   (TBD)
     - feedback for incorrect: show moving ball but in red
     - choice version (rewarded if choose correct exit)
@@ -270,13 +274,13 @@ group Maze {
 group Staircase {
     var fix_alpha_max = 1
     var t_visible = 0.5 // sec; alpha linearly decrease from max to min
-    var fix_alpha_min = 0 // 0.5
+    var fix_alpha_min = 0.3 // 0 // 0.5
     var fix_alpha_min0 = 0// 0.5
     var id_visible = 0
-    var p_visible = 0.333
+    var p_visible = 0 // 0.333
 
-    var delta_fix_alpha_up = 0 // 0.01
-    var delta_fix_alpha_down = 0 // 0.05
+    var delta_fix_alpha_up = 0.01 // 0 // 0.01
+    var delta_fix_alpha_down = 0.05 // 0 // 0.05
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -365,7 +369,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 if_else{
     if (rand() > p_visible){
         id_visible = 0
-        fix_alpha_min = fix_alpha_min0 
+        // fix_alpha_min = fix_alpha_min0 
 
     }
     else {
