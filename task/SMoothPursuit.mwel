@@ -257,6 +257,7 @@ group Maze {
     var dur_before_turn =0
     var dur_post_turn=0
     var dur_post_turn_2=0
+    var dur_bad = 0
 
     var id_rotate = 0 // id_rotate=0, 1(-90 deg), 2(90 deg)
 
@@ -982,8 +983,39 @@ protocol 'Pursuit' {
             //staircase
             fix_alpha_min=min(1,fix_alpha_min+delta_fix_alpha_up)
 
-            dequeue_stimulus (dynamicFix)
+            fix_red = 1
+            fix_green = 0
+            // dequeue_stimulus (dynamicFix)
             update_stimulus_display ()
+
+            if_else{
+                if (tTurn_2 > tTurn){
+                    dur_bad = dur_post_turn_2*1e3 - (now()-tTurn_2)/1e3
+                }
+                else {
+                    if_else{
+                        if (tTurn > tBallOn){
+                            dur_bad = dur_post_turn*1e3 - (now()-tTurn)/1e3
+                        }
+                        else { // during 1st segment
+                            dur_bad = dur_before_turn*1e3 - (now()-tBallOn)/1e3
+                             }
+                        }
+                    }
+                }
+
+            start_timer (
+                timer = fix_pur_timeout
+                duration = dur_bad
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'Timeout' // 'End Trial'
+                timer = fix_pur_timeout
+                )
+        }
+
+        state Timeout {
             start_timer (
                 timer = fix_pur_timeout
                 duration = fix_pur_timeoutDur // 1500
@@ -994,6 +1026,7 @@ protocol 'Pursuit' {
                 timer = fix_pur_timeout
                 )
         }
+
         state 'Failure to fixate' {
             report ('Failure to fixate.')
             dequeue_stimulus (dynamicFix)
