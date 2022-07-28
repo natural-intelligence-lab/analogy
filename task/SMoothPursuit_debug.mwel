@@ -282,9 +282,9 @@ group Staircase {
     var t_visible = 0.5 // sec; alpha linearly decrease from max to min
     var fix_alpha_min = 1 // 0.3 // 0 // 0.5
     var fix_alpha_min0 = 0// 0.5
-    var fix_alpha_min_feedback = 0 // if 1, visible feedback; if 0, invisible
+    var fix_alpha_min_feedback = 0 // 1 // 0 // if 1, visible feedback; if 0, invisible
     var id_visible = 0
-    var p_visible = 0 // 0.333
+    var p_visible = 0.2 // 1// 0 // 0.333
 
     var delta_fix_alpha_up = 0 //  0.1 // 0.01 // 0 // 0.01
     var delta_fix_alpha_down = 0 // 0.5 // 0.05 // 0 // 0.05
@@ -406,6 +406,7 @@ if_else{
             x_position_v=x_turn
             y_position_v= amp_fixY-(y_size_v/2)
 
+            // *****
             id_turn=disc_rand(0,5)
             // selecting only 1 2 5
             while (id_turn!=1 && id_turn!=2){ // && id_turn!=1 && id_turn!=2 && id_turn!=3 && id_turn!=4
@@ -414,6 +415,7 @@ if_else{
             // id_turn=disc_rand(0,4)
             // id_turn=disc_rand(0,2)
 
+            // *****
             // arm
             id_arm = 1 // disc_rand(1, 2) // for now, always add 3rd arm
 
@@ -528,7 +530,8 @@ if_else{
 %end
 
 % define random_rotate ()
-    id_rotate=0 // disc_rand(0,2) // id_rotate=0, 1(-90 deg), 2(90 deg)
+    // *****
+    id_rotate=disc_rand(0,2) //0 // disc_rand(0,2) // id_rotate=0, 1(-90 deg), 2(90 deg)
 
     if (id_rotate == 1){ // x=-y y=x
         pursuitTheta=0
@@ -777,6 +780,10 @@ protocol 'Pursuit' {
 
             tMazeOn = now()
 
+            // reset trigger_flag
+            on_fix_dyn = 0
+            on_fix_static = 0
+
             queue_stimulus(horizon_path)
             queue_stimulus(vertical_path)
             queue_stimulus(arm)
@@ -827,16 +834,12 @@ protocol 'Pursuit' {
                 when = !on_fix_static
                 )
             timer_expired (
-                target = 'Ball On'
+                target = 'Dynamic Fix'
                 timer = StaticFixWait
                 )
 
         }
-
-        state 'Ball On' {
-            report ('Ball On')
-            tBallOn = now()
-
+        state 'Dynamic Fix' {
             dequeue_stimulus(fixCircleStatic)
             tStart = next_frame_time()
             live_queue_stimulus (dynamicFix)
@@ -844,15 +847,42 @@ protocol 'Pursuit' {
 
             // var_debug = cos(pursuitTheta*pi()/180)*ball_speed*(next_frame_time() - tStart)/1e6
 
-            // play_dynamic_stimulus (dynamicFix)
+            /*
+            // debug
+            report('on_fix_dyn=$on_fix_dyn')
+            report('on_fix_static=$on_fix_static')
+                report('eye_x = $eye_x')
+                report('eye_y = $eye_y')
+                tmp = fixX+cos(pursuitTheta*pi()/180)*ball_speed*(now() - tStart)/1e6
+                report('fix_x = $tmp')
+                tmp = fixY+sin(pursuitTheta*pi()/180)*ball_speed*(now() - tStart)/1e6
+                report('fix_y = $tmp')
+            */
 
-
-            startTrial = 1
             start_timer (
                 timer = timer_ball_on
                 duration = dur_before_turn*1e3 // fix_pur_HoldDur 2500
                 duration_units = ms
                 )
+            goto (
+                target = 'Ball On'
+                when = on_fix_dyn
+                )
+            timer_expired (
+                target = 'Bad Ball On'
+                timer = timer_ball_on
+                )
+        }
+
+        state 'Ball On' {
+            report ('===== Ball On =====')
+            tBallOn = now()
+
+            // play_dynamic_stimulus (dynamicFix)
+
+
+            startTrial = 1
+
             goto (
                 target = 'Bad Ball On'
                 when = !on_fix_dyn
@@ -890,7 +920,7 @@ protocol 'Pursuit' {
                 )
             goto (
                 target = 'Bad Postturn'
-                when = !on_fix_dyn
+                when = id_bad ==0 && !on_fix_dyn
                 )
             timer_expired (
                 target = 'Postturn2' // 'Reward'
@@ -926,7 +956,7 @@ protocol 'Pursuit' {
                 )
             goto (
                 target = 'Bad Postturn2'
-                when = !on_fix_dyn
+                when = id_bad ==0 && !on_fix_dyn
                 )
             goto (
                 target = 'Reward'
@@ -1003,6 +1033,8 @@ protocol 'Pursuit' {
             // dequeue_stimulus(horizon_path)
             // dequeue_stimulus(vertical_path)
 
+            id_bad = 0
+
             update_stimulus_display ()
 
             localTrials = localTrials+1
@@ -1037,7 +1069,7 @@ protocol 'Pursuit' {
                 )
         }
         state Bad {
-            report ('Trial Failed.')
+            report ('Trial Failed: id_bad = $id_bad')
 
             //staircase
             fix_alpha_min=min(1,fix_alpha_min+delta_fix_alpha_up)
@@ -1066,6 +1098,11 @@ protocol 'Pursuit' {
 
         state 'Failure to fixate' {
             report ('Failure to fixate.')
+
+            fix_green_static = 0
+            fix_red_static = 1
+
+            dequeue_stimulus(fixCircleStatic)
             dequeue_stimulus (dynamicFix)
             update_stimulus_display ()
             start_timer (
