@@ -544,7 +544,7 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         plt.axis('equal')
 
     def __call__(self):
-        render_maze, original_maze, path, original_path, distractors = super(WireMazeSampler, self).__call__()
+        render_maze, original_maze, path, original_path, distractors,original_distractor = super(WireMazeSampler, self).__call__()
 
         # num_overlap = super(WireMazeSampler, self).num_overlap # do not take into account overlapping distractors
         x_overlap = self._get_overlap_position(original_maze,original_path)
@@ -558,8 +558,19 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
         # print(original_path)
 
         # transform distractor path same way
+        maze_distractor_walls=[]
+        distract_path=[]
         for i, distractor_path in enumerate(distractors):
             distractors[i] = wire_path_dataset.rotate_path_90(maze, distractor_path, num_times=3)
+            original_distractor[i] = wire_path_dataset.rotate_path_90(maze, original_distractor[i], num_times=3)
+            maze_distractor_walls.append(self._get_maze_walls_from_path(original_distractor[i]))
+            # turning distractors into the same format as prey_path
+            distract_path.append([x for x in (distractors[i][::2] / 2).astype(int)])
+            distract_path[i].insert(0, distract_path[i][0] + (distract_path[i][0] - distract_path[i][1]))
+            distract_path[i] = [tuple(x) for x in distract_path[i]]
+        if np.shape(distract_path)[0]==1:
+            distract_path=distract_path[0]
+            maze_distractor_walls=maze_distractor_walls[0]
 
         # deal with walls
         maze_width = int((maze.shape[0] + 1) / 2)
@@ -602,7 +613,8 @@ class WireMazeSampler(wire_maze_composer.MazeComposer):
             'num_overlap': len(x_overlap),
             'x_overlap' : x_overlap,
             'maze_prey_walls': maze_prey_walls,
-            'distractor_path':distractors,
+            'distractor_path':distract_path,  # distractors,
+            'maze_distractor_walls': maze_distractor_walls,
             # 'maze_walls_near_turn': maze_walls_near_turn,
         }
 

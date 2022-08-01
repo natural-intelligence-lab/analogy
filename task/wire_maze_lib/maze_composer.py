@@ -211,6 +211,7 @@ class MazeComposer():
 
         # Add distractor paths
         distractors = []
+        original_distractor =[]
         self._num_overlap = 0
         self._total_num_overlap = 0
         for _ in range(self._num_layers - 1):
@@ -253,10 +254,12 @@ class MazeComposer():
                                             self._total_num_overlap += self._compute_num_overlap(maze0,new_maze)  # total between target and distractors, not across distractors
                                             done = True
                                             distractors.append(self._transform_path(distractor))
+                                            original_distractor.append(distractor)
                                     else:
                                         maze += (new_maze>0)
                                         done = True
                                         distractors.append(self._transform_path(distractor))
+                                        original_distractor.append(distractor)
                                 else: # if exit_distance > _min_dist_maze:
                                     # resample target path if distance is too close
                                     maze, path = self._mazes[
@@ -277,10 +280,12 @@ class MazeComposer():
                                         self._total_num_overlap += self._compute_num_overlap(maze0, new_maze)
                                         done = True
                                         distractors.append(self._transform_path(distractor))
+                                        original_distractor.append(distractor)
                                 else:
                                     maze += (new_maze>0)
                                     done = True
                                     distractors.append(self._transform_path(distractor))
+                                    original_distractor.append(distractor)
                 else: # if self._distractors_num_turns is not None:
                     # no overlapped path only with target
                     if not np.any(new_maze * maze0 != 0) \
@@ -303,11 +308,13 @@ class MazeComposer():
                                                                                              new_maze)  # total between target and distractors, not across distractors
                                         done = True
                                         distractors.append(self._transform_path(distractor))
+                                        original_distractor.append(distractor)
                                 else:
                                     maze += (new_maze > 0)
                                     done = True
                                     ####### To be debugged
                                     distractors.append(self._transform_path(distractor))
+                                    original_distractor.append(distractor)
                             else: # if exit_distance > _min_dist_maze:
                                 # resample target path if distance is too close
                                 maze, path = self._mazes[
@@ -327,11 +334,13 @@ class MazeComposer():
                                     self._total_num_overlap += self._compute_num_overlap(maze0, new_maze)
                                     done = True
                                     distractors.append(self._transform_path(distractor))
+                                    original_distractor.append(distractor)
                             ###################################
                             else:
                                 maze += (new_maze > 0)
                                 done = True
                                 distractors.append(self._transform_path(distractor))
+                                original_distractor.append(distractor)
 
         rendered_maze = self._render_maze(maze)
 
@@ -339,7 +348,7 @@ class MazeComposer():
         prey_path = self._transform_path(path)
 
         # print(count)
-        return rendered_maze, maze, prey_path, path,distractors
+        return rendered_maze, maze, prey_path, path,distractors,original_distractor
 
 
     @property

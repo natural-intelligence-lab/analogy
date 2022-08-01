@@ -1,5 +1,10 @@
 """Common grid_chase task config.
 
+
+2022/8/1
+1) repeat the same trial : _ID_REPEAT_FORCE
+2) but randomize target vs. distractor paths
+
 TBD
 1) repeat trials after no final reward
 2) exclude trials whose target path overlaps with initial paddle (no need to move)
@@ -132,6 +137,7 @@ _GAIN_SLOW_OFFLINE_ERROR = 0.3 # after offline error, prey_speed is scaled by th
 _GAIN_AGENT_MASS = 1 # 2 # 2
 
 # error trials staircase
+_ID_REPEAT_FORCE = True
 _ID_REPEAT_INCORRECT_TRIAL = True
 _N_MAX_REPEAT = 2 # 10
 
@@ -312,12 +318,14 @@ class RepeatIncorrectTrial():
     def __init__(self,
                  id_repeat_incorrect_trial=_ID_REPEAT_INCORRECT_TRIAL,
                  id_correct_offline0=True,
-                 n_max_repeat = _N_MAX_REPEAT):
+                 n_max_repeat = _N_MAX_REPEAT,
+                 id_repeat_force= _ID_REPEAT_FORCE):
         self._id_correct_offline=id_correct_offline0
         self._id_repeat_incorrect_trial=id_repeat_incorrect_trial
         self._stimulus = None
         self._n_max_repeat = n_max_repeat
         self._n_repeat = 0
+        self._id_repeat_force = id_repeat_force
 
     def step(self, reward,id_correct_offline):
         if self._id_repeat_incorrect_trial:
@@ -333,6 +341,20 @@ class RepeatIncorrectTrial():
                 self._n_repeat = 0
         else:
             self._id_correct_offline = True
+        if self._id_repeat_force: # repeat trial forcefully but with randomized entry
+            self._id_correct_offline = False
+            if np.random.rand()>0.5:
+                # swap target path & distractors
+                tmp = self._stimulus['features']['distractor_path']
+                self._stimulus['features']['distractor_path']=self._stimulus['prey_path']
+                self._stimulus['prey_path']=tmp
+                self._stimulus['features']['start_x'] =self._stimulus['prey_path'][0][1]
+                self._stimulus['features']['path_length'] = len(self._stimulus['prey_path'])
+
+                tmp = self._stimulus['features']['maze_prey_walls']
+                self._stimulus['features']['maze_prey_walls'] = self._stimulus['features']['maze_distractor_walls']
+                self._stimulus['features']['maze_distractor_walls'] = tmp
+
     @property
     def id_correct_offline(self):
         return self._id_correct_offline
@@ -529,6 +551,7 @@ class TrialInitialization():
 
         # to make data json-seriziable
         del stimulus['features']['maze_prey_walls']
+        del stimulus['features']['maze_distractor_walls']
 
         self._meta_state = {
             'fix_dur': 0,
