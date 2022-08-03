@@ -552,6 +552,7 @@ class TrialInitialization():
         # to make data json-seriziable
         del stimulus['features']['maze_prey_walls']
         del stimulus['features']['maze_distractor_walls']
+        del stimulus['features']['distractor_path']
 
         self._meta_state = {
             'fix_dur': 0,
