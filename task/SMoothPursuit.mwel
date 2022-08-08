@@ -417,7 +417,7 @@ if_else{
 
             // *****
             // arm
-            id_arm = 2 // 1 // disc_rand(1, 2) // for now, always add 3rd arm
+            id_arm = disc_rand(1, 2) // 2 // 1 // disc_rand(1, 2) // for now, always add 3rd arm
 
             if (id_turn==0){ // no turn
                 x_size_h=0
