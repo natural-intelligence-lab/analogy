@@ -242,7 +242,7 @@ group Maze {
     var y_turn=0
     var amp_y_turn=6
     var tmp_seg_length = 5
-    var ball_speed= 5 // 15 // 10 // 15
+    var ball_speed=5 // 15 // 10 // 15
 
     var path_red = 0.5
     var path_green = 0.5
@@ -417,7 +417,7 @@ if_else{
 
             // *****
             // arm
-            id_arm =disc_rand(1, 2) // 2 // 1 // disc_rand(1, 2) // for now, always add 3rd arm
+            id_arm = disc_rand(1, 2) // 2 // 1 // disc_rand(1, 2) // for now, always add 3rd arm
 
             if (id_turn==0){ // no turn
                 x_size_h=0

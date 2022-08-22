@@ -1,0 +1,612 @@
+
+/* Memory saccade task (+overlap task)
+
+    2022/8/22:
+        based on SmoothPursuit.mwel
+
+  (TBD)
+
+   */
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// I/O Devices
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// Include one of the following hand interfaces:
+
+// %include 'hand_interfaces/keyboard' // debug
+// %include 'hand_interfaces/gamepad'
+// %include 'hand_interfaces/joystick'
+%include 'hand_interfaces/joystick_monkey' // debug
+
+// Include one of the following eye interfaces
+
+// %include 'eye_interfaces/mouse' // debug
+%include 'eye_interfaces/eyelink' // debug
+
+%include 'firmata_ephys' // debug
+// %include 'firmata_train'
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Choose platform
+//
+///////////////////////////////////////////////////////////////////////////////
+var platform = 'monkey_ephys'
+// var platform = 'monkey_train'
+// var platform = 'psychophysics'
+// var platform = 'laptop'
+// var platform = 'desktop'
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Set data file, pwd, and python_site_packages
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+var pwd = ""
+var python_site_packages = ""
+python_file ('set_pwd.py')
+
+data_file ("$pwd/logs/$(date('%Y_%m_%d'))/mworks/$(date('%Y_%m_%d_%H_%M_%S'))")
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Resources
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// These directories are copied to the machine running MWServer
+resource ('sounds')
+
+// These files are copied to the machine running MWServer and executed when the
+// experiment loads
+// python_file ('calibration_static.py')
+// python_file ('task.py')
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Sounds
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// These directories are copied to the machine running MWServer
+resource ('sounds')
+
+//sound/wav_file success_sound ('sounds/success.wav')
+//sound/wav_file failure_sound ('sounds/failure.wav')
+//sound/wav_file pong_sound ('sounds/pong.wav')
+
+sound/wav_file pong_sound(
+    path='sounds/pong.wav'
+)
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Variables
+//
+///////////////////////////////////////////////////////////////////////////////
+
+    // var space_pressed = 0 (groups = I/O)
+
+var data_file = ""
+var tmp=0
+var var_debug = 0
+
+group Reward {
+    var reward_line = 0 (groups = Reward)
+    var rewardDur = 50 (groups = Reward)
+    var bonusRewDur = 0  (groups = Reward)
+}
+
+group Fixation {
+    var fixY = 0 (groups = Fixation)
+    var fixX = 0 (groups = Fixation)
+
+    var fix_win = 10 (
+        groups = Fixation
+        persistant = 1
+        )
+    var fix_sz = 0.5 (groups = Fixation)
+    var NoFixWaitDur = 2000 (groups = Fixation)
+    var fixWaitDur = 10000 (groups = Fixation)
+    var fixOn = 0 (groups = Fixation)
+
+    var fix_red = 1 (groups = Fixation)
+    var fix_green = 1 (groups = Fixation)
+    var fix_blue = 1 (groups = Fixation)
+
+    var fix_red_static = 1  (groups = Fixation)
+    var fix_green_static = 1 (groups = Fixation)
+    var fix_blue_static = 1 (groups = Fixation)
+
+    var pursuitTheta = -90 (groups = Fixation) // down; if 0, horizontal
+    var nRep = 1 (groups = Fixation) // 3
+    var trialNum = 1e6  (groups = Fixation) // after this # trials, stop experiment
+    var on_fix_dyn = 0 (groups = Fixation)
+    var on_fix_static = 0 (groups = Fixation)
+
+    var fix_pur_HoldDur = 2500 (groups = Fixation) // not used; old
+    var fix_pur_ITI_Dur = 500 (groups = Fixation)
+    var fix_pur_timeoutDur = 1500 (groups = Fixation)
+
+}
+
+group Global {
+    var pstop = 0 (groups = Trial)
+    var startTrial = 0 (groups = Trial)
+    var endTrial = 0 (groups = Trial)
+    var localTrials = 0 (groups = Trial)
+    var CorrectTrials = 0 (groups = Trial)
+    var CorrectInvisibleTrials = 0 (groups = Trial)
+    var id_bad = 0 (groups = Trial)
+}
+
+group Matlab {
+    var sync = 0 (groups = Matlab)
+    var Nback = 100 (
+        groups = Matlab
+        persistant = 1
+        )
+}
+
+group Time {
+    //time stamps for eye movement analysis
+    var tStart = 0
+    var tFix = 0
+    var tTargetOn = 0
+    var tTargetOff = 0
+    var tFixOff = 0
+    var tResponse = 0
+    var tRew = 0
+    var tEnd = 0
+}
+
+group MemorySaccade {
+    var fixTimeDur = 0
+    var fixTimeDurMean = 250
+    var fixTimeDurMin = 500
+
+    var targetTimeDur = 0
+    var targetTimeDurMean = 0
+    var targetTimeDurMin = 500
+
+    var memoryTimeDur = 0
+    var memoryTimeDurMean = 250
+    var memoryTimeDurMin = 500
+
+    var targetWait = 2000
+
+    var responseRewardDelay = 300
+
+    var id_overlap = 1
+}
+
+
+group Staircase {
+    var fix_alpha_max = 1
+    var t_visible = 0.5 // sec; alpha linearly decrease from max to min
+    var fix_alpha_min = 1 // 0.3 // 0 // 0.5
+    var fix_alpha_min0 = 0// 0.5
+    var fix_alpha_min_feedback = 1 // 0 // 1 // 0 // if 1, visible feedback; if 0, invisible
+    var id_visible = 0
+    var p_visible = 1 // 0.2 // 1// 0 // 0.333
+
+    var delta_fix_alpha_up = 0 //  0.1 // 0.01 // 0 // 0.01
+    var delta_fix_alpha_down = 0 // 0.5 // 0.05 // 0 // 0.05
+}
+
+group target{
+    var target_red=1
+    var target_green=1
+    var target_blue=1
+    var target_win = 10
+    var on_target=0
+    var target_sz = 0.5
+    var target_radius= 10
+    var target_theta=0
+    var targetX = 0
+    var targetY = 0
+    var nTarget =2
+    var target_alpha=1
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Stimuli
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// TBD
+group 'object' {
+    stimulus/rectangle horizon_path(
+        color = 0, 0, 0
+        x_size=0
+        y_size=0
+        x_position=0
+        y_position=0
+    )
+}
+
+group 'Fixation' {
+    stimulus/circular_fixation_point fixCircleStatic (
+            color = fix_red_static,fix_green_static,fix_blue_static
+            trigger_width = fix_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_fix_static
+            x_size = fix_sz
+            y_size = fix_sz
+            x_position = fixX
+            y_position = fixY
+            rotation = 0
+            alpha_multiplier = 1
+    )
+
+    // old below
+    /*
+    frame_list dynamicFix (
+        stimulus_group = dynamicFixFrames
+        loop = YES // NO // YES
+        autoplay = YES // NO //YES
+        )
+    stimulus_group dynamicFixFrames {
+        circular_fixation_point fixCircleDyn (
+            color = fix_red,fix_green,fix_blue
+            trigger_width = fix_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_fix_dyn
+            x_size = fix_sz
+            y_size = fix_sz
+            x_position = fixX+cos(pursuitTheta*pi()/180)*ball_speed*(next_frame_time() - tStart)/1e6 // set up for 1s drift to right most point (8deg)
+            y_position = fixY+sin(pursuitTheta*pi()/180)*ball_speed*(next_frame_time() - tStart)/1e6
+            rotation = 0
+            alpha_multiplier = max(fix_alpha_min,fix_alpha_max-(fix_alpha_max-fix_alpha_min)/t_visible*((next_frame_time() - tBallOn)/1e6))
+            )
+    }
+    */
+}
+
+group 'Target'{
+    stimulus/fixation_point target (
+            color = target_red,target_green,target_blue
+            trigger_width = target_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_target
+            x_size = target_sz
+            y_size = target_sz
+            x_position = targetX
+            y_position = targetY
+            rotation = 0
+            alpha_multiplier = target_alpha
+    )
+}
+
+
+iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(height/2/distance)*2; % 25.6 deg
+    background_color = 0,0,0
+    )
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Sampling trials
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+%define sample_trial ()
+    // sample target locations
+    target_theta=disc_rand(0,nTarget-1)*(360/nTarget)
+
+    targetX = fixX + cos(target_theta*pi()/180)*target_radius
+    targetY = fixY + sin(target_theta*pi()/180)*target_radius
+
+    // sample durations
+    fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
+    targetTimeDur=-targetTimeDurMean*logn(rand(0,1)) + targetTimeDurMin
+    memoryTimeDur=-memoryTimeDurMean*logn(rand(0,1)) + memoryTimeDurMin
+
+%end
+
+% define sample_visiblity ()
+if_else{
+    if (rand() > p_visible){
+        id_visible = 0
+        fix_alpha_min = fix_alpha_min0 // comment to use staircase
+    }
+    else {
+            id_visible = 1
+            // fix_alpha_min0 = fix_alpha_min // // keeping staircase (debug TBD)
+            fix_alpha_min = 1
+        }
+    }
+% end
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Protocols
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+protocol 'MemorySaccade' {
+    start_device_io (eye_tracker)
+
+    start_io_device (firmata) // debug
+
+    update_stimulus_display ()
+    task Trials {
+        state 'Initial' {
+            localTrials = 0
+            CorrectTrials = 0
+            CorrectInvisibleTrials = 0
+
+            sample_trial () // durations & target location
+
+            goto ('Fix On')
+        }
+        state 'Fix On' {
+            report ('localTrials = $localTrials')
+
+            //MATLAB
+            sync=0
+            sync=1
+
+            // reset trigger_flag
+            on_target = 0
+            on_fix_static = 0
+
+            queue_stimulus(fixCircleStatic)
+
+            update_stimulus_display ()
+            tStart = now()
+            startTrial = 1
+            id_bad = 0
+
+            start_timer (
+                timer = fixWait
+                duration = fixWaitDur // 10000
+                duration_units = ms
+                )
+            goto (
+                target = 'Static Fix'
+                when = on_fix_static
+                )
+            timer_expired (
+                target = 'Failure to fixate'
+                timer = fixWait
+                )
+        }
+
+        state 'Static Fix' {
+            localTrials = localTrials+1
+
+            tFix = now()
+            id_bad = 1
+
+            start_timer (
+                timer = StaticFixWait
+                duration = fixTimeDur // fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'Target On'
+                timer = StaticFixWait
+                )
+
+        }
+        state 'Target On' {
+            tTargetOn = next_frame_time()
+            live_queue_stimulus(target)
+            update_stimulus_display ()
+            id_bad = 2
+
+            start_timer (
+                timer = timer_target_on
+                duration = targetTimeDur
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'Memory'
+                timer = timer_target_on
+                )
+        }
+
+        state 'Memory' {
+            tTargetOff = next_frame_time()
+            id_bad = 3
+            if (id_overlap!=1){
+                target_alpha = 0
+            }
+            update_stimulus_display ()
+
+            start_timer (
+                timer = timer_memory
+                duration = memoryTimeDur
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'FixOff'
+                timer = timer_memory
+                )
+        }
+        state 'FixOff' {
+            tFixOff= next_frame_time()
+            id_bad = 4
+            dequeue_stimulus(fixCircleStatic)
+
+            update_stimulus_display ()
+
+            goto (
+                target = 'Response'
+                )
+        }
+
+        state 'Response' {
+            id_bad = 5
+
+            start_timer (
+                timer = timer_response
+                duration = targetWait // 2000
+                duration_units = ms
+                )
+            goto (
+                target = 'post_response'
+                when = on_target
+                )
+            timer_expired (
+                target = 'Failure to fixate'
+                timer = timer_response
+                )
+        }
+
+        state 'post_response' {
+            id_bad = 6
+            tResponse= now()
+
+            // make target visible
+            target_alpha = 1
+            update_stimulus_display ()
+
+            start_timer (
+                timer = timer_post_response
+                duration = responseRewardDelay // 300
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_target
+                )
+            timer_expired (
+                target = 'Reward'
+                timer = timer_post_response
+                )
+        }
+
+        state 'Reward' {
+            report ('Success!: CorrectTrials = $CorrectTrials')
+            tRew = now()
+
+            // make target green
+            target_red=0
+            target_blue=0
+            update_stimulus_display ()
+
+            CorrectTrials = CorrectTrials+1
+            if (id_visible==0){
+                CorrectInvisibleTrials=CorrectInvisibleTrials+1
+            }
+
+            //staircase
+            // fix_alpha_min=max(0,fix_alpha_min-delta_fix_alpha_down)
+
+            pulse ( // micro seconds
+                variable = reward_line
+                duration = (rewardDur+bonusRewDur)*1000
+                )
+            start_timer (
+                timer = GreenTime
+                duration = rewardDur+bonusRewDur
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = GreenTime
+                )
+        }
+        state 'End Trial' {
+            tEnd = now()
+
+            // reset stimulus
+            target_red=1
+            target_blue=1
+            target_alpha = 1
+
+            dequeue_stimulus (target)
+            dequeue_stimulus (fixCircleStatic)
+
+            id_bad = 0
+
+            update_stimulus_display ()
+
+            endTrial = 1
+            goto (
+                target = 'Exit System'
+                when = CorrectTrials >= trialNum
+                )
+            goto (
+                target = 'Exit System'
+                when = pstop
+                )
+            goto (ITI)
+        }
+        state ITI {
+
+            sample_trial () // duration and target locations
+
+            start_timer (
+                timer = fix_pur_ITI
+                duration = fix_pur_ITI_Dur // 500
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'Fix On'
+                timer = fix_pur_ITI
+                )
+        }
+        state Bad { // not used now
+            report ('Trial Failed: id_bad = $id_bad')
+
+            //staircase
+            // fix_alpha_min=min(1,fix_alpha_min+delta_fix_alpha_up)
+
+            start_timer (
+                timer = fix_pur_timeout
+                duration = fix_pur_timeoutDur // 1500
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = fix_pur_timeout
+                )
+        }
+
+        state 'Failure to fixate' {
+            report ('Trial Failed: id_bad = $id_bad')
+
+            start_timer (
+                timer = NoFixWait
+                duration = NoFixWaitDur  // 2000
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = NoFixWait
+                )
+        }
+        state 'Exit System' {
+            report ('Leaving state system')
+            yield ()
+        }
+    }
+}
