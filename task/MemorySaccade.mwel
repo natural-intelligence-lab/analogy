@@ -601,6 +601,7 @@ protocol 'MemorySaccade' {
             if (id_bad==2 || id_bad==3){
                 fix_green_static = 0
                 fix_blue_static = 0
+                dequeue_stimulus (target)
                 update_stimulus_display ()
             }
 
