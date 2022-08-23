@@ -2,10 +2,19 @@
 /* Memory saccade task (+overlap task)
 
     2022/8/22:
-        based on SmoothPursuit.mwel
+        - based on SmoothPursuit.mwel
+        - fixation break for overlap -> red fixation
 
-  (TBD)
+    2022/8/23:
+        - target object: yellow ) for banana
+        - implement MGS with distractors
 
+  (TBD) training curriculum
+1. Overlap saccade
+2. Memory guided saccade (MGS)
+3. MGS with distractors
+4. MGS with moving objects
+5. Target opacity on staircase
    */
 
 
@@ -214,6 +223,69 @@ group target{
     var targetY = 0
     var nTarget =2
     var target_alpha=1
+}
+
+group object{
+    var object_red=1
+    var object_green=1
+    var object_blue=1
+    var object_win = 10
+    var on_object=0
+    var object_sz = 0.5
+    var object_radius= 10
+    var object_theta=0
+    var objectX = 0
+    var objectY = 0
+    var nobject =2
+    var object_alpha=1
+
+}
+
+group 'Target'{
+    stimulus/fixation_point target (
+            color = target_red,target_green,target_blue
+            trigger_width = target_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_target
+            x_size = target_sz
+            y_size = target_sz
+            x_position = targetX
+            y_position = targetY
+            rotation = 0
+            alpha_multiplier = target_alpha
+    )
+}
+
+group distractor{
+    var distractor_red=1
+    var distractor_green=1
+    var distractor_blue=1
+    var distractor_win = 10
+    var on_distractor=0
+    var distractor_sz = 0.5
+    var distractor_radius= 10
+    var distractor_theta=0
+    var distractorX = 0
+    var distractorY = 0
+    var nDistractor =2
+    var distractor_alpha=1
+}
+
+group 'Target'{
+    stimulus/fixation_point target (
+            color = target_red,target_green,target_blue
+            trigger_width = target_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_target
+            x_size = target_sz
+            y_size = target_sz
+            x_position = targetX
+            y_position = targetY
+            rotation = 0
+            alpha_multiplier = target_alpha
+    )
 }
 
 
