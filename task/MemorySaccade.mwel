@@ -9,7 +9,11 @@
         - target object: yellow ) for banana
         - implement MGS with distractors
 
-  (TBD) training curriculum
+  (TBD)
+  - dim target for MGS
+  - fixation training for H?
+
+  training curriculum
 1. Overlap saccade
 2. Memory guided saccade (MGS)
 3. MGS with distractors
