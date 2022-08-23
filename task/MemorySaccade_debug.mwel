@@ -113,7 +113,7 @@ group Fixation {
         persistant = 1
         )
     var fix_sz = 0.5 (groups = Fixation)
-    var NoFixWaitDur = 2000 (groups = Fixation)
+    var NoFixWaitDur = 5000 (groups = Fixation)
     var fixWaitDur = 10000 (groups = Fixation)
     var fixOn = 0 (groups = Fixation)
 
@@ -364,7 +364,7 @@ protocol 'MemorySaccade' {
             on_target = 0
             on_fix_static = 0
 
-            queue_stimulus(fixCircleStatic)
+            live_queue_stimulus(fixCircleStatic)
 
             update_stimulus_display ()
             tStart = now()
@@ -542,6 +542,10 @@ protocol 'MemorySaccade' {
             target_blue=1
             target_alpha = 1
 
+            fix_red_static = 1
+            fix_green_static = 1
+            fix_blue_static = 1
+
             dequeue_stimulus (target)
             dequeue_stimulus (fixCircleStatic)
 
@@ -563,6 +567,9 @@ protocol 'MemorySaccade' {
         state ITI {
 
             sample_trial () // duration and target locations
+
+            // override eye_x eye_y to reset trigger_flag
+            eye_x=100
 
             start_timer (
                 timer = fix_pur_ITI
@@ -593,6 +600,13 @@ protocol 'MemorySaccade' {
 
         state 'Failure to fixate' {
             report ('Trial Failed: id_bad = $id_bad')
+
+            if (id_bad==2 || id_bad==3){
+                fix_green_static = 0
+                fix_blue_static = 0
+                dequeue_stimulus (target)
+                update_stimulus_display ()
+            }
 
             start_timer (
                 timer = NoFixWait
