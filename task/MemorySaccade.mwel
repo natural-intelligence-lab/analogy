@@ -19,6 +19,12 @@
 3. MGS with distractors
 4. MGS with moving objects
 5. Target opacity on staircase
+
+
+
+stimulus/image_file
+path=/path/to/image.png
+
    */
 
 
@@ -230,9 +236,9 @@ group target{
 }
 
 group object{
-    var object_red=1
-    var object_green=1
-    var object_blue=1
+    var object_red=1 // oragne [1 .5 0]
+    var object_green=.5
+    var object_blue=0
     var object_win = 10
     var on_object=0
     var object_sz = 0.5
@@ -245,21 +251,54 @@ group object{
 
 }
 
-group 'Target'{
-    stimulus/fixation_point target (
+group 'object'{
+    stimulus/text object ( // alternative: ellipse rectangle
+            text=)
+            font_name=Helvetica Neue
+            font_size=24
+
             color = target_red,target_green,target_blue
             trigger_width = target_win
             trigger_watch_x = eye_x
             trigger_watch_y = eye_y
             trigger_flag = on_target
-            x_size = target_sz
-            y_size = target_sz
+            x_size = object_sz
+            y_size = object_sz
+            rotation = 45
             x_position = targetX
             y_position = targetY
             rotation = 0
             alpha_multiplier = target_alpha
     )
 }
+
+// render actions
+/*
+var position = 0
+var size = 0
+
+circle ball (
+    color = 1,0,0
+    x_position = position
+    x_size = size
+    )
+
+var elapsed_time = 0
+
+render_actions update_position_and_size (
+    elapsed_time = elapsed_time
+    ) {
+    // Vary position and size sinusoidally with a period of
+    // three seconds
+    position = -15 * cos(2*pi() * elapsed_time / 3s)
+    size = 3 * (sin(2*pi() * elapsed_time / 3s) + 1) + 2
+}
+
+queue_stimulus (update_position_and_size)
+live_queue_stimulus (ball)
+update_display ()
+
+*/
 
 group distractor{
     var distractor_red=1
@@ -276,7 +315,7 @@ group distractor{
     var distractor_alpha=1
 }
 
-group 'Target'{
+group 'distractor'{
     stimulus/fixation_point target (
             color = target_red,target_green,target_blue
             trigger_width = target_win
