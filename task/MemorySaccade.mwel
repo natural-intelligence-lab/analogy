@@ -468,8 +468,8 @@ protocol 'MemorySaccade' {
             sync=1
 
             // reset trigger_flag
-            on_target = 0
-            on_fix_static = 0
+            // on_target = 0
+            // on_fix_static = 0
 
             live_queue_stimulus(fixCircleStatic)
 
