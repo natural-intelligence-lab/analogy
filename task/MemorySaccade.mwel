@@ -5,13 +5,13 @@
         - based on SmoothPursuit.mwel
         - fixation break for overlap -> red fixation
 
-    2022/8/23:
+    2022/8/24:
+        - dim target for MGS : target_alpha_memory, delta_alpha
         - target object: yellow ) for banana
-        - implement MGS with distractors
+        - fixation training for H
 
   (TBD)
-  - dim target for MGS
-  - fixation training for H?
+  - implement MGS with distractors
 
   training curriculum
 1. Overlap saccade
@@ -195,15 +195,17 @@ group MemorySaccade {
     var targetTimeDurMean = 0
     var targetTimeDurMin = 500
 
-    var memoryTimeDur = 0
+    var memoryTimeDur = 0.0001 // to prevent division by zero
     var memoryTimeDurMean = 250
     var memoryTimeDurMin = 500
 
-    var targetWait = 2000
+    var targetWait = 5000
 
     var responseRewardDelay = 300
 
-    var id_overlap = 1
+    var id_overlap = 0
+    var id_ramp_opacity=0
+    var id_fixation = 1
 }
 
 
@@ -226,52 +228,32 @@ group target{
     var target_blue=1
     var target_win = 10
     var on_target=0
-    var target_sz = 0.5
+    var target_sz = 0.001 // 0.5
     var target_radius= 10
     var target_theta=0
     var targetX = 0
     var targetY = 0
     var nTarget =2
-    var target_alpha=1
+    var target_alpha=0//1
+    var target_alpha_memory=0.01
+    var delta_alpha=0
 }
 
 group object{
     var object_red=1 // oragne [1 .5 0]
     var object_green=.5
     var object_blue=0
-    var object_win = 10
-    var on_object=0
-    var object_sz = 0.5
-    var object_radius= 10
+    var object_sz = 2
     var object_theta=0
     var objectX = 0
     var objectY = 0
-    var nobject =2
+    var nObject =2
     var object_alpha=1
+    var object_alpha_memory=0 // 0.01
 
 }
 
-group 'object'{
-    stimulus/text object ( // alternative: ellipse rectangle
-            text=)
-            font_name=Helvetica Neue
-            font_size=24
-
-            color = target_red,target_green,target_blue
-            trigger_width = target_win
-            trigger_watch_x = eye_x
-            trigger_watch_y = eye_y
-            trigger_flag = on_target
-            x_size = object_sz
-            y_size = object_sz
-            rotation = 45
-            x_position = targetX
-            y_position = targetY
-            rotation = 0
-            alpha_multiplier = target_alpha
-    )
-}
-
+//TBD
 // render actions
 /*
 var position = 0
@@ -316,18 +298,18 @@ group distractor{
 }
 
 group 'distractor'{
-    stimulus/fixation_point target (
-            color = target_red,target_green,target_blue
-            trigger_width = target_win
+    stimulus/fixation_point distractor (
+            color = distractor_red,distractor_green,distractor_blue
+            trigger_width = distractor_win
             trigger_watch_x = eye_x
             trigger_watch_y = eye_y
-            trigger_flag = on_target
-            x_size = target_sz
-            y_size = target_sz
-            x_position = targetX
-            y_position = targetY
+            trigger_flag = on_distractor
+            x_size = distractor_sz
+            y_size = distractor_sz
+            x_position = distractorX
+            y_position = distractorY
             rotation = 0
-            alpha_multiplier = target_alpha
+            alpha_multiplier = distractor_alpha
     )
 }
 
@@ -338,14 +320,20 @@ group 'distractor'{
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// TBD
-group 'object' {
-    stimulus/rectangle horizon_path(
-        color = 0, 0, 0
-        x_size=0
-        y_size=0
-        x_position=0
-        y_position=0
+group 'object'{
+    stimulus/text object ( // alternative: ellipse rectangle
+            text=')'
+            font_name="Capitals"
+            font_size=48
+
+            color = object_red,object_green,object_blue
+            text_alignment = center
+            x_size = object_sz
+            y_size = object_sz
+            rotation = -45
+            x_position = objectX
+            y_position = objectY
+            alpha_multiplier = object_alpha
     )
 }
 
@@ -423,6 +411,10 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
     targetX = fixX + cos(target_theta*pi()/180)*target_radius
     targetY = fixY + sin(target_theta*pi()/180)*target_radius
+
+    object_theta = target_theta
+    objectX = targetX
+    objectY = targetY
 
     // sample durations
     fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
@@ -525,6 +517,7 @@ protocol 'MemorySaccade' {
         state 'Target On' {
             tTargetOn = next_frame_time()
             live_queue_stimulus(target)
+            live_queue_stimulus(object)
             update_stimulus_display ()
             id_bad = 2
 
@@ -547,9 +540,27 @@ protocol 'MemorySaccade' {
             tTargetOff = next_frame_time()
             id_bad = 3
             if (id_overlap!=1){
-                target_alpha = 0
+                // slowly fainting target
+                if (id_ramp_opacity==1){
+                    delta_alpha = (object_alpha-object_alpha_memory)/(memoryTimeDur/1000*60)
+                    while (object_alpha > object_alpha_memory){
+                        object_alpha=max(object_alpha_memory,object_alpha-delta_alpha)
+                        update_stimulus_display ()
+                    }
+                }
+                if (id_ramp_opacity==0){
+                    object_alpha=object_alpha_memory
+                    update_stimulus_display ()
+
+                }
+
+                /* for target fixation window
+                delta_alpha = (target_alpha-target_alpha_memory)/(memoryTimeDur/1000*60)
+                while (target_alpha > target_alpha_memory){
+                    target_alpha=target_alpha-delta_alpha
+                    update_stimulus_display ()
+                }*/
             }
-            update_stimulus_display ()
 
             start_timer (
                 timer = timer_memory
@@ -573,7 +584,42 @@ protocol 'MemorySaccade' {
             update_stimulus_display ()
 
             goto (
+                target = 'Fixation_reward'
+                when = id_fixation
+                )
+            goto (
                 target = 'Response'
+                when = !id_fixation
+                )
+        }
+        state 'Fixation_reward' {
+            report ('Success!: CorrectTrials = $CorrectTrials')
+            tRew = now()
+
+            fix_red_static = 0
+            fix_green_static = 1
+            fix_blue_static = 0
+
+            queue_stimulus(fixCircleStatic)
+            update_stimulus_display ()
+
+            CorrectTrials = CorrectTrials+1
+            if (id_visible==0){
+                CorrectInvisibleTrials=CorrectInvisibleTrials+1
+            }
+
+            pulse ( // micro seconds
+                variable = reward_line
+                duration = (rewardDur+bonusRewDur)*1000
+                )
+            start_timer (
+                timer = GreenTime
+                duration = rewardDur+bonusRewDur
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = GreenTime
                 )
         }
 
@@ -582,7 +628,7 @@ protocol 'MemorySaccade' {
 
             start_timer (
                 timer = timer_response
-                duration = targetWait // 2000
+                duration = targetWait // 5000
                 duration_units = ms
                 )
             goto (
@@ -600,7 +646,7 @@ protocol 'MemorySaccade' {
             tResponse= now()
 
             // make target visible
-            target_alpha = 1
+            object_alpha = 1 //target_alpha = 1
             update_stimulus_display ()
 
             start_timer (
@@ -623,8 +669,8 @@ protocol 'MemorySaccade' {
             tRew = now()
 
             // make target green
-            target_red=0
-            target_blue=0
+            object_red=0 // target_red=0
+            object_blue=0 // target_blue=0
             update_stimulus_display ()
 
             CorrectTrials = CorrectTrials+1
@@ -653,15 +699,17 @@ protocol 'MemorySaccade' {
             tEnd = now()
 
             // reset stimulus
-            target_red=1
-            target_blue=1
-            target_alpha = 1
+            object_red=1 // target_red=1
+            object_green=0.5
+            object_blue=0 // target_blue=1
+            object_alpha = 1 // target_alpha = 1
 
             fix_red_static = 1
             fix_green_static = 1
             fix_blue_static = 1
 
             dequeue_stimulus (target)
+            dequeue_stimulus (object)
             dequeue_stimulus (fixCircleStatic)
 
             id_bad = 0
@@ -720,6 +768,7 @@ protocol 'MemorySaccade' {
                 fix_green_static = 0
                 fix_blue_static = 0
                 dequeue_stimulus (target)
+                dequeue_stimulus (object)
                 update_stimulus_display ()
             }
 
