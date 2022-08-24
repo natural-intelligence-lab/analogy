@@ -204,8 +204,8 @@ group MemorySaccade {
     var responseRewardDelay = 300
 
     var id_overlap = 0
-    var id_ramp_opacity=0
-    var id_fixation = 1
+    var id_ramp_opacity=1
+    var id_fixation = 0
 }
 
 
