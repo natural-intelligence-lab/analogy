@@ -203,9 +203,9 @@ group MemorySaccade {
 
     var responseRewardDelay = 300
 
-    var id_overlap = 0
+    var id_overlap = 1
     var id_ramp_opacity=0
-    var id_fixation = 1
+    var id_fixation = 0
 }
 
 
@@ -324,7 +324,7 @@ group 'object'{
     stimulus/text object ( // alternative: ellipse rectangle
             text=')'
             font_name="Capitals"
-            font_size=48
+            font_size=64
 
             color = object_red,object_green,object_blue
             text_alignment = center
