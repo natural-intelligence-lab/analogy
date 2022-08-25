@@ -10,6 +10,11 @@
         - target object: yellow ) for banana
         - fixation training for H
 
+    2022/8/25:
+        - bigger font & nTarget=4 (correct trials check for each direction)
+        -
+
+
   (TBD)
   - implement MGS with distractors
 
@@ -156,15 +161,6 @@ group Fixation {
 
 }
 
-group Global {
-    var pstop = 0 (groups = Trial)
-    var startTrial = 0 (groups = Trial)
-    var endTrial = 0 (groups = Trial)
-    var localTrials = 0 (groups = Trial)
-    var CorrectTrials = 0 (groups = Trial)
-    var CorrectInvisibleTrials = 0 (groups = Trial)
-    var id_bad = 0 (groups = Trial)
-}
 
 group Matlab {
     var sync = 0 (groups = Matlab)
@@ -231,19 +227,31 @@ group target{
     var target_sz = 0.001 // 0.5
     var target_radius= 10
     var target_theta=0
+    var target_id=0
     var targetX = 0
     var targetY = 0
-    var nTarget =2
+    var nTarget =4
     var target_alpha=0//1
     var target_alpha_memory=0.01
     var delta_alpha=0
+}
+
+group Global {
+    var pstop = 0 (groups = Trial)
+    var startTrial = 0 (groups = Trial)
+    var endTrial = 0 (groups = Trial)
+    var localTrials = 0 (groups = Trial)
+    var CorrectTrials = 0 (groups = Trial)
+    var CorrectTrialsTarget = [0:(nTarget-1)] (groups = Trial)
+    var CorrectInvisibleTrials = 0 (groups = Trial)
+    var id_bad = 0 (groups = Trial)
 }
 
 group object{
     var object_red=1 // oragne [1 .5 0]
     var object_green=.5
     var object_blue=0
-    var object_sz = 2
+    var object_sz = 3
     var object_theta=0
     var objectX = 0
     var objectY = 0
@@ -324,7 +332,7 @@ group 'object'{
     stimulus/text object ( // alternative: ellipse rectangle
             text=')'
             font_name="Capitals"
-            font_size=48
+            font_size=64
 
             color = object_red,object_green,object_blue
             text_alignment = center
@@ -407,7 +415,8 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
 %define sample_trial ()
     // sample target locations
-    target_theta=disc_rand(0,nTarget-1)*(360/nTarget)
+    target_id = disc_rand(0,nTarget-1)
+    target_theta=target_id*(360/nTarget)
 
     targetX = fixX + cos(target_theta*pi()/180)*target_radius
     targetY = fixY + sin(target_theta*pi()/180)*target_radius
@@ -455,6 +464,10 @@ protocol 'MemorySaccade' {
             localTrials = 0
             CorrectTrials = 0
             CorrectInvisibleTrials = 0
+            while (tmp<nTarget){
+                CorrectTrialsTarget[tmp]=0
+                tmp=tmp+1
+            }
 
             sample_trial () // durations & target location
 
@@ -673,6 +686,7 @@ protocol 'MemorySaccade' {
             object_blue=0 // target_blue=0
             update_stimulus_display ()
 
+            CorrectTrialsTarget[target_id] = CorrectTrialsTarget[target_id]+1
             CorrectTrials = CorrectTrials+1
             if (id_visible==0){
                 CorrectInvisibleTrials=CorrectInvisibleTrials+1
