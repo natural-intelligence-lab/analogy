@@ -11,7 +11,7 @@
 
 %define update_joystick ()
 
-    // threshold = 30 // originally 4
+    // threshold = 30 // 50 // 30 // originally 4
     x_force = (
         (rocker_x > 512 + 30) * (rocker_x - 512) / 512 +
         (rocker_x < 512 - 30) * (rocker_x - 512) / 512

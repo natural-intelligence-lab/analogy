@@ -24,8 +24,7 @@
 %include 'eye_interfaces/eyelink'
 //%include 'eye_interfaces/mouse'
 
-%include 'firmata_ephys'
-// %include 'firmata_train'
+%include 'firmata_train'
 
 /////////////////
 // Variables
@@ -214,10 +213,8 @@ protocol 'Manual+Pursuit' {
             fix_red = 0
             fix_blue = 0
 
-            pulse ( // micro seconds
-                variable = reward_line
-                duration = (rewardDur+bonusRewDur)*1000
-                )
+            reward_line = true
+
             start_timer (
                 timer = GreenTime
                 duration = rewardDur+bonusRewDur
@@ -230,6 +227,7 @@ protocol 'Manual+Pursuit' {
         }
         state 'End Trial' {
             report ('Ending Trial.')
+            reward_line = false
             dequeue_stimulus (dynamicFix)
             update_stimulus_display ()
 

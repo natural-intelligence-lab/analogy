@@ -43,15 +43,15 @@ if getvar('platform') == 'laptop':
     from configs import config_human as config_lib
 elif getvar('platform') == 'desktop':
     # from configs import config_g as config_lib
-    from configs import config as config_lib
+    from configs import config_human as config_lib
     # from configs import config_human as config_lib
 elif getvar('platform') == 'psychophysics':
     from configs import config_human as config_lib
 elif getvar('platform') == 'monkey_ephys':
     from configs import config as config_lib
 elif getvar('platform') == 'monkey_train':
-    from configs import config_g as config_lib
-    # from configs import config as config_lib
+    # from configs import config_g as config_lib
+    from configs import config as config_lib
     # from configs import config_online as config_lib    
     
 
@@ -102,6 +102,10 @@ class TaskManager:
             self._path_prey_position_staircase = config_class._path_prey_position_staircase
             self._update_p_correct = config_class._update_p_correct
             self._reward_window_staircase = config_class._reward_window_staircase
+
+        # i_trial dynamics
+        if getvar('platform') == 'laptop' or getvar('platform') == 'psychophysics' or getvar('platform') == 'desktop':
+            self._id_trial_staircase = config_class._id_trial_staircase
 
         # Create environment
         log_dir = os.path.join(_PWD, 'logs')
@@ -196,6 +200,13 @@ class TaskManager:
         # ?
         setvar('prey_opacity',self.env.meta_state['prey_opacity']) ## updated in task.reward
         setvar('path_prey_opacity', self.env.meta_state['path_prey_opacity'])  ## updated in task.reward
+
+        # set trial & block
+        # i_trial dynamics
+        if getvar('platform') == 'laptop' or getvar('platform') == 'psychophysics' or getvar('platform') == 'desktop':
+            setvar('num_completeTrials',self.env.meta_state['i_trial'])
+            setvar('id_block', self.env.meta_state['id_block']) # true/1 for odd (with FP), false/0 for even (no FP)
+            setvar('num_trials_block', self.env.meta_state['num_trial_block'])
 
     def _register_event_callback(self, varname):
         self.events[varname] = []
@@ -302,8 +313,10 @@ class TaskManager:
             setvar('num_turns',self.env.meta_state['num_turns'])
             setvar('end_x_prey',self.env.meta_state['prey_path'][-1][0])
             setvar('start_x_prey',self.env.meta_state['prey_path'][0][0])
-            # if not len(self.env.meta_state['distractor_path'])==0:
-            #     setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
+
+            # if self.env.meta_state['distractor_path'] is not None:
+            #     if not len(self.env.meta_state['distractor_path'])==0:
+            #         setvar('end_x_distract',self.env.meta_state['distractor_path'][-1][0])
 
         # get offline RT
         agent = self.env.state['agent']

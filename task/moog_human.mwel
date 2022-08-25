@@ -24,8 +24,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // var platform = 'monkey'
 // var platform = 'psychophysics'
-// var platform = 'laptop'
-var platform = 'desktop'
+var platform = 'laptop'
+// var platform = 'desktop'
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -119,9 +119,26 @@ var num_trials = 0
 var num_completeTrials = 0
 var num_trials_block = 100
 
+var id_block = 1 // # true/1 for odd (with FP), false/0 for even (no FP)
+var foreperiod = 0
+
+var prey_opacity = 0
+
+var prey_distance_invisible = 0
+var slope_opacity = 0
+
+var num_turns = 0
+
+var sync = 0
+
 var RT_offline = 0
 var tp = 0
 var ts = 0
+
+// offline behavior
+var end_x_prey = 0
+var end_x_agent = 0
+var end_x_distract = 0
 
 //time stamps for eye movement analysis
 var tFix = 0
@@ -191,7 +208,7 @@ var tRew = 0
             state 'Success' {
                 play_sound (success_sound)
 
-                num_completeTrials = num_completeTrials + 1
+                // num_completeTrials = num_completeTrials + 1
 
                 report ('Dispensing reward')
 
@@ -206,12 +223,28 @@ var tRew = 0
                 reward_line = false
                 reward_duration = 0
 
+                // num_completeTrials = num_completeTrials+1
+
                 goto (
-                    target = 'End protocol'
-                    when = (num_completeTrials%num_trials_block == 0)
+                    target = 'End trial' // 'Pause' // 'End protocol' //
+                    when = (num_completeTrials % num_trials_block == 0)
+
                 )
 
                 goto ('Wait for completion')
+            }
+
+            state 'Pause' {
+                // id_block = 1 - id_block
+                clear_display ()
+                // pause_experiment ()
+                // goto ('End trial')
+
+                goto (
+                    target = 'Begin trial' //
+                    when = right_pressed
+
+                )
             }
 
             state 'Failure' {
@@ -236,6 +269,13 @@ var tRew = 0
                     timer = timer
                     duration = inter_trial_interval_duration
                     )
+
+                //goto (
+                //    target = 'Pause'
+                //    when = (num_completeTrials % num_trials_block == 0)
+
+                //)
+
 
                 goto (
                     target = 'Begin trial'
@@ -341,5 +381,11 @@ protocol 'random_12_uniform_num_turns' {
 protocol 'Vertical prey, random height' {
     run_python_string (
         't = TaskManager(level="random.vertical_random_height.vertical_random_height", fixation_phase=False, ms_per_unit=2000)')
+    run_task ()
+}
+
+protocol 'random_20_uniform_num_turns' {
+    run_python_string (
+        't = TaskManager(level="random.random_12.random_20_uniform_num_turns", fixation_phase=False, ms_per_unit=1000)') //2000
     run_task ()
 }

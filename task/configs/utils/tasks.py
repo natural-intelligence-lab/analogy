@@ -114,6 +114,7 @@ class ContactReward(tasks.AbstractTask):
                         if self._steps_until_reset == np.inf:
                             self._steps_until_reset = (
                                 self._reset_steps_after_contact)
+
                         self._reward_given = True
 
             if not self._staircase_updated:
@@ -131,7 +132,6 @@ class ContactReward(tasks.AbstractTask):
                     self._reward_window_staircase.step(reward)
 
                 self._staircase_updated = True
-
 
         self._steps_until_reset -= 1
         should_reset = self._steps_until_reset < 0

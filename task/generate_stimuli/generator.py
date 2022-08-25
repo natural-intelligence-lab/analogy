@@ -8,7 +8,7 @@ import os
 # This is the number of numerals in filenames. Since there is one file per
 # condition, you should pick _FILENAME_ZFILL large enough that the number of
 # condition in your stimulus dataset is less than 10^_FILENAME_ZFILL.
-_FILENAME_ZFILL = 4
+_FILENAME_ZFILL = 5 # 4
 
 
 def _serialize(x):

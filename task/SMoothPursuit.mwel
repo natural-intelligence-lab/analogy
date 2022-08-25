@@ -74,8 +74,8 @@
 // %include 'eye_interfaces/mouse' // debug
 %include 'eye_interfaces/eyelink' // debug
 
-%include 'firmata_ephys' // debug
-// %include 'firmata_train'
+// %include 'firmata_ephys' // debug
+%include 'firmata_train'
 
 // fake monkey: not used
 /*
@@ -99,8 +99,8 @@
 // Choose platform
 //
 ///////////////////////////////////////////////////////////////////////////////
-var platform = 'monkey_ephys'
-// var platform = 'monkey_train'
+// var platform = 'monkey_ephys'
+var platform = 'monkey_train'
 // var platform = 'psychophysics'
 // var platform = 'laptop'
 // var platform = 'desktop'
@@ -162,7 +162,7 @@ var tmp=0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 50 (groups = Reward)
+    var rewardDur = 70 // 50 (groups = Reward)
     var bonusRewDur = 0  (groups = Reward)
 }
 group Fixation {
@@ -381,7 +381,7 @@ if_else{
     }
     else {
             id_visible = 1
-            // fix_alpha_min0 = fix_alpha_min // // keeping staircase (debug TBD)
+            // fix_alpha_min0 = fix_alpha_min // keeping staircase (debug TBD)
             fix_alpha_min = 1
         }
     }

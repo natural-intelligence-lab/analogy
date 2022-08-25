@@ -418,11 +418,21 @@ class Maze():
         
         self._walls_frozen.extend(walls_to_freeze)
 
-    def to_circle(self,edge1,edge2,n_point):
-        """generate circular path from edge1 [x,y] to edge 2 [x,y] in n_point
-        """
-        radius=abs(edge1[0]-edge2[0])
 
+    def plot(self):
+        """
+
+        """
+        maze_walls = self.walls
+
+        plt.figure()
+        for i in range(len(maze_walls)):
+            wall = maze_walls[i]
+            x = [wall[0][0], wall[1][0]]
+            y = [wall[0][1], wall[1][1]]
+            plt.plot(x,y,'k-')
+
+        plt.show()
 
 
     def to_sprites(self,

@@ -45,6 +45,8 @@ old-TBD
 3) moving ball at the beginning
 
 2022/4/30
+everything same as H (monkeyEphys) except path aid staircase
+- new features: no gap, 0-turn with no overlap constraint (new maze), paddle initially at middle & booster
 1) Impose 500ms for maze-on
 
 2022/4/21
@@ -152,7 +154,7 @@ _MAZE_ON_DURATION=60 # 30  # 30 # 60 # 30 # 60 # 1s
 _OFFLINE_DURATION = 60
 _PATH_PREY_DURATION=0 # np.inf # 0
 
-_MAX_WAIT_TIME_GAIN = 2 # 5 # 10 # 2 # when tp>2*ts, abort
+_MAX_WAIT_TIME_GAIN = 2 # 3 # 2 # 5 # 10 # 2 # when tp>2*ts, abort
 _MAX_WAIT_TIME_GAIN_REWARD = _MAX_WAIT_TIME_GAIN-1
 _MAX_WAIT_TIME_GAIN_UP = 0.3
 _MAX_WAIT_TIME_GAIN_DOWN = 0.3
@@ -413,7 +415,7 @@ class TrialInitialization():
         maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
         cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
-            wall_width=_WALL_WIDTH, cell_size=cell_size, bottom_border=_MAZE_Y, # maze_walls_near_turn=None,
+            wall_width=_WALL_WIDTH, cell_size=cell_size, bottom_border=_MAZE_Y, # ,maze_walls_near_turn=None,
             # maze_walls_near_turn=stimulus['features']['maze_walls_near_turn'],
             c0=128, c1=128, c2=128)
         # to highlight path touched by path aid
@@ -995,9 +997,9 @@ class Config():
             if not np.all(s.velocity == 0) and not s.metadata['moved_h']: ##  # if not np.all(s.velocity[0] == 0): ##
                 s.metadata['moved_h'] = True
                 if s.velocity[0]<0:
-                    s.metadata['id_left0'] = True
+                    s.metadata['id_left0'] = 1
                 if s.velocity[0]>0:
-                    s.metadata['id_left0'] = False
+                    s.metadata['id_left0'] = 0
         update_agent_metadata = gr.ModifySprites('agent', _track_moved_h)
 
         def _should_increase_RT_offline(state, meta_state):

@@ -2,6 +2,7 @@
 
 import os
 from configs import config
+# from configs import config_g as config
 # from configs import config_human as config
 from configs import samplers
 from configs.levels import get_stimuli_dir
@@ -57,7 +58,7 @@ def random_14_staircase(num_layers=_num_layers, max_num_turns=_max_num_turns,**k
         samplers.LayeredMazeSampler(
             path_dir=path_dir,
             num_layers=num_layers,
-            ball_path_top_bottom=True,  # False,
+            ball_path_top_bottom=True, # False,
             ball_path_top=True,
             max_num_turns=max_num_turns,
             num_turns=i,

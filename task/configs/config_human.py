@@ -1,4 +1,25 @@
-"""Common grid_chase task config."""
+"""Common grid_chase task config.
+
+2021/10/18
+- self-paced: press left arrow when ready [block design]
+- insert buffer fixation after offline
+- feedback: up for early, down for late (no meaning about distance)
+- automization of block switch
+ TO DO
+- fix some trials with broken walls for prey_path
+- eye movement
+
+2021/10/10: test cue-combination
+- with FP(500+exp(500)) vs no FP
+- Block design (num_trials_block; 100): ABABA...
+- 20 grid, # turns:[0 2 4 6], for 0 turn, [10 15 20] grids
+- no joystick, just keyboard
+- initial eye position for offline: present ball first
+ TO DO
+- orthogonalize # turns & path length?
+- repeat the same trials?
+
+"""
 
 import abc
 import collections
@@ -21,29 +42,59 @@ from configs.utils import tasks as tasks_custom
 from configs.utils import tasks_offline as tasks_custom_offline
 from maze_lib.constants import max_reward, bonus_reward, reward_window
 
-_FIXATION_THRESHOLD = 0.4
-_ITI = 6  #  100 ms
-_FIXATION_STEPS = 6  #  100 ms
-_REWARD = 6 # 100 ms
+# stimulus
+_IMAGE_SIZE = [20] # [16]  # [8, 16, 24]
+_WALL_WIDTH = 0.05 # WAS 0.05 for 12 bin maze
 _AGENT_Y = 0.05
 _MAZE_Y = 0.1
-_MAZE_WIDTH = 0.55
+_MAZE_WIDTH = 0.7  # 0.55
+_FEEDBACK_DY = 0.03
 
+# trial
+_NUM_TRIAL_BLOCK = 100  #  3  # 100
+_ID_BLOCK = True  # only for manual block switch   # False  # True # true/1 for odd (with FP), false/0 for even (no FP)
+
+# time
+_REFRESH_RATE = 60/1000 # /ms
+_MEAN_EXP = 500*_REFRESH_RATE # 8.3
+_MIN_EXP = 1000*_REFRESH_RATE  # 500/_REFRESH_RATE
+_MAX_EXP = _MEAN_EXP*2
+_FIXATION_STEPS = 12 # 200 ms
+_REWARD = 6 # 100 ms
+_ITI = 6  #  100 ms
+_FEEDBACK = 6  #  100 ms
+_AFTERBREAK = 1
+
+# fixation
+_FIXATION_THRESHOLD = 0.4
+
+# reward
 _MAX_REWARDING_DIST = 0.2
 _EPSILON = 1e-4  # FOR REWARD FUNCTION
 
-_IMAGE_SIZE = [20] # [16]  # [8, 16, 24]
 
+class IdTrialStaircase():
+
+    def __init__(self,init_value = 1):
+        self._i_trial = init_value
+
+    def step(self):
+        self._i_trial = self._i_trial + 1
+
+    @property
+    def i_trial(self):
+        return self._i_trial
 
 class TrialInitialization():
 
     def __init__(self, stimulus_generator, prey_lead_in, static_prey=False,
-                 static_agent=False):
+                 static_agent=False,prey_opacity_staircase=None,id_trial_staircase=None):
         self._stimulus_generator = stimulus_generator
         self._prey_lead_in = prey_lead_in
         self._static_prey = static_prey
         self._static_agent = static_agent
-
+        self._prey_opacity_staircase = prey_opacity_staircase
+        self._id_trial_staircase = id_trial_staircase
         self._prey_factors = dict(
             shape='circle', scale=0.015, c0=0, c1=255, c2=0)
         self._fixation_shape = 0.2 * np.array([
@@ -61,10 +112,11 @@ class TrialInitialization():
         maze_height = stimulus['maze_height']
         prey_path = stimulus['prey_path']
         maze_walls = stimulus['maze_walls']
+        num_turns = stimulus['features']['num_turns']
         maze = maze_lib.Maze(maze_width, maze_height, all_walls=maze_walls)
         cell_size = _MAZE_WIDTH / maze_width
         tunnels = maze.to_sprites(
-            wall_width=0.05, cell_size=cell_size, bottom_border=_MAZE_Y, c0=128,
+            wall_width=_WALL_WIDTH, cell_size=cell_size, bottom_border=_MAZE_Y, c0=128,
             c1=128, c2=128)
 
         # Compute scaled and translated prey path
@@ -83,6 +135,8 @@ class TrialInitialization():
         fixation = sprite.Sprite(
             x=0.5, y=0.5, shape=self._fixation_shape, scale=0.05,
             c0=255, c1=255, c2=255, opacity=0)
+        fixation.position = [prey_path[0][0], prey_path[0][1]]
+
         screen = sprite.Sprite(
             x=0.5, y=0.5, shape='square', scale=2., c0=0, c1=0, c2=0)
 
@@ -100,13 +154,22 @@ class TrialInitialization():
             x=0.5, y=0.5, shape='circle', scale=0.015, c0=0, c1=255, c2=0,
         )
 
+        # feedback sprite (initially invisible)
+        early_feedback = sprite.Sprite(
+            x=prey_path[-1][0], y=_AGENT_Y+_FEEDBACK_DY, shape='circle', scale=0.015, c0=129, c1=32, c2=32, opacity=0,
+        )
+        late_feedback = sprite.Sprite(
+            x=prey_path[-1][0], y=_AGENT_Y-_FEEDBACK_DY, shape='circle', scale=0.015, c0=129, c1=32, c2=32, opacity=0,
+        )
         state = collections.OrderedDict([
             ('agent', []),
             ('prey', [prey]),
             ('maze', tunnels),
             ('screen', [screen]),
-            ('joystick_fixation', [joystick_fixation]),
-            ('joystick', [joystick]),
+            # ('joystick_fixation', [joystick_fixation]),
+            # ('joystick', [joystick]),
+            ('early_feedback',[early_feedback]),
+            ('late_feedback', [late_feedback]),
             ('fixation', [fixation]),
             ('eye', [eye]),
         ])
@@ -120,6 +183,16 @@ class TrialInitialization():
         # randomly choose image size across trials
         image_size = np.random.choice(_IMAGE_SIZE)
 
+        if self._prey_opacity_staircase is None:
+            self._prey_opacity = 255
+        else:
+            self._prey_opacity = self._prey_opacity_staircase.opacity
+
+        if self._id_trial_staircase is None:
+            self._i_trial = 1
+        else:
+            self._i_trial = self._id_trial_staircase._i_trial
+
         self._meta_state = {
             'fixation_duration': 0,
             'motion_steps': 0,
@@ -128,21 +201,31 @@ class TrialInitialization():
             'stimulus_features': stimulus['features'],
             'prey_path': prey_path,
             'prey_speed': 0,
+            'prey_opacity': self._prey_opacity,
             'maze_width': maze_width,
             'maze_height': maze_height,
             'image_size': image_size,
             'prey_distance_remaining': prey_distance_remaining,
+            'prey_distance_invisible': cell_size * len(prey_path) + _MAZE_Y - _AGENT_Y,
+            'slope_opacity': 0,
+            'end_x_agent': 0,
+            'distractor_path': None,
             'RT_offline': 0,
             'tp': 0,
             'ts': 0,
+            'num_turns': num_turns,
+            'id_block': bool(_ID_BLOCK),  # true/1 for odd (with FP), false/0 for even (no FP)
+            'num_trial_block': _NUM_TRIAL_BLOCK,
+            'i_trial': self._i_trial,
+            't_offline' : 0,
         }
 
         return state
 
     def create_agent(self, state):
         agent = sprite.Sprite(
-            x=0.5, y=_AGENT_Y, shape='square', aspect_ratio=0.3, scale=0.05,
-            c0=128, c1=32, c2=32, metadata={'response': False, 'moved': False},
+            x=self._meta_state['prey_path'][-1][0], y=_AGENT_Y, shape='square', aspect_ratio=0.3, scale=0.05, opacity = 0,
+            c0=128, c1=32, c2=32, metadata={'response_up': False, 'moved_h': False,'y_speed':0},
         )
         if self._static_agent:
             agent.mass = np.inf
@@ -164,6 +247,8 @@ class Config():
                  stimulus_generator,
                  fixation_phase=True,
                  prey_opacity=0,
+                 i_trial=1,
+                 id_trial_staircase=None,
                  static_prey=False,
                  static_agent=False,
                  ms_per_unit=2000):
@@ -183,6 +268,12 @@ class Config():
         self._prey_opacity = prey_opacity
         self._static_prey = static_prey
         self._static_agent = static_agent
+        self._id_trial_staircase = id_trial_staircase
+
+        if self._id_trial_staircase is not None:
+            self._i_trial = self._id_trial_staircase._i_trial
+        else:
+            self._i_trial = i_trial
 
         # How close to center joystick must be to count as joystick centering
         self._joystick_center_threshold = 0.05
@@ -193,7 +284,8 @@ class Config():
 
         self._trial_init = TrialInitialization(
             stimulus_generator, prey_lead_in=self._prey_lead_in,
-            static_prey=static_prey, static_agent=static_agent)
+            static_prey=static_prey, static_agent=static_agent,
+            id_trial_staircase=self._id_trial_staircase)
 
         # Create renderer
         self._observer = observers.PILRenderer(
@@ -226,6 +318,8 @@ class Config():
             half_width=40,  # given 60 Hz, 666*2/2 ms
             maximum=1,
             prey_speed=self._prey_speed,
+            max_rewarding_dist=_MAX_REWARDING_DIST,
+            prey_opacity_staircase=None,
         )
 
         # joystick_center_task = tasks_custom.BeginPhase('fixation')
@@ -234,8 +328,8 @@ class Config():
         #     'offline', max_rewarding_dist=_MAX_REWARDING_DIST)
         #
         timeout_task = tasks.Reset(
-            condition=lambda _, meta_state: meta_state['phase'] == 'reward',
-            steps_after_condition=_REWARD,
+            condition=lambda _, meta_state: meta_state['phase'] == 'afterbreak',
+            steps_after_condition=_AFTERBREAK,
         )
         self._task = tasks.CompositeTask(
             prey_task,
@@ -250,7 +344,7 @@ class Config():
             eye=action_spaces.SetPosition(action_layers=('eye',), inertia=0.),
             hand=action_spaces_custom.JoystickColor(
                 up_color=(32, 128, 32), # green
-                scaling_factor=0.01),
+                scaling_factor=0.0001),
         )
 
     def _construct_game_rules(self):
@@ -270,6 +364,16 @@ class Config():
             s.c1 = 128
             s.c2 = 32
 
+        def _make_yellow(s):
+            s.c0 = 60
+            s.c1 = 100
+            s.c2 = 100
+
+        def _make_red(s):
+            s.c0 = 128
+            s.c1 = 32
+            s.c2 = 32
+
         # 1. ITI phase
 
         def _reset_physics(meta_state):
@@ -278,33 +382,31 @@ class Config():
 
         reset_physics = gr.ModifyMetaState(_reset_physics)
 
+        def _set_id_block(meta_state):
+            if self._id_trial_staircase is not None:
+                meta_state['i_trial'] = self._id_trial_staircase._i_trial
+            i_block = np.floor_divide(meta_state['i_trial']-1, _NUM_TRIAL_BLOCK)  # 01234...
+            meta_state['id_block'] = bool((i_block % 2) == 0)  # true for odd (with FP), false for even
+            print([meta_state['i_trial'],i_block,meta_state['id_block']])
+
+        set_id_block = gr.ModifyMetaState(_set_id_block)
+
         phase_iti = gr.Phase(
-            one_time_rules=reset_physics,
-            duration=_ITI,
+            one_time_rules=[reset_physics,set_id_block],
+            duration=_ITI,  # 6 frames: 100ms
             name='iti',
         )
 
-        # 2. Joystick centering phase
+        # 2. Fixation phase
 
-        appear_joystick = gr.ModifySprites(
-            ['joystick_fixation', 'joystick'], _make_opaque)
-
-        def _should_end_joystick_fixation(state):
-            joystick_pos = state['joystick'][0].position
-            dist_from_center = np.linalg.norm(joystick_pos - 0.5 * np.ones(2))
-            joystick_v = state['joystick'][0].velocity
-            return (dist_from_center < self._joystick_center_threshold) & np.all(joystick_v == 0)
-
-        phase_joystick_center = gr.Phase(
-            one_time_rules=appear_joystick,
-            end_condition=_should_end_joystick_fixation,
-            name='joystick_fixation',
-        )
-
-        # 3. Fixation phase
-
-        disappear_joystick = gr.ModifySprites(
-            ['joystick_fixation', 'joystick'], _make_transparent)
+        # one time (for offline phase)
+        def _sample_foreperiod(meta_state):
+            if meta_state['id_block']:  # true if odd (with FP)
+                offline_duration = np.round(_MIN_EXP + np.min([_MAX_EXP, np.random.exponential(scale=_MEAN_EXP)]))
+            else:
+                offline_duration = 0
+            meta_state['RT_offline'] = offline_duration
+        sample_foreperiod = gr.ModifyMetaState(_sample_foreperiod)
 
         def _should_increase_fixation_dur(state, meta_state):
             dist = np.linalg.norm(
@@ -327,80 +429,87 @@ class Config():
         def _should_end_fixation(state, meta_state):
             return (meta_state['fixation_duration'] >= _FIXATION_STEPS)  # 6 frames 100ms
 
-        if not self._fixation_phase:  # protocol 'random_12'
-            fixation_duration = 0
+        if not self._fixation_phase:  # protocol 'random_20'
+            fixation_duration = _FIXATION_STEPS # 12 frames, 200ms
         else:
             fixation_duration = np.inf
 
         appear_fixation = gr.ModifySprites('fixation', _make_opaque)
 
         phase_fixation = gr.Phase(
-            one_time_rules=[appear_fixation, disappear_joystick],
+            one_time_rules=[appear_fixation],  # ,sample_foreperiod],
             continual_rules=[increase_fixation_dur, reset_fixation_dur],
             end_condition=_should_end_fixation,
             duration=fixation_duration,
             name='fixation',
         )
 
-        # 4. Offline phase
+        # 3. Offline phase
 
         # one_time_rules
         disappear_fixation = gr.ModifySprites('fixation', _make_transparent)
         disappear_screen = gr.ModifySprites('screen', _make_transparent)
         create_agent = custom_game_rules.CreateAgent(self._trial_init)
 
-        # # continual_rules
-        # #   change agent color if offline reward
-        # def _reward(state, meta_state):
-        #     if len(state['agent']) > 0:
-        #         agent = state['agent'][0]
-        #         if (meta_state['phase'] == 'offline' and
-        #                 agent.metadata['moved'] and
-        #                 np.all(state['agent'][0].velocity == 0)):
-        #             prey = state['prey'][0]
-        #             prey_exit_x = meta_state['prey_path'][-1][0]
-        #             agent_prey_dist = np.abs(agent.x - prey_exit_x)
-        #             reward = max(0, 1 - agent_prey_dist / (_MAX_REWARDING_DIST + _EPSILON))
-        #         else:
-        #             reward = 0.
-        #     else:
-        #         reward = 0.
-        #     return reward
-        # def _offline_reward(state, meta_state):
-        #     return _reward(state, meta_state) > 0
-
+        # continual_rules
         def _track_moved(s):
-            if not np.all(s.velocity == 0):
-                s.metadata['moved'] = True
+            if not np.all(s.velocity == 0): ##
+                s.metadata['moved_h'] = True
         update_agent_metadata = gr.ModifySprites('agent', _track_moved)
-        # update_agent_color = gr.ConditionalRule(
-        #     condition=lambda state, x: _offline_reward(state, x) > 0,
-        #     rules=gr.ModifySprites('agent', _make_green)
-        # )
 
         def _should_increase_RT_offline(state, meta_state):
             agent = state['agent'][0]
-            return not agent.metadata['moved']
+            return not agent.metadata['moved_h']
         def _increase_RT_offline(meta_state):
             meta_state['RT_offline'] += 1
         update_RT_offline = gr.ConditionalRule(
             condition=_should_increase_RT_offline,
             rules=gr.ModifyMetaState(_increase_RT_offline)
         )
-
-        # end_condition
-        def _end_offline_phase(state):
+        def _end_offline_phase(state,meta_state):
             agent = state['agent'][0]
-            return (agent.metadata['moved'] and np.all(agent.velocity == 0))
+            if meta_state['id_block']:  # true if odd (with FP)
+                tmp_output = agent.metadata['moved_h']
+            else:
+                tmp_output = True
+            return tmp_output
+
+        ## for externally controled foreperiod
+        # def _increase_t_offline(meta_state):
+        #     meta_state['t_offline'] += 1
+        # increase_t_offline = gr.ModifyMetaState(_increase_t_offline)
+        # def _should_end_offline(state, meta_state):
+        #     return (meta_state['t_offline'] >= meta_state['RT_offline'])  # 6 frames 100ms
 
         phase_offline = gr.Phase(
             one_time_rules=[disappear_fixation, disappear_screen, create_agent],
-            continual_rules=[update_agent_metadata, update_RT_offline],  # update_agent_color
             name='offline',
-            end_condition=_end_offline_phase,  # duration=10,
+            continual_rules=[update_agent_metadata, update_RT_offline],  #  increase_t_offline,
+            end_condition=_end_offline_phase  #  _should_end_offline,
         )
 
-        # 5. Visible motion phase
+        # 3-2. buffer fixation
+        def return_not_id_block(state,meta_state):
+            id_block = not (meta_state['id_block'])  # true if odd (with FP)
+            return id_block
+
+        def return_id_block(state,meta_state):
+            id_block = (meta_state['id_block'])  # true if odd (with FP)
+            return id_block
+
+        appear_fixation2 = gr.ConditionalRule(
+            condition=return_id_block,
+            rules=gr.ModifySprites('fixation', _make_opaque)
+        )
+
+        phase_fixation2 = gr.Phase(
+            one_time_rules=[appear_fixation2],  # ,sample_foreperiod],
+            duration=fixation_duration,
+            end_condition=return_not_id_block,
+            name='fixation2',
+        )
+
+        # 4. Visible motion phase
 
         def _unglue(meta_state):
             self._maze_walk.speed = self._prey_speed
@@ -421,16 +530,16 @@ class Config():
             return False
 
         phase_motion_visible = gr.Phase(
-            one_time_rules=[unglue,glue_agent],
+            one_time_rules=[disappear_fixation,unglue,glue_agent],
             continual_rules=update_motion_steps,
             end_condition=_end_vis_motion_phase,  #  duration=10,
             name='motion_visible',
         )
 
-        # 6. Invisible motion phase
+        # 5. Invisible motion phase
 
         def _end_motion_phase(state):
-            return state['agent'][0].metadata['response']
+            return state['agent'][0].metadata['response_up']
 
         hide_prey = gr.ModifySprites('prey', _make_prey_transparent)
 
@@ -449,25 +558,89 @@ class Config():
             name='motion_invisible',
         )
 
-        # 7. Reward Phase
+        # 6. Reward Phase
 
-        reveal_prey = gr.ModifySprites('prey', _make_opaque)
+        # one_time_rules
+        # reveal_prey = gr.ModifySprites('prey', _make_opaque)
+        opaque_agent = gr.ModifySprites('agent', _make_opaque)
+
+        # feedback for early
+        def _sign_error(state,meta_state):
+            early_error = meta_state['prey_distance_remaining'] > 0
+            return early_error
+        update_agent_y = gr.ConditionalRule(
+            condition=_sign_error,
+            rules=gr.ModifySprites('early_feedback', _make_opaque)
+        )
+        # feedback for late
+        def _sign_error2(state,meta_state):
+            late_error = meta_state['prey_distance_remaining'] <= 0
+            return late_error
+        update_agent_y2 = gr.ConditionalRule(
+            condition=_sign_error2,
+            rules=gr.ModifySprites('late_feedback', _make_opaque)
+        )
 
         phase_reward = gr.Phase(
-            one_time_rules=reveal_prey,
+            one_time_rules=[opaque_agent,update_agent_y,update_agent_y2],  #   reveal_prey],
             continual_rules=[update_motion_steps],
+            duration=_FEEDBACK,
             name='reward',
         )
+
+        # 7. break
+
+        # one-time
+        appear_screen = gr.ModifySprites('screen', _make_opaque)
+        opaque_early_feedback = gr.ModifySprites('early_feedback', _make_transparent)
+        opaque_late_feedback = gr.ModifySprites('late_feedback', _make_transparent)
+
+        unglue_agent = custom_game_rules.UnglueAgent()
+
+        # end condition
+        def _end_break(state,meta_state):
+
+            not_break_trial = (meta_state['i_trial'] % _NUM_TRIAL_BLOCK != 0)
+            if len(state['agent']) > 0:
+                break_break = state['agent'][0].velocity[0] != 0
+            else:
+                break_break = True
+            end_break = not_break_trial or break_break
+            return end_break
+
+        phase_break = gr.Phase(
+            one_time_rules=[appear_screen,opaque_early_feedback,opaque_late_feedback,unglue_agent],
+            # duration=_FEEDBACK,
+            end_condition=_end_break,
+            name='break',
+        )
+
+        # 8. after-break
+
+        def _increase_trial(meta_state):
+            if self._id_trial_staircase is not None:
+                self._id_trial_staircase.step()
+
+        increase_trial = gr.ModifyMetaState(_increase_trial)
+
+        phase_afterbreak = gr.Phase(
+            one_time_rules=increase_trial,
+            duration=0,
+            name='afterbreak',
+        )
+
 
         # Final rules
         phase_sequence = gr.PhaseSequence(
             phase_iti,
-            phase_joystick_center,
             phase_fixation,
             phase_offline,
+            phase_fixation2,
             phase_motion_visible,
             phase_motion_invisible,
             phase_reward,
+            phase_break,
+            phase_afterbreak,
             meta_state_phase_name_key='phase',
         )
         self._game_rules = (phase_sequence,)
