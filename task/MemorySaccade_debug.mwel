@@ -785,6 +785,10 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (target)
             dequeue_stimulus (object)
             dequeue_stimulus (fixCircleStatic)
+            dequeue_stimulus (update_position)
+            dequeue_stimulus(distractor1)
+            dequeue_stimulus(distractor2)
+            dequeue_stimulus(distractor3)
 
             id_bad = 0
 
@@ -843,6 +847,10 @@ protocol 'MemorySaccade' {
                 fix_blue_static = 0
                 dequeue_stimulus (target)
                 dequeue_stimulus (object)
+                dequeue_stimulus(distractor1)
+                dequeue_stimulus(distractor2)
+                dequeue_stimulus(distractor3)
+                dequeue_stimulus (update_position)
                 update_stimulus_display ()
             }
 
