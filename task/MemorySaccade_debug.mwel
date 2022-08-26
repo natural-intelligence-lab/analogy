@@ -263,7 +263,9 @@ group object{
     var object_offsetY = 0.5
     var nObject =2
     var object_alpha=1
+    var object_alpha0=1
     var object_alpha_memory=0 // 0.01
+    var elapsed_time2 = 0
 
 }
 
@@ -314,6 +316,11 @@ render_actions update_position (
     distractorY=targetY+ sin(distractor_theta*pi()/180)*distractor_radius
 }
 
+render_actions object_disappear (
+    elapsed_time = elapsed_time2
+    ) {
+    object_alpha=(object_alpha0-object_alpha_memory)*(1-elapsed_time2/1000/memoryTimeDur)+object_alpha_memory
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -598,6 +605,7 @@ protocol 'MemorySaccade' {
             tTargetOff = next_frame_time()
             id_bad = 3
 
+            /*
             // memory
             if (id_overlap!=1){
                 // slowly fainting target
@@ -621,12 +629,14 @@ protocol 'MemorySaccade' {
                     update_stimulus_display ()
                 }*/
             }
+            */
 
             live_queue_stimulus(distractor1)
             live_queue_stimulus(distractor2)
             live_queue_stimulus(distractor3)
 
             queue_stimulus (update_position)
+            queue_stimulus (object_disappear)
             update_stimulus_display ()
 
             start_timer (
@@ -648,6 +658,7 @@ protocol 'MemorySaccade' {
             id_bad = 4
             dequeue_stimulus(fixCircleStatic)
             dequeue_stimulus (update_position)
+            dequeue_stimulus (object_disappear)
             update_stimulus_display ()
 
             goto (
@@ -785,10 +796,11 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (target)
             dequeue_stimulus (object)
             dequeue_stimulus (fixCircleStatic)
-            dequeue_stimulus (update_position)
             dequeue_stimulus(distractor1)
             dequeue_stimulus(distractor2)
             dequeue_stimulus(distractor3)
+            dequeue_stimulus (update_position)
+            dequeue_stimulus (object_disappear)
 
             id_bad = 0
 
@@ -851,6 +863,7 @@ protocol 'MemorySaccade' {
                 dequeue_stimulus(distractor2)
                 dequeue_stimulus(distractor3)
                 dequeue_stimulus (update_position)
+                dequeue_stimulus (object_disappear)
                 update_stimulus_display ()
             }
 
