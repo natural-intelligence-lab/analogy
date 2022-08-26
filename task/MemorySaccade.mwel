@@ -52,8 +52,8 @@ path=/path/to/image.png
 // %include 'eye_interfaces/mouse' // debug
 %include 'eye_interfaces/eyelink' // debug
 
-// %include 'firmata_ephys' // debug
-%include 'firmata_train' // debug
+%include 'firmata_ephys' // debug
+// %include 'firmata_train' // debug
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,8 @@ path=/path/to/image.png
 // Choose platform
 //
 ///////////////////////////////////////////////////////////////////////////////
-// var platform = 'monkey_ephys'
-var platform = 'monkey_train'
+var platform = 'monkey_ephys'
+// var platform = 'monkey_train'
 // var platform = 'psychophysics'
 // var platform = 'laptop'
 // var platform = 'desktop'
@@ -223,7 +223,7 @@ group target{
     var target_red=1
     var target_green=1
     var target_blue=1
-    var target_win = 10
+    var target_win = 5
     var on_target=0
     var target_sz = 0.001 // 0.5
     var target_radius= 10
@@ -231,6 +231,8 @@ group target{
     var target_id=0
     var targetX = 0
     var targetY = 0
+    var targetX_final = 0
+    var targetY_final = 0
     var nTarget =4
     var target_alpha=0//1
     var target_alpha_memory=0.01
@@ -256,6 +258,9 @@ group object{
     var object_theta=0
     var objectX = 0
     var objectY = 0
+    var objectX_final = 0
+    var objectY_final = 0
+    var object_offsetY = 0.5
     var nObject =2
     var object_alpha=1
     var object_alpha_memory=0 // 0.01
@@ -271,44 +276,44 @@ group distractor{ // purple grape
     var circle_size=0.5
     var within_distance=sqrt(pow(circle_size,2)-pow((circle_size/2),2))/(1+sin(30/180*pi()))
 
-    var distractor_radius= 4*circle_size// 2*circle_size+object_sz // relative to target/object
+    var distractor_radius= 6*circle_size// 2*circle_size+object_sz // relative to target/object
     var distractor_theta=0
     var distractor_nTheta=4
     var distractor_id=0
 
     var distractorX = 0
     var distractorY = 0
+
+    var distractorX_final = 0
+    var distractorY_final = 0
     var distractor_alpha=1
 }
 
-//TBD
-// render actions
-/*
-var position = 0
-var size = 0
+group motion {
+    var motion_direction = 0 // -1 for CW 1 for CCW
+    var angle_rotation=0
+    var angle_rotation0=0
+    var elapsed_time = 0
 
-circle ball (
-    color = 1,0,0
-    x_position = position
-    x_size = size
-    )
-
-var elapsed_time = 0
-
-render_actions update_position_and_size (
-    elapsed_time = elapsed_time
-    ) {
-    // Vary position and size sinusoidally with a period of
-    // three seconds
-    position = -15 * cos(2*pi() * elapsed_time / 3s)
-    size = 3 * (sin(2*pi() * elapsed_time / 3s) + 1) + 2
 }
 
-queue_stimulus (update_position_and_size)
-live_queue_stimulus (ball)
-update_display ()
 
-*/
+render_actions update_position (
+    elapsed_time = elapsed_time
+    ) {
+
+    angle_rotation=motion_direction*pi()/3*(1-elapsed_time/1000/memoryTimeDur) //   +/-60 to 0
+
+    targetX = fixX + cos(target_theta*pi()/180+angle_rotation)*target_radius
+    targetY = fixY + sin(target_theta*pi()/180+angle_rotation)*target_radius
+
+    objectX = targetX
+    objectY = targetY
+
+    distractorX=targetX + cos(distractor_theta*pi()/180)*distractor_radius
+    distractorY=targetY+ sin(distractor_theta*pi()/180)*distractor_radius
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -329,7 +334,7 @@ group 'object'{
             y_size = object_sz
             rotation = -45
             x_position = objectX
-            y_position = objectY
+            y_position = objectY-object_offsetY
             alpha_multiplier = object_alpha
     )
 }
@@ -407,7 +412,7 @@ group 'Fixation' {
 }
 
 group 'Target'{
-    stimulus/fixation_point target (
+    stimulus/circular_fixation_point target (
             color = target_red,target_green,target_blue
             trigger_width = target_win
             trigger_watch_x = eye_x
@@ -435,6 +440,8 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
 
 %define sample_trial ()
+    motion_direction=2*(disc_rand(0,1))-1 // -1 for CW 1 for CCW
+
     // sample target locations
     target_id = disc_rand(0,nTarget-1)
     target_theta=target_id*(360/nTarget)
@@ -442,23 +449,32 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     targetX_final = fixX + cos(target_theta*pi()/180)*target_radius
     targetY_final = fixY + sin(target_theta*pi()/180)*target_radius
 
+    angle_rotation0=motion_direction*pi()/3 //   +/-60
+    targetX = fixX + cos(target_theta*pi()/180+angle_rotation0)*target_radius
+    targetY = fixY + sin(target_theta*pi()/180+angle_rotation0)*target_radius
+
     object_theta = target_theta
-    objectX_final = targetX
-    objectY_final = targetY
+    objectX_final = targetX_final
+    objectY_final = targetY_final
+
+    objectX = targetX
+    objectY = targetY
 
     // sample distractors
     distractor_id = disc_rand(0,distractor_nTheta-1)
     distractor_theta = distractor_id*(360/distractor_nTheta)
 
-    distractorX_final=targetX + cos(distractor_theta*pi()/180)*distractor_radius
-    distractorY_final=targetY+ sin(distractor_theta*pi()/180)*distractor_radius
+    distractorX_final=targetX_final + cos(distractor_theta*pi()/180)*distractor_radius
+    distractorY_final=targetY_final+ sin(distractor_theta*pi()/180)*distractor_radius
+
+    distractorX = targetX + cos(distractor_theta*pi()/180)*distractor_radius
+    distractorY = targetY+ sin(distractor_theta*pi()/180)*distractor_radius
 
     // sample durations
     fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
     targetTimeDur=-targetTimeDurMean*logn(rand(0,1)) + targetTimeDurMin
     memoryTimeDur=-memoryTimeDurMean*logn(rand(0,1)) + memoryTimeDurMin
 
-    motion_direction=disc_rand(0,1)
 %end
 
 % define sample_visiblity ()
@@ -560,9 +576,6 @@ protocol 'MemorySaccade' {
             tTargetOn = next_frame_time()
             live_queue_stimulus(target)
             live_queue_stimulus(object)
-            live_queue_stimulus(distractor1)
-            live_queue_stimulus(distractor2)
-            live_queue_stimulus(distractor3)
             update_stimulus_display ()
             id_bad = 2
 
@@ -584,6 +597,8 @@ protocol 'MemorySaccade' {
         state 'Memory' {
             tTargetOff = next_frame_time()
             id_bad = 3
+
+            // memory
             if (id_overlap!=1){
                 // slowly fainting target
                 if (id_ramp_opacity==1){
@@ -607,6 +622,13 @@ protocol 'MemorySaccade' {
                 }*/
             }
 
+            live_queue_stimulus(distractor1)
+            live_queue_stimulus(distractor2)
+            live_queue_stimulus(distractor3)
+
+            queue_stimulus (update_position)
+            update_stimulus_display ()
+
             start_timer (
                 timer = timer_memory
                 duration = memoryTimeDur
@@ -625,7 +647,7 @@ protocol 'MemorySaccade' {
             tFixOff= next_frame_time()
             id_bad = 4
             dequeue_stimulus(fixCircleStatic)
-
+            dequeue_stimulus (update_position)
             update_stimulus_display ()
 
             goto (
@@ -692,6 +714,10 @@ protocol 'MemorySaccade' {
 
             // make target visible
             object_alpha = 1 //target_alpha = 1
+            dequeue_stimulus(distractor1)
+            dequeue_stimulus(distractor2)
+            dequeue_stimulus(distractor3)
+
             update_stimulus_display ()
 
             start_timer (
@@ -749,6 +775,8 @@ protocol 'MemorySaccade' {
             object_green=0.5
             object_blue=0 // target_blue=1
             object_alpha = 1 // target_alpha = 1
+
+            elapsed_time = 0
 
             fix_red_static = 1
             fix_green_static = 1
