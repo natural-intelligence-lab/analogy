@@ -302,6 +302,7 @@ group motion {
     var angle_rotation=0
     var angle_rotation0=0
     var elapsed_time = 0
+    var nAngle0=4 // initial angle from final location 120/nAngle0
 
 }
 
@@ -325,7 +326,7 @@ render_actions update_position (
 render_actions object_disappear (
     elapsed_time = elapsed_time2
     ) {
-    object_alpha=(object_alpha0-object_alpha_memory)*(1-elapsed_time2/1000/memoryTimeDur)+object_alpha_memory
+    object_alpha=(object_alpha0-object_alpha_memory)*(1-elapsed_time2/1000/memoryTimeDur)+object_alpha_memory // ramp down from object_alpha0 to object_alpha_memory
 }
 
 
@@ -398,30 +399,6 @@ group 'Fixation' {
             rotation = 0
             alpha_multiplier = 1
     )
-
-    // old below
-    /*
-    frame_list dynamicFix (
-        stimulus_group = dynamicFixFrames
-        loop = YES // NO // YES
-        autoplay = YES // NO //YES
-        )
-    stimulus_group dynamicFixFrames {
-        circular_fixation_point fixCircleDyn (
-            color = fix_red,fix_green,fix_blue
-            trigger_width = fix_win
-            trigger_watch_x = eye_x
-            trigger_watch_y = eye_y
-            trigger_flag = on_fix_dyn
-            x_size = fix_sz
-            y_size = fix_sz
-            x_position = fixX+cos(pursuitTheta*pi()/180)*ball_speed*(next_frame_time() - tStart)/1e6 // set up for 1s drift to right most point (8deg)
-            y_position = fixY+sin(pursuitTheta*pi()/180)*ball_speed*(next_frame_time() - tStart)/1e6
-            rotation = 0
-            alpha_multiplier = max(fix_alpha_min,fix_alpha_max-(fix_alpha_max-fix_alpha_min)/t_visible*((next_frame_time() - tBallOn)/1e6))
-            )
-    }
-    */
 }
 
 group 'Target'{
@@ -462,7 +439,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     targetX_final = fixX + cos(target_theta*pi()/180)*target_radius
     targetY_final = fixY + sin(target_theta*pi()/180)*target_radius
 
-    angle_rotation0=motion_direction*rand(0,1)+// pi()/3 //   +/-[30 180]
+    angle_rotation0=motion_direction*disc_rand(0,nAngle0)*pi()/6 // pi()/3 //   +/-[30 180]
     targetX = fixX + cos(target_theta*pi()/180+angle_rotation0)*target_radius
     targetY = fixY + sin(target_theta*pi()/180+angle_rotation0)*target_radius
 
@@ -486,6 +463,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     // sample durations
     fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
     targetTimeDur=-targetTimeDurMean*logn(rand(0,1)) + targetTimeDurMin
+    relationTimeDur=-relationTimeDurMean*logn(rand(0,1)) + relationTimeDurMin
     memoryTimeDur=-memoryTimeDurMean*logn(rand(0,1)) + memoryTimeDurMin
 
 %end
@@ -602,47 +580,45 @@ protocol 'MemorySaccade' {
                 when = !on_fix_static
                 )
             timer_expired (
-                target = 'Memory'
+                target = 'Cue On'
                 timer = timer_target_on
                 )
         }
 
-        state 'Memory' {
-            tTargetOff = next_frame_time()
-            id_bad = 3
-
-            /*
-            // memory
-            if (id_overlap!=1){
-                // slowly fainting target
-                if (id_ramp_opacity==1){
-                    delta_alpha = (object_alpha-object_alpha_memory)/(memoryTimeDur/1000*60)
-                    while (object_alpha > object_alpha_memory){
-                        object_alpha=max(object_alpha_memory,object_alpha-delta_alpha)
-                        update_stimulus_display ()
-                    }
-                }
-                if (id_ramp_opacity==0){
-                    object_alpha=object_alpha_memory
-                    update_stimulus_display ()
-
-                }
-
-                /* for target fixation window
-                delta_alpha = (target_alpha-target_alpha_memory)/(memoryTimeDur/1000*60)
-                while (target_alpha > target_alpha_memory){
-                    target_alpha=target_alpha-delta_alpha
-                    update_stimulus_display ()
-                }*/
-            }
-            */
+        state 'Cue On' {
+            tCueOn = next_frame_time()
 
             live_queue_stimulus(distractor1)
             live_queue_stimulus(distractor2)
             live_queue_stimulus(distractor3)
 
+            update_stimulus_display ()
+
+            id_bad = 3
+
+            start_timer (
+                timer = timer_cue_on
+                duration = relationTimeDur
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'Memory'
+                timer = timer_cue_on
+                )
+        }
+
+        state 'Memory' {
+            tTargetOff = next_frame_time()
+            id_bad = 4
+
             queue_stimulus (update_position)
-            queue_stimulus (object_disappear)
+            if (id_ramp_opacity==1){
+                queue_stimulus (object_disappear)
+            }
             update_stimulus_display ()
 
             start_timer (
@@ -661,7 +637,7 @@ protocol 'MemorySaccade' {
         }
         state 'FixOff' {
             tFixOff= next_frame_time()
-            id_bad = 4
+            id_bad = 5
             dequeue_stimulus(fixCircleStatic)
             dequeue_stimulus (update_position)
             dequeue_stimulus (object_disappear)
@@ -708,7 +684,7 @@ protocol 'MemorySaccade' {
         }
 
         state 'Response' {
-            id_bad = 5
+            id_bad = 6
 
             start_timer (
                 timer = timer_response
@@ -726,7 +702,7 @@ protocol 'MemorySaccade' {
         }
 
         state 'post_response' {
-            id_bad = 6
+            id_bad = 7
             tResponse= now()
 
             // make target visible
@@ -860,7 +836,7 @@ protocol 'MemorySaccade' {
         state 'Failure to fixate' {
             report ('Trial Failed: id_bad = $id_bad')
 
-            if (id_bad==2 || id_bad==3){
+            if (id_bad==2 || id_bad==3 || id_bad==4){ // target cue memory
                 fix_green_static = 0
                 fix_blue_static = 0
                 dequeue_stimulus (target)
