@@ -4,7 +4,7 @@ function [retval] = plot_alpha_staircase(data, values)
 
 % fig.1: fix_alpha_min
 
-name={'fix_alpha_min',... % 1 from meta_state
+name={'p_memoryTimeDur',... % fix_alpha_min',... % 1 from meta_state
     'localTrials',... % 11
     'CorrectTrials',... % 17
     }; % 16

@@ -17,7 +17,7 @@
 
     2022/8/28
         - elaborate time course
-
+        - staircase for ramp down duration (p_memoryTimeDur)
 
   (TBD)
   - for recording, regular MGS
@@ -272,7 +272,10 @@ group object{ // banana
     var object_alpha0=1
     var object_alpha_memory=0 // 0.01
     var elapsed_time2 = 0
-
+    var p_memoryTimeDur=1 // staircase for ramp-down duration
+    var delta_memoryTimeDur=0.1
+    var p_memoryTimeDurMin=0.0001
+    var p_memoryTimeDurMax=1
 }
 
 
@@ -326,7 +329,7 @@ render_actions update_position (
 render_actions object_disappear (
     elapsed_time = elapsed_time2
     ) {
-    object_alpha=(object_alpha0-object_alpha_memory)*(1-elapsed_time2/1000/memoryTimeDur)+object_alpha_memory // ramp down from object_alpha0 to object_alpha_memory
+    object_alpha=(object_alpha0-object_alpha_memory)*max(0,(1-elapsed_time2/1000/(p_memoryTimeDur*memoryTimeDur)))+object_alpha_memory // ramp down from object_alpha0 to object_alpha_memory
 }
 
 
@@ -470,20 +473,6 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
 %end
 
-% define sample_visiblity ()
-if_else{
-    if (rand() > p_visible){
-        id_visible = 0
-        fix_alpha_min = fix_alpha_min0 // comment to use staircase
-    }
-    else {
-            id_visible = 1
-            // fix_alpha_min0 = fix_alpha_min // // keeping staircase (debug TBD)
-            fix_alpha_min = 1
-        }
-    }
-% end
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Protocols
@@ -621,6 +610,9 @@ protocol 'MemorySaccade' {
             if (id_ramp_opacity==1){
                 queue_stimulus (object_disappear)
             }
+            if (id_ramp_opacity==0){
+                object_alpha=object_alpha_memory
+            }
             update_stimulus_display ()
 
             start_timer (
@@ -746,7 +738,7 @@ protocol 'MemorySaccade' {
             }
 
             //staircase
-            // fix_alpha_min=max(0,fix_alpha_min-delta_fix_alpha_down)
+            p_memoryTimeDur=max(p_memoryTimeDur-delta_memoryTimeDur,p_memoryTimeDurMin)
 
             pulse ( // micro seconds
                 variable = reward_line
@@ -822,7 +814,7 @@ protocol 'MemorySaccade' {
             report ('Trial Failed: id_bad = $id_bad')
 
             //staircase
-            // fix_alpha_min=min(1,fix_alpha_min+delta_fix_alpha_up)
+            p_memoryTimeDur=min(p_memoryTimeDur+delta_memoryTimeDur,p_memoryTimeDurMax)
 
             start_timer (
                 timer = fix_pur_timeout
@@ -849,6 +841,15 @@ protocol 'MemorySaccade' {
                 dequeue_stimulus (update_position)
                 dequeue_stimulus (object_disappear)
                 update_stimulus_display ()
+            }
+            if (id_bad==5 || id_bad==6){ // response fixOff; not able to find target
+                //staircase
+                p_memoryTimeDur=min(p_memoryTimeDur+delta_memoryTimeDur,p_memoryTimeDurMax)
+
+                object_alpha = 1 //target_alpha = 1
+
+                update_stimulus_display ()
+
             }
 
             start_timer (
