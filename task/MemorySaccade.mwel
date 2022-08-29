@@ -15,9 +15,12 @@
         - distractors
         - option for moving
 
+    2022/8/28
+        - elaborate time course
+
 
   (TBD)
-  - implement MGS with distractors
+  - for recording, regular MGS
 
   training curriculum
 1. Overlap saccade
@@ -25,8 +28,6 @@
 3. MGS with distractors
 4. MGS with moving objects
 5. Target opacity on staircase
-
-
 
 stimulus/image_file
 path=/path/to/image.png
@@ -125,7 +126,7 @@ var var_debug = 0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 50 (groups = Reward)
+    var rewardDur = 60 (groups = Reward)
     var bonusRewDur = 0  (groups = Reward)
 }
 
@@ -176,6 +177,7 @@ group Time {
     var tStart = 0
     var tFix = 0
     var tTargetOn = 0
+    var tCueOn = 0
     var tTargetOff = 0
     var tFixOff = 0
     var tResponse = 0
@@ -185,12 +187,16 @@ group Time {
 
 group MemorySaccade {
     var fixTimeDur = 0
-    var fixTimeDurMean = 250
-    var fixTimeDurMin = 500
+    var fixTimeDurMean = 0
+    var fixTimeDurMin = 250
 
     var targetTimeDur = 0
-    var targetTimeDurMean = 0
-    var targetTimeDurMin = 500
+    var targetTimeDurMean = 250
+    var targetTimeDurMin = 250
+
+    var relationTimeDur = 0
+    var relationTimeDurMean = 250
+    var relationTimeDurMin = 250
 
     var memoryTimeDur = 0.0001 // to prevent division by zero
     var memoryTimeDurMean = 250
@@ -200,13 +206,13 @@ group MemorySaccade {
 
     var responseRewardDelay = 300
 
-    var id_overlap = 1
-    var id_ramp_opacity=0
-    var id_fixation = 0
+    var id_overlap = 1 // not used anymore
+    var id_ramp_opacity=1
+    var id_fixation = 0 // not used anymore
 }
 
 
-group Staircase {
+group Staircase { // not used
     var fix_alpha_max = 1
     var t_visible = 0.5 // sec; alpha linearly decrease from max to min
     var fix_alpha_min = 1 // 0.3 // 0 // 0.5
@@ -219,7 +225,7 @@ group Staircase {
     var delta_fix_alpha_down = 0 // 0.5 // 0.05 // 0 // 0.05
 }
 
-group target{
+group target{ // just for target fixation window
     var target_red=1
     var target_green=1
     var target_blue=1
@@ -234,7 +240,7 @@ group target{
     var targetX_final = 0
     var targetY_final = 0
     var nTarget =4
-    var target_alpha=0//1
+    var target_alpha=0 //1
     var target_alpha_memory=0.01
     var delta_alpha=0
 }
@@ -250,7 +256,7 @@ group Global {
     var id_bad = 0 (groups = Trial)
 }
 
-group object{
+group object{ // banana
     var object_red=1 // oragne [1 .5 0]
     var object_green=.5
     var object_blue=0
@@ -304,7 +310,7 @@ render_actions update_position (
     elapsed_time = elapsed_time
     ) {
 
-    angle_rotation=motion_direction*pi()/3*(1-elapsed_time/1000/memoryTimeDur) //   +/-60 to 0
+    angle_rotation=motion_direction*angle_rotation0*(1-elapsed_time/1000/memoryTimeDur) //   +/-60 to 0
 
     targetX = fixX + cos(target_theta*pi()/180+angle_rotation)*target_radius
     targetY = fixY + sin(target_theta*pi()/180+angle_rotation)*target_radius
@@ -456,7 +462,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     targetX_final = fixX + cos(target_theta*pi()/180)*target_radius
     targetY_final = fixY + sin(target_theta*pi()/180)*target_radius
 
-    angle_rotation0=motion_direction*pi()/3 //   +/-60
+    angle_rotation0=motion_direction*rand(0,1)+// pi()/3 //   +/-[30 180]
     targetX = fixX + cos(target_theta*pi()/180+angle_rotation0)*target_radius
     targetY = fixY + sin(target_theta*pi()/180+angle_rotation0)*target_radius
 
