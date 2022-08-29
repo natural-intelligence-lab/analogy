@@ -311,7 +311,7 @@ render_actions update_position (
     elapsed_time = elapsed_time
     ) {
 
-    angle_rotation=motion_direction*angle_rotation0*(1-elapsed_time/1000/memoryTimeDur) //   +/-60 to 0
+    angle_rotation=angle_rotation0*(1-elapsed_time/1000/memoryTimeDur)
 
     targetX = fixX + cos(target_theta*pi()/180+angle_rotation)*target_radius
     targetY = fixY + sin(target_theta*pi()/180+angle_rotation)*target_radius
@@ -439,9 +439,11 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     targetX_final = fixX + cos(target_theta*pi()/180)*target_radius
     targetY_final = fixY + sin(target_theta*pi()/180)*target_radius
 
-    angle_rotation0=motion_direction*disc_rand(0,nAngle0)*pi()/6 // pi()/3 //   +/-[30 180]
+    angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6 // pi()/3 //   +/-[30 180]
     targetX = fixX + cos(target_theta*pi()/180+angle_rotation0)*target_radius
     targetY = fixY + sin(target_theta*pi()/180+angle_rotation0)*target_radius
+
+    angle_rotation=angle_rotation0
 
     object_theta = target_theta
     objectX_final = targetX_final
@@ -619,13 +621,6 @@ protocol 'MemorySaccade' {
             if (id_ramp_opacity==1){
                 queue_stimulus (object_disappear)
             }
-            update_stimulus_display ()
-
-            live_queue_stimulus(distractor1)
-            live_queue_stimulus(distractor2)
-            live_queue_stimulus(distractor3)
-
-            queue_stimulus (update_position)
             update_stimulus_display ()
 
             start_timer (
