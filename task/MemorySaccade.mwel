@@ -814,7 +814,7 @@ protocol 'MemorySaccade' {
             report ('Trial Failed: id_bad = $id_bad')
 
             //staircase
-            p_memoryTimeDur=min(p_memoryTimeDur+delta_memoryTimeDur,p_memoryTimeDurMax)
+            p_memoryTimeDur=min(p_memoryTimeDur+2*delta_memoryTimeDur,p_memoryTimeDurMax)
 
             start_timer (
                 timer = fix_pur_timeout
