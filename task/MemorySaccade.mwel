@@ -20,8 +20,8 @@
         - staircase for ramp down duration (p_memoryTimeDur)
 
     2022/9/2
-        - simplified motion: linear
-        - now slower speed: angle_rotation0 from [-120:30:120] to [-60:15:60]
+        - implement linear motion (id_linear_circular)
+        - slower speed (angle_rotation0 for circular, memoryTimeDurMin)
 
   (TBD)
   - test for use of cue/LUT, no cue trial?
@@ -58,8 +58,8 @@ path=/path/to/image.png
 // %include 'eye_interfaces/mouse' // debug
 %include 'eye_interfaces/eyelink' // debug
 
-// %include 'firmata_ephys' // debug
-%include 'firmata_train' // debug
+%include 'firmata_ephys' // debug
+// %include 'firmata_train' // debug
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -67,8 +67,8 @@ path=/path/to/image.png
 // Choose platform
 //
 ///////////////////////////////////////////////////////////////////////////////
-// var platform = 'monkey_ephys'
-var platform = 'monkey_train'
+var platform = 'monkey_ephys'
+// var platform = 'monkey_train'
 // var platform = 'psychophysics'
 // var platform = 'laptop'
 // var platform = 'desktop'
@@ -205,7 +205,7 @@ group MemorySaccade {
 
     var memoryTimeDur = 0.0001 // to prevent division by zero
     var memoryTimeDurMean = 250
-    var memoryTimeDurMin = 500
+    var memoryTimeDurMin = 750 // 500
 
     var targetWait = 5000
 
@@ -306,16 +306,33 @@ group distractor{ // purple grape
 }
 
 group motion {
-    var motion_direction = 0 // -1 for CW 1 for CCW
+    var motion_direction = 0 // -1 for CW 1 for CCW, if circular; angle [0 90 180 270] if linear
     var angle_rotation=0
     var angle_rotation0=0
     var elapsed_time = 0
     var nAngle0=4 // initial angle from final location 120/nAngle0
 
+    var id_linear_circular = 0 // if 0, linear; if 1, circular
+
 }
 
+render_actions update_position_linear ( // linear
+    elapsed_time = elapsed_time
+    ) {
 
-render_actions update_position (
+    angle_rotation=(1-elapsed_time/1000/memoryTimeDur) // from 1 to 0
+
+    targetX = targetX_final + angle_rotation*cos(motion_direction*pi()/180)*angle_rotation0
+    targetY = targetY_final + angle_rotation*sin(motion_direction*pi()/180)*angle_rotation0
+
+    objectX = targetX
+    objectY = targetY
+
+    distractorX=targetX + cos(distractor_theta*pi()/180)*distractor_radius
+    distractorY=targetY+ sin(distractor_theta*pi()/180)*distractor_radius
+}
+
+render_actions update_position_circular ( // circular
     elapsed_time = elapsed_time
     ) {
 
@@ -438,20 +455,35 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
 
 %define sample_trial ()
-    motion_direction=2*(disc_rand(0,1))-1 // -1 for CW 1 for CCW
 
     // sample target locations
-    target_id = disc_rand(0,nTarget-1)
+    target_id = disc_rand(0,nTarget-1) // 0 1 2 3:0 90 180 270deg
     target_theta=target_id*(360/nTarget)
 
     targetX_final = fixX + cos(target_theta*pi()/180)*target_radius
     targetY_final = fixY + sin(target_theta*pi()/180)*target_radius
 
-    angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6/2 // pi()/3 //   +/-[30 180]
-    targetX = fixX + cos(target_theta*pi()/180+angle_rotation0)*target_radius
-    targetY = fixY + sin(target_theta*pi()/180+angle_rotation0)*target_radius
+    if (id_linear_circular==0){ // linear
 
-    angle_rotation=angle_rotation0
+        // decide motion direction based on target_id
+        motion_direction = target_theta+180
+
+        angle_rotation0=rand(target_radius/2,target_radius*3/2) // 5 to 15 dva
+
+        targetX = targetX_final + cos(motion_direction*pi()/180)*angle_rotation0
+        targetY = targetY_final + sin(motion_direction*pi()/180)*angle_rotation0
+
+        angle_rotation=1
+    }
+    if (id_linear_circular==1){ // circular
+        motion_direction=2*(disc_rand(0,1))-1 // -1 for CW 1 for CCW
+
+        angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6/2 // pi()/3 //   +/-[30 180]
+        targetX = fixX + cos(target_theta*pi()/180+angle_rotation0)*target_radius
+        targetY = fixY + sin(target_theta*pi()/180+angle_rotation0)*target_radius
+
+        angle_rotation=angle_rotation0
+    }
 
     object_theta = target_theta
     objectX_final = targetX_final
@@ -611,7 +643,13 @@ protocol 'MemorySaccade' {
             tTargetOff = next_frame_time()
             id_bad = 4
 
-            queue_stimulus (update_position)
+            if (id_linear_circular==0){
+                queue_stimulus (update_position_linear)
+            }
+            if (id_linear_circular==1){
+                queue_stimulus (update_position_circular)
+            }
+
             if (id_ramp_opacity==1){
                 queue_stimulus (object_disappear)
             }
@@ -638,7 +676,8 @@ protocol 'MemorySaccade' {
             tFixOff= next_frame_time()
             id_bad = 5
             dequeue_stimulus(fixCircleStatic)
-            dequeue_stimulus (update_position)
+            dequeue_stimulus (update_position_circular)
+            dequeue_stimulus (update_position_linear)
             dequeue_stimulus (object_disappear)
             update_stimulus_display ()
 
@@ -780,7 +819,8 @@ protocol 'MemorySaccade' {
             dequeue_stimulus(distractor1)
             dequeue_stimulus(distractor2)
             dequeue_stimulus(distractor3)
-            dequeue_stimulus (update_position)
+            dequeue_stimulus (update_position_linear)
+            dequeue_stimulus (update_position_circular)
             dequeue_stimulus (object_disappear)
 
             id_bad = 0
@@ -843,7 +883,8 @@ protocol 'MemorySaccade' {
                 dequeue_stimulus(distractor1)
                 dequeue_stimulus(distractor2)
                 dequeue_stimulus(distractor3)
-                dequeue_stimulus (update_position)
+                dequeue_stimulus (update_position_linear)
+                dequeue_stimulus (update_position_circular)
                 dequeue_stimulus (object_disappear)
                 update_stimulus_display ()
             }
