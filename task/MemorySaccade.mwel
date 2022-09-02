@@ -19,8 +19,13 @@
         - elaborate time course
         - staircase for ramp down duration (p_memoryTimeDur)
 
+    2022/9/2
+        - simplified motion: linear
+        - now slower speed: angle_rotation0 from [-120:30:120] to [-60:15:60]
+
   (TBD)
-  - for recording, regular MGS
+  - test for use of cue/LUT, no cue trial?
+  - for recording, regular MGS?
 
   training curriculum
 1. Overlap saccade
@@ -442,7 +447,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     targetX_final = fixX + cos(target_theta*pi()/180)*target_radius
     targetY_final = fixY + sin(target_theta*pi()/180)*target_radius
 
-    angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6 // pi()/3 //   +/-[30 180]
+    angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6/2 // pi()/3 //   +/-[30 180]
     targetX = fixX + cos(target_theta*pi()/180+angle_rotation0)*target_radius
     targetY = fixY + sin(target_theta*pi()/180+angle_rotation0)*target_radius
 
