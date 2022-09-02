@@ -1,1 +1,0 @@
-["x", "y", "shape", "angle", "scale", "aspect_ratio", "c0", "c1", "c2", "opacity", "x_vel", "y_vel", "angle_vel", "mass", "metadata"]

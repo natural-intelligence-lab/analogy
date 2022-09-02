@@ -19,6 +19,8 @@
         - elaborate time course
         - staircase for ramp down duration (p_memoryTimeDur)
 
+
+
   (TBD)
   - for recording, regular MGS
 
@@ -442,7 +444,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     targetX_final = fixX + cos(target_theta*pi()/180)*target_radius
     targetY_final = fixY + sin(target_theta*pi()/180)*target_radius
 
-    angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6 // pi()/3 //   +/-[30 180]
+    angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6/2 // pi()/3 //   +/-[30 180]
     targetX = fixX + cos(target_theta*pi()/180+angle_rotation0)*target_radius
     targetY = fixY + sin(target_theta*pi()/180+angle_rotation0)*target_radius
 
