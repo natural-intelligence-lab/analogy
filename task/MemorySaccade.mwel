@@ -801,6 +801,8 @@ protocol 'MemorySaccade' {
         state 'End Trial' {
             tEnd = now()
 
+            endTrial = endTrial+1
+
             // reset stimulus
             object_red=1 // target_red=1
             object_green=0.5
@@ -827,7 +829,6 @@ protocol 'MemorySaccade' {
 
             update_stimulus_display ()
 
-            endTrial = 1
             goto (
                 target = 'Exit System'
                 when = CorrectTrials >= trialNum
