@@ -58,8 +58,8 @@ path=/path/to/image.png
 // %include 'eye_interfaces/mouse' // debug
 %include 'eye_interfaces/eyelink' // debug
 
-// %include 'firmata_ephys' // debug
-%include 'firmata_train' // debug
+%include 'firmata_ephys' // debug
+// %include 'firmata_train' // debug
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ var var_debug = 0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 90 (groups = Reward)
+    var rewardDur = 70 (groups = Reward)
     var bonusRewDur = 0  (groups = Reward)
 }
 
