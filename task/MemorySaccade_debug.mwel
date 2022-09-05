@@ -20,11 +20,12 @@
         - staircase for ramp down duration (p_memoryTimeDur)
 
     2022/9/2
-        - implement linear motion
-        - slower speed
+        - implement linear motion (id_linear_circular)
+        - slower speed (angle_rotation0 for circular, memoryTimeDurMin)
 
   (TBD)
-  - for recording, regular MGS
+  - test for use of cue/LUT, no cue trial?
+  - for recording, regular MGS?
 
   training curriculum
 1. Overlap saccade
@@ -800,6 +801,8 @@ protocol 'MemorySaccade' {
         state 'End Trial' {
             tEnd = now()
 
+            endTrial = endTrial+1
+
             // reset stimulus
             object_red=1 // target_red=1
             object_green=0.5
@@ -826,7 +829,6 @@ protocol 'MemorySaccade' {
 
             update_stimulus_display ()
 
-            endTrial = 1
             goto (
                 target = 'Exit System'
                 when = CorrectTrials >= trialNum
