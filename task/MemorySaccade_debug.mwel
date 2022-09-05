@@ -312,7 +312,9 @@ group motion {
     var elapsed_time = 0
     var nAngle0=4 // initial angle from final location 120/nAngle0
 
-    var id_linear_circular = 0 // if 0, linear; if 1, circular
+    var id_linear_circular = 1 // if 0, linear; if 1, circular
+
+    var id_cue_motion = 0 // if 0, no cue motion
 
 }
 
@@ -656,6 +658,11 @@ protocol 'MemorySaccade' {
             if (id_ramp_opacity==0){
                 object_alpha=object_alpha_memory
             }
+
+            if (id_cue_motion==0){
+                distractor_alpha=0
+            }
+
             update_stimulus_display ()
 
             start_timer (
@@ -679,6 +686,11 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (update_position_circular)
             dequeue_stimulus (update_position_linear)
             dequeue_stimulus (object_disappear)
+
+            if (id_cue_motion==0){
+                distractor_alpha=1
+            }
+
             update_stimulus_display ()
 
             goto (

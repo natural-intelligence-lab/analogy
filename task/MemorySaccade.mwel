@@ -131,7 +131,7 @@ var var_debug = 0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 60 (groups = Reward)
+    var rewardDur = 90 (groups = Reward)
     var bonusRewDur = 0  (groups = Reward)
 }
 
@@ -272,13 +272,12 @@ group object{ // banana
     var objectX_final = 0
     var objectY_final = 0
     var object_offsetY = 0.5
-    var nObject =2
     var object_alpha=1
     var object_alpha0=1
     var object_alpha_memory=0 // 0.01
     var elapsed_time2 = 0
-    var p_memoryTimeDur=1 // staircase for ramp-down duration
-    var delta_memoryTimeDur=0.1
+    var p_memoryTimeDur=0.0001 // 1 // staircase for ramp-down duration
+    var delta_memoryTimeDur=0 // 0.1
     var p_memoryTimeDurMin=0.0001
     var p_memoryTimeDurMax=1
 }
@@ -312,7 +311,9 @@ group motion {
     var elapsed_time = 0
     var nAngle0=4 // initial angle from final location 120/nAngle0
 
-    var id_linear_circular = 0 // if 0, linear; if 1, circular
+    var id_linear_circular = 1 // if 0, linear; if 1, circular
+
+    var id_cue_motion = 1 // if 0, no cue motion
 
 }
 
@@ -656,6 +657,11 @@ protocol 'MemorySaccade' {
             if (id_ramp_opacity==0){
                 object_alpha=object_alpha_memory
             }
+
+            if (id_cue_motion==0){
+                distractor_alpha=0
+            }
+
             update_stimulus_display ()
 
             start_timer (
@@ -679,6 +685,11 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (update_position_circular)
             dequeue_stimulus (update_position_linear)
             dequeue_stimulus (object_disappear)
+
+            if (id_cue_motion==0){
+                distractor_alpha=1
+            }
+
             update_stimulus_display ()
 
             goto (
