@@ -244,7 +244,7 @@ group target{ // just for target fixation window
     var targetY = 0
     var targetX_final = 0
     var targetY_final = 0
-    var nTarget =4
+    var nTarget =8 // 4
     var target_alpha=0 //1
     var target_alpha_memory=0.01
     var delta_alpha=0
@@ -291,7 +291,7 @@ group distractor{ // purple grape
     var circle_size=0.5
     var within_distance=sqrt(pow(circle_size,2)-pow((circle_size/2),2))/(1+sin(30/180*pi()))
 
-    var distractor_radius= 6*circle_size// 2*circle_size+object_sz // relative to target/object
+    var distractor_radius= 8*circle_size// 6*circle_size// 2*circle_size+object_sz // relative to target/object
     var distractor_theta=0
     var distractor_nTheta=4
     var distractor_id=0
