@@ -131,7 +131,7 @@ var var_debug = 0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 60 (groups = Reward)
+    var rewardDur = 500//90 (groups = Reward)
     var bonusRewDur = 0  (groups = Reward)
 }
 
@@ -234,17 +234,17 @@ group target{ // just for target fixation window
     var target_red=1
     var target_green=1
     var target_blue=1
-    var target_win = 5
+    var target_win = 3 // 5
     var on_target=0
     var target_sz = 0.001 // 0.5
-    var target_radius= 10
+    var target_radius= 8 // 10
     var target_theta=0
     var target_id=0
     var targetX = 0
     var targetY = 0
     var targetX_final = 0
     var targetY_final = 0
-    var nTarget =4
+    var nTarget =8 // 4
     var target_alpha=0 //1
     var target_alpha_memory=0.01
     var delta_alpha=0
@@ -272,13 +272,12 @@ group object{ // banana
     var objectX_final = 0
     var objectY_final = 0
     var object_offsetY = 0.5
-    var nObject =2
     var object_alpha=1
     var object_alpha0=1
     var object_alpha_memory=0 // 0.01
     var elapsed_time2 = 0
-    var p_memoryTimeDur=1 // staircase for ramp-down duration
-    var delta_memoryTimeDur=0.1
+    var p_memoryTimeDur=0.0001 // 1 // staircase for ramp-down duration
+    var delta_memoryTimeDur=0 // 0.1
     var p_memoryTimeDurMin=0.0001
     var p_memoryTimeDurMax=1
 }
@@ -292,7 +291,7 @@ group distractor{ // purple grape
     var circle_size=0.5
     var within_distance=sqrt(pow(circle_size,2)-pow((circle_size/2),2))/(1+sin(30/180*pi()))
 
-    var distractor_radius= 6*circle_size// 2*circle_size+object_sz // relative to target/object
+    var distractor_radius= 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
     var distractor_theta=0
     var distractor_nTheta=4
     var distractor_id=0
@@ -314,7 +313,7 @@ group motion {
 
     var id_linear_circular = 1 // if 0, linear; if 1, circular
 
-    var id_cue_motion = 0 // if 0, no cue motion
+    var id_cue_motion = 1 // if 0, no cue motion
 
 }
 
@@ -887,6 +886,7 @@ protocol 'MemorySaccade' {
 
         state 'Failure to fixate' {
             report ('Trial Failed: id_bad = $id_bad')
+            tResponse= now()
 
             if (id_bad==2 || id_bad==3 || id_bad==4){ // target cue memory
                 fix_green_static = 0
