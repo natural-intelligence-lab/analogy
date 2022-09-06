@@ -886,6 +886,7 @@ protocol 'MemorySaccade' {
 
         state 'Failure to fixate' {
             report ('Trial Failed: id_bad = $id_bad')
+            tResponse= now()
 
             if (id_bad==2 || id_bad==3 || id_bad==4){ // target cue memory
                 fix_green_static = 0
