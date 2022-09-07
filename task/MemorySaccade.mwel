@@ -188,6 +188,8 @@ group Time {
     var tResponse = 0
     var tRew = 0
     var tEnd = 0
+    var flag_response=0
+    var tResponse0=0
 }
 
 group MemorySaccade {
@@ -208,8 +210,9 @@ group MemorySaccade {
     var memoryTimeDurMin = 750 // 500
 
     var targetWait = 10000//5000
+    var targetWait0 = 10000//5000
 
-    var responseRewardDelay = 300
+    var responseRewardDelay = 100
 
     var id_overlap = 1 // not used anymore
     var id_ramp_opacity=1
@@ -234,17 +237,17 @@ group target{ // just for target fixation window
     var target_red=1
     var target_green=1
     var target_blue=1
-    var target_win = 3 // 5
+    var target_win = 4 // 3 // 5
     var on_target=0
     var target_sz = 0.001 // 0.5
-    var target_radius= 3
+    var target_radius= 4 // 3
     var target_theta=0
     var target_id=0
     var targetX = 0
     var targetY = 0
     var targetX_final = 0
     var targetY_final = 0
-    var nTarget =4
+    var nTarget = 2 // 4
     var target_alpha=0 //1
     var target_alpha_memory=0.01
     var delta_alpha=0
@@ -291,7 +294,7 @@ group distractor{ // purple grape
     var circle_size=0.5
     var within_distance=sqrt(pow(circle_size,2)-pow((circle_size/2),2))/(1+sin(30/180*pi()))
 
-    var distractor_radius= 8 // 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
+    var distractor_radius= 7 // 8 // 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
     var distractor_theta=0
     var distractor_nTheta=4
     var distractor_id=0
@@ -737,9 +740,17 @@ protocol 'MemorySaccade' {
         state 'Response' {
             id_bad = 6
 
+            if (flag_response==0){
+                tResponse0=now()
+                flag_response=1
+            }
+            if (flag_response==1){
+                targetWait=targetWait-(now()-tResponse0)/1000
+            }
+
             start_timer (
                 timer = timer_response
-                duration = targetWait // 5000
+                duration = targetWait // 10000
                 duration_units = ms
                 )
             goto (
@@ -756,21 +767,13 @@ protocol 'MemorySaccade' {
             id_bad = 7
             tResponse= now()
 
-            // make target visible
-            object_alpha = 1 //target_alpha = 1
-            dequeue_stimulus(distractor1)
-            dequeue_stimulus(distractor2)
-            dequeue_stimulus(distractor3)
-
-            update_stimulus_display ()
-
             start_timer (
                 timer = timer_post_response
-                duration = responseRewardDelay // 300
+                duration = responseRewardDelay // 100
                 duration_units = ms
                 )
             goto (
-                target = 'Failure to fixate'
+                target = 'Response' // 'Failure to fixate'
                 when = !on_target
                 )
             timer_expired (
@@ -783,10 +786,19 @@ protocol 'MemorySaccade' {
             report ('Success!: CorrectTrials = $CorrectTrials')
             tRew = now()
 
-            // make target green
-            object_red=0 // target_red=0
-            object_blue=0 // target_blue=0
+            // make target visible
+            object_alpha = 1 //target_alpha = 1
+            dequeue_stimulus(distractor1)
+            dequeue_stimulus(distractor2)
+            dequeue_stimulus(distractor3)
+
             update_stimulus_display ()
+
+
+            // make target green
+//            object_red=0 // target_red=0
+//            object_blue=0 // target_blue=0
+//            update_stimulus_display ()
 
             CorrectTrialsTarget[target_id] = CorrectTrialsTarget[target_id]+1
             CorrectTrials = CorrectTrials+1
@@ -839,6 +851,9 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (object_disappear)
 
             id_bad = 0
+
+            flag_response=0
+            targetWait=targetWait0
 
             update_stimulus_display ()
 
