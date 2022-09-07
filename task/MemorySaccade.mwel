@@ -62,8 +62,8 @@ path=/path/to/image.png
 // %include 'eye_interfaces/mouse' // debug
 %include 'eye_interfaces/eyelink' // debug
 
-// %include 'firmata_ephys' // debug
-%include 'firmata_train' // debug
+%include 'firmata_ephys' // debug
+// %include 'firmata_train' // debug
 
 
 ///////////////////////////////////////////////////////////////////////////////
