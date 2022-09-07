@@ -131,7 +131,7 @@ var var_debug = 0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 60 (groups = Reward)
+    var rewardDur = 500 (groups = Reward) // 70
     var bonusRewDur = 0  (groups = Reward)
 }
 
@@ -201,13 +201,13 @@ group MemorySaccade {
 
     var relationTimeDur = 0
     var relationTimeDurMean = 250
-    var relationTimeDurMin = 250
+    var relationTimeDurMin = 500//250
 
     var memoryTimeDur = 0.0001 // to prevent division by zero
     var memoryTimeDurMean = 250
     var memoryTimeDurMin = 750 // 500
 
-    var targetWait = 5000
+    var targetWait = 10000//5000
 
     var responseRewardDelay = 300
 
@@ -234,10 +234,10 @@ group target{ // just for target fixation window
     var target_red=1
     var target_green=1
     var target_blue=1
-    var target_win = 5
+    var target_win = 3 // 5
     var on_target=0
     var target_sz = 0.001 // 0.5
-    var target_radius= 10
+    var target_radius= 3
     var target_theta=0
     var target_id=0
     var targetX = 0
@@ -272,13 +272,12 @@ group object{ // banana
     var objectX_final = 0
     var objectY_final = 0
     var object_offsetY = 0.5
-    var nObject =2
     var object_alpha=1
     var object_alpha0=1
     var object_alpha_memory=0 // 0.01
     var elapsed_time2 = 0
-    var p_memoryTimeDur=1 // staircase for ramp-down duration
-    var delta_memoryTimeDur=0.1
+    var p_memoryTimeDur=0.0001 // 1 // staircase for ramp-down duration
+    var delta_memoryTimeDur=0 // 0.1
     var p_memoryTimeDurMin=0.0001
     var p_memoryTimeDurMax=1
 }
@@ -292,7 +291,7 @@ group distractor{ // purple grape
     var circle_size=0.5
     var within_distance=sqrt(pow(circle_size,2)-pow((circle_size/2),2))/(1+sin(30/180*pi()))
 
-    var distractor_radius= 6*circle_size// 2*circle_size+object_sz // relative to target/object
+    var distractor_radius= 8 // 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
     var distractor_theta=0
     var distractor_nTheta=4
     var distractor_id=0
@@ -314,7 +313,7 @@ group motion {
 
     var id_linear_circular = 1 // if 0, linear; if 1, circular
 
-    var id_cue_motion = 0 // if 0, no cue motion
+    var id_cue_motion = 1 // if 0, no cue motion
 
 }
 
@@ -324,14 +323,14 @@ render_actions update_position_linear ( // linear
 
     angle_rotation=(1-elapsed_time/1000/memoryTimeDur) // from 1 to 0
 
-    targetX = targetX_final + angle_rotation*cos(motion_direction*pi()/180)*angle_rotation0
-    targetY = targetY_final + angle_rotation*sin(motion_direction*pi()/180)*angle_rotation0
+    distractorX = distractorX_final + angle_rotation*cos(motion_direction*pi()/180)*angle_rotation0
+    distractorY = distractorY_final + angle_rotation*sin(motion_direction*pi()/180)*angle_rotation0
+
+    targetX  = distractorX + cos(target_theta*pi()/180)*target_radius
+    targetY  = distractorY + sin(target_theta*pi()/180)*target_radius
 
     objectX = targetX
     objectY = targetY
-
-    distractorX=targetX + cos(distractor_theta*pi()/180)*distractor_radius
-    distractorY=targetY+ sin(distractor_theta*pi()/180)*distractor_radius
 }
 
 render_actions update_position_circular ( // circular
@@ -340,14 +339,15 @@ render_actions update_position_circular ( // circular
 
     angle_rotation=angle_rotation0*(1-elapsed_time/1000/memoryTimeDur)
 
-    targetX = fixX + cos(target_theta*pi()/180+angle_rotation)*target_radius
-    targetY = fixY + sin(target_theta*pi()/180+angle_rotation)*target_radius
+    distractorX = fixX + cos(distractor_theta*pi()/180+angle_rotation)*distractor_radius
+    distractorY = fixY + sin(distractor_theta*pi()/180+angle_rotation)*distractor_radius
+
+    targetX  = distractorX + cos(target_theta*pi()/180)*target_radius
+    targetY  = distractorY + sin(target_theta*pi()/180)*target_radius
 
     objectX = targetX
     objectY = targetY
 
-    distractorX=targetX + cos(distractor_theta*pi()/180)*distractor_radius
-    distractorY=targetY+ sin(distractor_theta*pi()/180)*distractor_radius
 }
 
 render_actions object_disappear (
@@ -458,34 +458,44 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
 %define sample_trial ()
 
-    // sample target locations
-    target_id = disc_rand(0,nTarget-1) // 0 1 2 3:0 90 180 270deg
-    target_theta=target_id*(360/nTarget)
+    // sample distractors
+    distractor_id = disc_rand(0,distractor_nTheta-1)
+    distractor_theta = distractor_id*(360/distractor_nTheta)
 
-    targetX_final = fixX + cos(target_theta*pi()/180)*target_radius
-    targetY_final = fixY + sin(target_theta*pi()/180)*target_radius
+    distractorX_final = fixX + cos(distractor_theta*pi()/180)*distractor_radius
+    distractorY_final = fixY+ sin(distractor_theta*pi()/180)*distractor_radius
 
     if (id_linear_circular==0){ // linear
 
         // decide motion direction based on target_id
-        motion_direction = target_theta+180
+        motion_direction = distractor_theta+180
 
-        angle_rotation0=rand(target_radius/2,target_radius*3/2) // 5 to 15 dva
+        angle_rotation0=rand(distractor_radius/2,distractor_radius*3/2) // 5 to 15 dva
 
-        targetX = targetX_final + cos(motion_direction*pi()/180)*angle_rotation0
-        targetY = targetY_final + sin(motion_direction*pi()/180)*angle_rotation0
+        distractorX = distractorX_final + cos(motion_direction*pi()/180)*angle_rotation0
+        distractorY = distractorY_final + sin(motion_direction*pi()/180)*angle_rotation0
 
         angle_rotation=1
     }
     if (id_linear_circular==1){ // circular
         motion_direction=2*(disc_rand(0,1))-1 // -1 for CW 1 for CCW
 
-        angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6/2 // pi()/3 //   +/-[30 180]
-        targetX = fixX + cos(target_theta*pi()/180+angle_rotation0)*target_radius
-        targetY = fixY + sin(target_theta*pi()/180+angle_rotation0)*target_radius
+        angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6/2 // +/-15*[-4 4]
+        distractorX = fixX + cos(distractor_theta*pi()/180+angle_rotation0)*distractor_radius
+        distractorY = fixY + sin(distractor_theta*pi()/180+angle_rotation0)*distractor_radius
 
         angle_rotation=angle_rotation0
     }
+
+    // sample target
+    target_id = disc_rand(0,nTarget-1) // 0 1 2 3:0 90 180 270deg
+    target_theta = target_id*(360/nTarget)
+
+    targetX_final = distractorX_final+ cos(target_theta*pi()/180)*target_radius
+    targetY_final = distractorY_final+ sin(target_theta*pi()/180)*target_radius
+
+    targetX  = distractorX + cos(target_theta*pi()/180)*target_radius
+    targetY  = distractorY + sin(target_theta*pi()/180)*target_radius
 
     object_theta = target_theta
     objectX_final = targetX_final
@@ -493,16 +503,6 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
     objectX = targetX
     objectY = targetY
-
-    // sample distractors
-    distractor_id = disc_rand(0,distractor_nTheta-1)
-    distractor_theta = distractor_id*(360/distractor_nTheta)
-
-    distractorX_final=targetX_final + cos(distractor_theta*pi()/180)*distractor_radius
-    distractorY_final=targetY_final+ sin(distractor_theta*pi()/180)*distractor_radius
-
-    distractorX = targetX + cos(distractor_theta*pi()/180)*distractor_radius
-    distractorY = targetY+ sin(distractor_theta*pi()/180)*distractor_radius
 
     // sample durations
     fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
@@ -887,6 +887,7 @@ protocol 'MemorySaccade' {
 
         state 'Failure to fixate' {
             report ('Trial Failed: id_bad = $id_bad')
+            tResponse= now()
 
             if (id_bad==2 || id_bad==3 || id_bad==4){ // target cue memory
                 fix_green_static = 0
