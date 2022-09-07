@@ -58,8 +58,8 @@ path=/path/to/image.png
 // %include 'eye_interfaces/mouse' // debug
 %include 'eye_interfaces/eyelink' // debug
 
-%include 'firmata_ephys' // debug
-// %include 'firmata_train' // debug
+// %include 'firmata_ephys' // debug
+%include 'firmata_train' // debug
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ group Fixation {
     var fixY = 0 (groups = Fixation)
     var fixX = 0 (groups = Fixation)
 
-    var fix_win = 10 (
+    var fix_win = 6 (
         groups = Fixation
         persistant = 1
         )
