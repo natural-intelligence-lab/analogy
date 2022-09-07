@@ -201,7 +201,7 @@ group MemorySaccade {
 
     var relationTimeDur = 0
     var relationTimeDurMean = 250
-    var relationTimeDurMin = 250
+    var relationTimeDurMin = 500 // 250
 
     var memoryTimeDur = 0.0001 // to prevent division by zero
     var memoryTimeDurMean = 250
