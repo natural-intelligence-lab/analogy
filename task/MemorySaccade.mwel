@@ -207,7 +207,7 @@ group MemorySaccade {
     var memoryTimeDurMean = 250
     var memoryTimeDurMin = 750 // 500
 
-    var targetWait = 5000
+    var targetWait = 10000//5000
 
     var responseRewardDelay = 300
 
