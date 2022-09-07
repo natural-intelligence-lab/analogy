@@ -23,6 +23,10 @@
         - implement linear motion (id_linear_circular)
         - slower speed (angle_rotation0 for circular, memoryTimeDurMin)
 
+    2022/9/7
+        - targets around cue
+        - center out motion (id_linear_circular=2 -> id_centerout=1)
+
   (TBD)
   - test for use of cue/LUT, no cue trial?
   - for recording, regular MGS?
@@ -314,11 +318,31 @@ group motion {
     var elapsed_time = 0
     var nAngle0=4 // initial angle from final location 120/nAngle0
 
-    var id_linear_circular = 1 // if 0, linear; if 1, circular
+    var id_linear_circular = 2 // if 0, linear; if 1, circular(radial); if 2, self-motion
 
     var id_cue_motion = 1 // if 0, no cue motion
 
+    var id_centerout = 1
+
 }
+
+render_actions update_position_centerout ( // self-motion (circular)
+    elapsed_time = elapsed_time
+    ) {
+
+    angle_rotation=elapsed_time/1000/memoryTimeDur // from 0 to 1
+
+    distractorX = fixX + cos(distractor_theta*pi()/180)*distractor_radius*angle_rotation
+    distractorY = fixY + sin(distractor_theta*pi()/180)*distractor_radius*angle_rotation
+
+    targetX  = distractorX + cos(target_theta*pi()/180)*target_radius
+    targetY  = distractorY + sin(target_theta*pi()/180)*target_radius
+
+    objectX = targetX
+    objectY = targetY
+
+}
+
 
 render_actions update_position_linear ( // linear
     elapsed_time = elapsed_time
@@ -337,7 +361,7 @@ render_actions update_position_linear ( // linear
 
 }
 
-render_actions update_position_circular ( // circular
+render_actions update_position_circular ( // circular(radial)
     elapsed_time = elapsed_time
     ) {
 
@@ -489,6 +513,12 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
         distractorY = fixY + sin(distractor_theta*pi()/180+angle_rotation0)*distractor_radius
 
         angle_rotation=angle_rotation0
+    }
+    if (id_linear_circular==2){ // self motion
+        motion_direction=distractor_theta
+        distractorX = fixX
+        distractorY = fixY
+
     }
 
     // sample target
@@ -655,6 +685,9 @@ protocol 'MemorySaccade' {
             if (id_linear_circular==1){
                 queue_stimulus (update_position_circular)
             }
+            if (id_linear_circular==2){
+                queue_stimulus (update_position_centerout)
+            }
 
             if (id_ramp_opacity==1){
                 queue_stimulus (object_disappear)
@@ -688,6 +721,7 @@ protocol 'MemorySaccade' {
             id_bad = 5
             dequeue_stimulus(fixCircleStatic)
             dequeue_stimulus (update_position_circular)
+            dequeue_stimulus (update_position_centerout)
             dequeue_stimulus (update_position_linear)
             dequeue_stimulus (object_disappear)
 
@@ -848,6 +882,7 @@ protocol 'MemorySaccade' {
             dequeue_stimulus(distractor3)
             dequeue_stimulus (update_position_linear)
             dequeue_stimulus (update_position_circular)
+            dequeue_stimulus (update_position_centerout)
             dequeue_stimulus (object_disappear)
 
             id_bad = 0
@@ -915,6 +950,7 @@ protocol 'MemorySaccade' {
                 dequeue_stimulus(distractor3)
                 dequeue_stimulus (update_position_linear)
                 dequeue_stimulus (update_position_circular)
+                dequeue_stimulus (update_position_centerout)
                 dequeue_stimulus (object_disappear)
                 update_stimulus_display ()
             }
