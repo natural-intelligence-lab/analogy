@@ -628,7 +628,7 @@ protocol 'MemorySaccade' {
         }
         state 'Target On' {
             tTargetOn = next_frame_time()
-            live_queue_stimulus(target)
+            
             live_queue_stimulus(object)
             update_stimulus_display ()
             id_bad = 2
@@ -718,6 +718,7 @@ protocol 'MemorySaccade' {
         state 'FixOff' {
             tFixOff= next_frame_time()
             id_bad = 5
+            live_queue_stimulus(target)
             dequeue_stimulus(fixCircleStatic)
             dequeue_stimulus (update_position_circular)
             dequeue_stimulus (update_position_centerout)
