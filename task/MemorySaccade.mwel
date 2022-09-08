@@ -142,7 +142,7 @@ group Reward {
 group Fixation {
     var fixY = 0 (groups = Fixation)
     var fixX = 0 (groups = Fixation)
-    var fixY_offset=0.5
+    var fixY_offset=0.8 // 0.5
 
     var fix_win = 6 (
         groups = Fixation
@@ -199,12 +199,12 @@ group Time {
 
 group MemorySaccade {
     var fixTimeDur = 0
-    var fixTimeDurMean = 0
+    var fixTimeDurMean = 250
     var fixTimeDurMin = 250
 
     var targetTimeDur = 0
     var targetTimeDurMean = 250
-    var targetTimeDurMin = 250
+    var targetTimeDurMin = 500 // 250
 
     var relationTimeDur = 0
     var relationTimeDurMean = 250
@@ -242,10 +242,10 @@ group target{ // just for target fixation window
     var target_red=1
     var target_green=1
     var target_blue=1
-    var target_win = 4 // 3 // 5
+    var target_win = 3 // 5
     var on_target=0
     var target_sz = 0.001 // 0.5
-    var target_radius= 4 // 3
+    var target_radius= 3
     var target_theta=0
     var target_id=0
     var targetX = 0
@@ -299,7 +299,7 @@ group distractor{ // purple grape
     var circle_size=0.5
     var within_distance=sqrt(pow(circle_size,2)-pow((circle_size/2),2))/(1+sin(30/180*pi()))
 
-    var distractor_radius= 7 // 8 // 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
+    var distractor_radius= 8 // 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
     var distractor_theta=0
     var distractor_nTheta=4
     var distractor_id=0
@@ -646,32 +646,6 @@ protocol 'MemorySaccade' {
             timer_expired (
                 target = 'Cue On'
                 timer = timer_target_on
-                )
-        }
-
-        state 'Cue On' {
-            tCueOn = next_frame_time()
-
-            live_queue_stimulus(distractor1)
-            live_queue_stimulus(distractor2)
-            live_queue_stimulus(distractor3)
-
-            update_stimulus_display ()
-
-            id_bad = 3
-
-            start_timer (
-                timer = timer_cue_on
-                duration = relationTimeDur
-                duration_units = ms
-                )
-            goto (
-                target = 'Failure to fixate'
-                when = !on_fix_static
-                )
-            timer_expired (
-                target = 'Memory'
-                timer = timer_cue_on
                 )
         }
 
