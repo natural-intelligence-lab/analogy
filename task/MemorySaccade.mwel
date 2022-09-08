@@ -142,6 +142,7 @@ group Reward {
 group Fixation {
     var fixY = 0 (groups = Fixation)
     var fixX = 0 (groups = Fixation)
+    var fixY_offset=0.5
 
     var fix_win = 6 (
         groups = Fixation
@@ -449,7 +450,7 @@ group 'Fixation' {
             x_size = fix_sz
             y_size = fix_sz
             x_position = fixX
-            y_position = fixY
+            y_position = fixY-fixY_offset
             rotation = 0
             alpha_multiplier = 1
     )

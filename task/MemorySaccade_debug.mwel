@@ -142,6 +142,7 @@ group Reward {
 group Fixation {
     var fixY = 0 (groups = Fixation)
     var fixX = 0 (groups = Fixation)
+    var fixY_offset=0.5
 
     var fix_win = 6 (
         groups = Fixation
@@ -207,16 +208,16 @@ group MemorySaccade {
 
     var relationTimeDur = 0
     var relationTimeDurMean = 250
-    var relationTimeDurMin = 500//250
+    var relationTimeDurMin = 500 // 250
 
     var memoryTimeDur = 0.0001 // to prevent division by zero
     var memoryTimeDurMean = 250
-    var memoryTimeDurMin = 750 // 500
+    var memoryTimeDurMin = 500
 
     var targetWait = 10000//5000
     var targetWait0 = 10000//5000
 
-    var responseRewardDelay = 100 // 300
+    var responseRewardDelay = 100
 
     var id_overlap = 1 // not used anymore
     var id_ramp_opacity=1
@@ -343,7 +344,6 @@ render_actions update_position_centerout ( // self-motion (circular)
 
 }
 
-
 render_actions update_position_linear ( // linear
     elapsed_time = elapsed_time
     ) {
@@ -450,7 +450,7 @@ group 'Fixation' {
             x_size = fix_sz
             y_size = fix_sz
             x_position = fixX
-            y_position = fixY
+            y_position = fixY-fixY_offset
             rotation = 0
             alpha_multiplier = 1
     )
@@ -629,7 +629,7 @@ protocol 'MemorySaccade' {
         }
         state 'Target On' {
             tTargetOn = next_frame_time()
-            live_queue_stimulus(target)
+
             live_queue_stimulus(object)
             update_stimulus_display ()
             id_bad = 2
@@ -719,6 +719,7 @@ protocol 'MemorySaccade' {
         state 'FixOff' {
             tFixOff= next_frame_time()
             id_bad = 5
+            live_queue_stimulus(target)
             dequeue_stimulus(fixCircleStatic)
             dequeue_stimulus (update_position_circular)
             dequeue_stimulus (update_position_centerout)
