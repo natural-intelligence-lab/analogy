@@ -644,7 +644,7 @@ protocol 'MemorySaccade' {
                 when = !on_fix_static
                 )
             timer_expired (
-                target = 'Cue On'
+                target = 'Memory'
                 timer = timer_target_on
                 )
         }
