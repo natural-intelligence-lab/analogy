@@ -135,7 +135,7 @@ var var_debug = 0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 70 (groups = Reward)
+    var rewardDur = 120 (groups = Reward)
     var bonusRewDur = 0  (groups = Reward)
 }
 
@@ -284,8 +284,8 @@ group object{ // banana
     var object_alpha0=1
     var object_alpha_memory=0 // 0.01
     var elapsed_time2 = 0
-    var p_memoryTimeDur=0.0001 // 1 // staircase for ramp-down duration
-    var delta_memoryTimeDur=0 // 0.1
+    var p_memoryTimeDur=1 // staircase for ramp-down duration
+    var delta_memoryTimeDur=0.1
     var p_memoryTimeDurMin=0.0001
     var p_memoryTimeDurMax=1
 }
@@ -629,8 +629,11 @@ protocol 'MemorySaccade' {
         }
         state 'Target On' {
             tTargetOn = next_frame_time()
-            
+            tCueOn = tTargetOn
             live_queue_stimulus(object)
+            live_queue_stimulus(distractor1)
+            live_queue_stimulus(distractor2)
+            live_queue_stimulus(distractor3)
             update_stimulus_display ()
             id_bad = 2
 
@@ -644,7 +647,7 @@ protocol 'MemorySaccade' {
                 when = !on_fix_static
                 )
             timer_expired (
-                target = 'Cue On'
+                target = 'Memory'
                 timer = timer_target_on
                 )
         }
