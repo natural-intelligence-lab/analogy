@@ -135,7 +135,7 @@ var var_debug = 0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 70 (groups = Reward)
+    var rewardDur = 90 (groups = Reward)
     var bonusRewDur = 0  (groups = Reward)
 }
 
@@ -629,8 +629,11 @@ protocol 'MemorySaccade' {
         }
         state 'Target On' {
             tTargetOn = next_frame_time()
-            
+            tCueOn = tTargetOn
             live_queue_stimulus(object)
+            live_queue_stimulus(distractor1)
+            live_queue_stimulus(distractor2)
+            live_queue_stimulus(distractor3)
             update_stimulus_display ()
             id_bad = 2
 
