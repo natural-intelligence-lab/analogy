@@ -187,7 +187,7 @@ group Time {
     var tStart = 0
     var tFix = 0
     var tTargetOn = 0
-    var tCueOn = 0
+    var tOccluderOn = 0
     var tTargetOff = 0
     var tFixOff = 0
     var tResponse = 0
@@ -206,9 +206,9 @@ group MemorySaccade {
     var targetTimeDurMean = 250
     var targetTimeDurMin = 500 // 250
 
-    var relationTimeDur = 0
-    var relationTimeDurMean = 250
-    var relationTimeDurMin = 500 // 250
+    var occluderTimeDur = 0
+    var occluderTimeDurMean = 250
+    var occluderTimeDurMin = 500 // 250
 
     var memoryTimeDur = 0.0001 // to prevent division by zero
     var memoryTimeDurMean = 250
@@ -258,6 +258,25 @@ group target{ // just for target fixation window
     var delta_alpha=0
 }
 
+group occluder{
+
+    var occluder_red = .5
+    var occluder_green = .5
+    var occluder_blue = .5
+    var occluder_size = 2
+    var occluder1X = 0
+    var occluder1Y = 0
+    var occluder2X = 0
+    var occluder2Y = 0
+
+}
+
+group occluder_target{ // just for target fixation window
+    var on_occluder_target=0
+    var occluder_targetX = 0
+    var occluder_targetY = 0
+}
+
 group Global {
     var pstop = 0 (groups = Trial)
     var startTrial = 0 (groups = Trial)
@@ -265,6 +284,9 @@ group Global {
     var localTrials = 0 (groups = Trial)
     var CorrectTrials = 0 (groups = Trial)
     var CorrectTrialsTarget = [0:(nTarget-1)] (groups = Trial)
+    var IncorrectTrials = 0 (groups = Trial)
+    var IncorrectTrialsTarget = [0:(nTarget-1)] (groups = Trial)
+
     var CorrectInvisibleTrials = 0 (groups = Trial)
     var id_bad = 0 (groups = Trial)
 }
@@ -341,6 +363,15 @@ render_actions update_position_centerout ( // self-motion (circular)
 
     objectX = targetX
     objectY = targetY
+
+    occluder1X= targetX
+    occluder1Y= targetY
+
+    occluder2X= distractorX + cos((180+target_theta)*pi()/180)*target_radius
+    occluder2Y= distractorY + sin((180+target_theta)*pi()/180)*target_radius
+
+    occluder_targetX=occluder2X
+    occluder_targetY=occluder2Y
 
 }
 
@@ -438,6 +469,45 @@ group 'distractor'{
             alpha_multiplier = distractor_alpha
     )
 
+}
+
+group 'occluder1'{
+    stimulus/rectangle occluder1(
+        color = occluder_red,occluder_green,occluder_blue
+        x_size = occluder_size
+        y_size = occluder_size
+        x_position = occluder1X
+        y_position = occluder1Y
+        rotation = 0
+        alpha_multiplier = 1
+    )
+}
+group 'occluder2'{
+    stimulus/rectangle occluder2(
+        color = occluder_red,occluder_green,occluder_blue
+        x_size = occluder_size
+        y_size = occluder_size
+        x_position = occluder2X
+        y_position = occluder2Y
+        rotation = 0
+        alpha_multiplier = 1
+    )
+}
+
+group 'occluderTarget'{
+    stimulus/circular_fixation_point occluderTarget (
+            color = target_red,target_green,target_blue
+            trigger_width = target_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_occluder_target
+            x_size = target_sz
+            y_size = target_sz
+            x_position = occluder_targetX
+            y_position = occluder_targetY
+            rotation = 0
+            alpha_multiplier = target_alpha
+   )
 }
 
 group 'Fixation' {
@@ -538,10 +608,19 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     objectX = targetX
     objectY = targetY
 
+    // occluder
+    occluder1X=objectX
+    occluder1Y=objectY
+    occluder2X=distractorX + cos((180+target_theta)*pi()/180)*target_radius
+    occluder2Y=distractorY + sin((180+target_theta)*pi()/180)*target_radius
+    occluder_targetX=occluder2X
+    occluder_targetY=occluder2Y
+
+
     // sample durations
     fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
     targetTimeDur=-targetTimeDurMean*logn(rand(0,1)) + targetTimeDurMin
-    relationTimeDur=-relationTimeDurMean*logn(rand(0,1)) + relationTimeDurMin
+    occluderTimeDur=-occluderTimeDurMean*logn(rand(0,1)) + occluderTimeDurMin
     memoryTimeDur=-memoryTimeDurMean*logn(rand(0,1)) + memoryTimeDurMin
 
 %end
@@ -563,9 +642,11 @@ protocol 'MemorySaccade' {
         state 'Initial' {
             localTrials = 0
             CorrectTrials = 0
+            IncorrectTrials = 0
             CorrectInvisibleTrials = 0
             while (tmp<nTarget){
                 CorrectTrialsTarget[tmp]=0
+                IncorrectTrialsTarget[tmp]=0
                 tmp=tmp+1
             }
 
@@ -629,7 +710,6 @@ protocol 'MemorySaccade' {
         }
         state 'Target On' {
             tTargetOn = next_frame_time()
-            tCueOn = tTargetOn
             live_queue_stimulus(object)
             live_queue_stimulus(distractor1)
             live_queue_stimulus(distractor2)
@@ -647,9 +727,33 @@ protocol 'MemorySaccade' {
                 when = !on_fix_static
                 )
             timer_expired (
-                target = 'Memory'
+                target = 'Occluder On'
                 timer = timer_target_on
                 )
+        }
+
+        state 'Occluder On' {
+            tOccluderOn = next_frame_time()
+
+            live_queue_stimulus(occluder1)
+            live_queue_stimulus(occluder2)
+            update_stimulus_display ()
+            id_bad = 3
+
+            start_timer (
+                timer = timer_occluder_on
+                duration = occluderTimeDur
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'Memory'
+                timer = timer_occluder_on
+                )
+
         }
 
         state 'Memory' {
@@ -697,6 +801,7 @@ protocol 'MemorySaccade' {
             tFixOff= next_frame_time()
             id_bad = 5
             live_queue_stimulus(target)
+            live_queue_stimulus(occluderTarget)
             dequeue_stimulus(fixCircleStatic)
             dequeue_stimulus (update_position_circular)
             dequeue_stimulus (update_position_centerout)
@@ -769,12 +874,63 @@ protocol 'MemorySaccade' {
                 target = 'post_response'
                 when = on_target
                 )
+           goto (
+            target = 'post_response_incorrect'
+            when = on_occluder_target
+            )
             timer_expired (
                 target = 'Failure to fixate'
                 timer = timer_response
                 )
         }
+        state 'post_response_incorrect' {
+            id_bad = 7
+            tResponse= now()
 
+            start_timer (
+                timer = timer_post_response
+                duration = responseRewardDelay // 100
+                duration_units = ms
+                )
+            goto (
+                target = 'Response' // 'Failure to fixate'
+                when = !on_occluder_target
+                )
+            timer_expired (
+                target = 'Incorrect'
+                timer = timer_post_response
+                )
+        }
+
+        state 'Incorrect' {
+            report ('incorrect!: IncorrectTrials = $IncorrectTrials')
+
+            // make target visible
+            dequeue_stimulus(occluder1)
+            dequeue_stimulus(occluder2)
+            object_alpha = 1 //target_alpha = 1
+            dequeue_stimulus(distractor1)
+            dequeue_stimulus(distractor2)
+            dequeue_stimulus(distractor3)
+
+            update_stimulus_display ()
+
+            IncorrectTrialsTarget[target_id] = IncorrectTrialsTarget[target_id]+1
+            IncorrectTrials = IncorrectTrials+1
+
+            //staircase
+            p_memoryTimeDur=min(p_memoryTimeDur+2*delta_memoryTimeDur,p_memoryTimeDurMax)
+
+            start_timer (
+                timer = NoFixWait
+                duration = NoFixWaitDur  // 2000
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = NoFixWait
+                )
+        }
         state 'post_response' {
             id_bad = 7
             tResponse= now()
@@ -799,6 +955,8 @@ protocol 'MemorySaccade' {
             tRew = now()
 
             // make target visible
+            dequeue_stimulus(occluder1)
+            dequeue_stimulus(occluder2)
             object_alpha = 1 //target_alpha = 1
             dequeue_stimulus(distractor1)
             dequeue_stimulus(distractor2)
@@ -853,6 +1011,9 @@ protocol 'MemorySaccade' {
             fix_blue_static = 1
 
             dequeue_stimulus (target)
+            dequeue_stimulus (occluderTarget)
+            dequeue_stimulus (occluder1)
+            dequeue_stimulus (occluder2)
             dequeue_stimulus (object)
             dequeue_stimulus (fixCircleStatic)
             dequeue_stimulus(distractor1)
