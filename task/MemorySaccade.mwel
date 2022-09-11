@@ -225,8 +225,8 @@ group Duration {
 
     var incorrectDur = 5000
     var NoFixWaitDur = 2000
-    var fix_pur_ITI_Dur = 500 (groups = Fixation)
-    var fix_pur_timeoutDur = 1500 (groups = Fixation)
+    var ITI = 500
+    var timeout = 2000
 
     var id_overlap = 1 // not used anymore
     var id_ramp_opacity=1
@@ -269,9 +269,12 @@ group target{ // just for target fixation window
 
 group occluder{
 
-    var occluder_red = .5
-    var occluder_green = .5
-    var occluder_blue = .5
+    var occluder1_red = .5
+    var occluder1_green = .5
+    var occluder1_blue = .5
+    var occluder2_red = .5
+    var occluder2_green = .5
+    var occluder2_blue = .5
     var occluder_size = 2
     var occluder1X = 0
     var occluder1Y = 0
@@ -482,7 +485,7 @@ group 'distractor'{
 
 group 'occluder1'{
     stimulus/rectangle occluder1(
-        color = occluder_red,occluder_green,occluder_blue
+        color = occluder1_red,occluder1_green,occluder1_blue
         x_size = occluder_size
         y_size = occluder_size
         x_position = occluder1X
@@ -493,7 +496,7 @@ group 'occluder1'{
 }
 group 'occluder2'{
     stimulus/rectangle occluder2(
-        color = occluder_red,occluder_green,occluder_blue
+        color = occluder2_red,occluder2_green,occluder2_blue
         x_size = occluder_size
         y_size = occluder_size
         x_position = occluder2X
@@ -909,8 +912,23 @@ protocol 'MemorySaccade' {
                 when = !on_occluder_target
                 )
             timer_expired (
-                target = 'Incorrect'
+                target = 'Bad'
                 timer = timer_post_response
+                )
+        }
+        state 'Bad' {
+            occluder2_red=1
+            occluder2_green=0
+            occluder2_blue=0
+            update_stimulus_display ()
+            start_timer (
+                timer = timer_timeout
+                duration = timeout // 2000
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'Incorrect'
+                timer = timer_timeout
                 )
         }
 
@@ -1027,6 +1045,10 @@ protocol 'MemorySaccade' {
             fix_green_static = 1
             fix_blue_static = 1
 
+            occluder2_red=.5
+            occluder2_green=.5
+            occluder2_blue=.5
+
             dequeue_stimulus (target)
             dequeue_stimulus (occluderTarget)
             dequeue_stimulus (occluder1)
@@ -1069,28 +1091,12 @@ protocol 'MemorySaccade' {
 
             start_timer (
                 timer = fix_pur_ITI
-                duration = fix_pur_ITI_Dur // 500
+                duration = ITI // 500
                 duration_units = ms
                 )
             timer_expired (
                 target = 'Fix On'
                 timer = fix_pur_ITI
-                )
-        }
-        state Bad { // not used now
-            report ('Trial Failed: id_bad = $id_bad')
-
-            //staircase
-            p_memoryTimeDur=min(p_memoryTimeDur+2*delta_memoryTimeDur,p_memoryTimeDurMax)
-
-            start_timer (
-                timer = fix_pur_timeout
-                duration = fix_pur_timeoutDur // 1500
-                duration_units = ms
-                )
-            timer_expired (
-                target = 'End Trial'
-                timer = fix_pur_timeout
                 )
         }
 
