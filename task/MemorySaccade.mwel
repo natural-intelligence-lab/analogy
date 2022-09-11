@@ -1041,6 +1041,8 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (update_position_centerout)
             dequeue_stimulus (object_disappear)
 
+            distractor_alpha=1
+
             id_bad = 0
 
             flag_response=0
