@@ -27,6 +27,13 @@
         - targets around cue
         - center out motion (id_linear_circular=2 -> id_centerout=1)
 
+    2022/9/11
+        - Bonus reward if look at it after incorrect choice? incorrectDur:5s; targetWait: 5s (<-10s)
+        - Issue: Fixation break -> remove motion around fixation? id_cue_motion=0
+        - Fixation break penalty: NoFixWaitDur 2s (<-5s)
+        - Occluder - just present at t(FixOff)?
+        - Only two cue locations? distractor_nTheta
+
   (TBD)
   - test for use of cue/LUT, no cue trial?
   - for recording, regular MGS?
@@ -136,7 +143,7 @@ var var_debug = 0
 group Reward {
     var reward_line = 0 (groups = Reward)
     var rewardDur = 90 (groups = Reward)
-    var bonusRewDur = 0  (groups = Reward)
+    var bonusRewDur = 15  (groups = Reward)
 }
 
 group Fixation {
@@ -149,7 +156,7 @@ group Fixation {
         persistant = 1
         )
     var fix_sz = 0.5 (groups = Fixation)
-    var NoFixWaitDur = 5000 (groups = Fixation)
+
     var fixWaitDur = 10000 (groups = Fixation)
     var fixOn = 0 (groups = Fixation)
 
@@ -167,9 +174,6 @@ group Fixation {
     var on_fix_dyn = 0 (groups = Fixation)
     var on_fix_static = 0 (groups = Fixation)
 
-    var fix_pur_HoldDur = 2500 (groups = Fixation) // not used; old
-    var fix_pur_ITI_Dur = 500 (groups = Fixation)
-    var fix_pur_timeoutDur = 1500 (groups = Fixation)
 
 }
 
@@ -197,7 +201,7 @@ group Time {
     var tResponse0=0
 }
 
-group MemorySaccade {
+group Duration {
     var fixTimeDur = 0
     var fixTimeDurMean = 250
     var fixTimeDurMin = 250
@@ -214,10 +218,15 @@ group MemorySaccade {
     var memoryTimeDurMean = 250
     var memoryTimeDurMin = 500
 
-    var targetWait = 10000//5000
-    var targetWait0 = 10000//5000
+    var targetWait = 5000//10000
+    var targetWait0 = 5000//10000
 
     var responseRewardDelay = 100
+
+    var incorrectDur = 5000
+    var NoFixWaitDur = 2000
+    var fix_pur_ITI_Dur = 500 (groups = Fixation)
+    var fix_pur_timeoutDur = 1500 (groups = Fixation)
 
     var id_overlap = 1 // not used anymore
     var id_ramp_opacity=1
@@ -323,7 +332,7 @@ group distractor{ // purple grape
 
     var distractor_radius= 8 // 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
     var distractor_theta=0
-    var distractor_nTheta=4
+    var distractor_nTheta=2 // 4
     var distractor_id=0
 
     var distractorX = 0
@@ -343,7 +352,7 @@ group motion {
 
     var id_linear_circular = 2 // if 0, linear; if 1, circular(radial); if 2, self-motion
 
-    var id_cue_motion = 1 // if 0, no cue motion
+    var id_cue_motion = 0 // 1 // if 0, no cue motion
 
     var id_centerout = 1
 
@@ -558,7 +567,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
     // sample distractors
     distractor_id = disc_rand(0,distractor_nTheta-1)
-    distractor_theta = distractor_id*(360/distractor_nTheta)
+    distractor_theta = distractor_id*(360/distractor_nTheta) + 90 // with '+90' default is up
 
     distractorX_final = fixX + cos(distractor_theta*pi()/180)*distractor_radius
     distractorY_final = fixY+ sin(distractor_theta*pi()/180)*distractor_radius
@@ -727,12 +736,12 @@ protocol 'MemorySaccade' {
                 when = !on_fix_static
                 )
             timer_expired (
-                target = 'Occluder On'
+                target = 'Memory' // 'Occluder On'
                 timer = timer_target_on
                 )
         }
 
-        state 'Occluder On' {
+        /* state 'Occluder On' {
             tOccluderOn = next_frame_time()
 
             live_queue_stimulus(occluder1)
@@ -754,7 +763,7 @@ protocol 'MemorySaccade' {
                 timer = timer_occluder_on
                 )
 
-        }
+        } */
 
         state 'Memory' {
             tTargetOff = next_frame_time()
@@ -802,6 +811,8 @@ protocol 'MemorySaccade' {
             id_bad = 5
             live_queue_stimulus(target)
             live_queue_stimulus(occluderTarget)
+            live_queue_stimulus(occluder1)
+            live_queue_stimulus(occluder2)
             dequeue_stimulus(fixCircleStatic)
             dequeue_stimulus (update_position_circular)
             dequeue_stimulus (update_position_centerout)
@@ -867,7 +878,7 @@ protocol 'MemorySaccade' {
 
             start_timer (
                 timer = timer_response
-                duration = targetWait // 10000
+                duration = targetWait // 5000
                 duration_units = ms
                 )
             goto (
@@ -923,8 +934,13 @@ protocol 'MemorySaccade' {
 
             start_timer (
                 timer = NoFixWait
-                duration = NoFixWaitDur  // 2000
+                duration = incorrectDur  // 5000
                 duration_units = ms
+                )
+
+            goto (
+                target = 'bonus reward'
+                when = on_target
                 )
             timer_expired (
                 target = 'End Trial'
@@ -981,11 +997,11 @@ protocol 'MemorySaccade' {
 
             pulse ( // micro seconds
                 variable = reward_line
-                duration = (rewardDur+bonusRewDur)*1000
+                duration = (rewardDur)*1000
                 )
             start_timer (
                 timer = GreenTime
-                duration = rewardDur+bonusRewDur
+                duration = rewardDur
                 duration_units = ms
                 )
             timer_expired (
@@ -1113,6 +1129,18 @@ protocol 'MemorySaccade' {
                 timer = NoFixWait
                 )
         }
+
+        state 'bonus reward' {
+            play_sound(success_sound) // debug
+            pulse ( // micro seconds
+                variable = reward_line
+                duration = (bonusRewDur)*1000
+                )
+            goto (
+                target = 'End Trial'
+                )
+        }
+
         state 'Exit System' {
             report ('Leaving state system')
             yield ()
