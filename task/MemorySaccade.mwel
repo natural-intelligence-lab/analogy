@@ -1026,6 +1026,8 @@ protocol 'MemorySaccade' {
             fix_green_static = 1
             fix_blue_static = 1
 
+            distractor_alpha=1
+
             dequeue_stimulus (target)
             dequeue_stimulus (occluderTarget)
             dequeue_stimulus (occluder1)
