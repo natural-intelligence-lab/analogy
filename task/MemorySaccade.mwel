@@ -1131,7 +1131,7 @@ protocol 'MemorySaccade' {
         }
 
         state 'bonus reward' {
-            play_sound(success_sound) // debug
+            // play_sound(success_sound) // debug
             pulse ( // micro seconds
                 variable = reward_line
                 duration = (bonusRewDur)*1000
