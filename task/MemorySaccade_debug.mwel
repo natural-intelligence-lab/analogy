@@ -208,7 +208,7 @@ group Duration {
 
     var targetTimeDur = 0
     var targetTimeDurMean = 250
-    var targetTimeDurMin = 500 // 250
+    var targetTimeDurMin = 750 // 500 // 250
 
     var occluderTimeDur = 0
     var occluderTimeDurMean = 250
