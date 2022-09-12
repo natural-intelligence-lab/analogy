@@ -917,9 +917,10 @@ protocol 'MemorySaccade' {
                 )
         }
         state 'Bad' {
-            occluder2_red=1
-            occluder2_green=0
-            occluder2_blue=0
+            dequeue_stimulus(occluder2)
+            // occluder2_red=1
+            // occluder2_green=0
+            // occluder2_blue=0
             update_stimulus_display ()
             start_timer (
                 timer = timer_timeout
@@ -936,9 +937,9 @@ protocol 'MemorySaccade' {
             report ('incorrect!: IncorrectTrials = $IncorrectTrials')
 
             // make target visible
-            dequeue_stimulus(occluder1)
-            dequeue_stimulus(occluder2)
-            object_alpha = 1 //target_alpha = 1
+            // dequeue_stimulus(occluder1)
+            // dequeue_stimulus(occluder2)
+            // object_alpha = 1 //target_alpha = 1
             dequeue_stimulus(distractor1)
             dequeue_stimulus(distractor2)
             dequeue_stimulus(distractor3)
@@ -1141,12 +1142,23 @@ protocol 'MemorySaccade' {
 
         state 'bonus reward' {
             // play_sound(success_sound) // debug
+            dequeue_stimulus(occluder1)
+            object_alpha = 1 //target_alpha = 1
+            update_stimulus_display ()
+
             pulse ( // micro seconds
                 variable = reward_line
                 duration = (bonusRewDur)*1000
                 )
-            goto (
+
+            start_timer (
+                timer = timer_timeout2
+                duration = timeout // 2000
+                duration_units = ms
+                )
+            timer_expired (
                 target = 'End Trial'
+                timer = timer_timeout2
                 )
         }
 
