@@ -261,7 +261,7 @@ group target{ // just for target fixation window
     var targetY = 0
     var targetX_final = 0
     var targetY_final = 0
-    var nTarget = 2 // 4
+    var nTarget = 4 // 2 // 4
     var target_alpha=0 //1
     var target_alpha_memory=0.01
     var delta_alpha=0
@@ -280,6 +280,7 @@ group occluder{
     var occluder1Y = 0
     var occluder2X = 0
     var occluder2Y = 0
+    var occluder_alpha = 1
 
 }
 
@@ -287,20 +288,6 @@ group occluder_target{ // just for target fixation window
     var on_occluder_target=0
     var occluder_targetX = 0
     var occluder_targetY = 0
-}
-
-group Global {
-    var pstop = 0 (groups = Trial)
-    var startTrial = 0 (groups = Trial)
-    var endTrial = 0 (groups = Trial)
-    var localTrials = 0 (groups = Trial)
-    var CorrectTrials = 0 (groups = Trial)
-    var CorrectTrialsTarget = [0:(nTarget-1)] (groups = Trial)
-    var IncorrectTrials = 0 (groups = Trial)
-    var IncorrectTrialsTarget = [0:(nTarget-1)] (groups = Trial)
-
-    var CorrectInvisibleTrials = 0 (groups = Trial)
-    var id_bad = 0 (groups = Trial)
 }
 
 group object{ // banana
@@ -344,6 +331,20 @@ group distractor{ // purple grape
     var distractorX_final = 0
     var distractorY_final = 0
     var distractor_alpha=1
+}
+
+group Global {
+    var pstop = 0 (groups = Trial)
+    var startTrial = 0 (groups = Trial)
+    var endTrial = 0 (groups = Trial)
+    var localTrials = 0 (groups = Trial)
+    var CorrectTrials = 0 (groups = Trial)
+    var CorrectTrialsTarget = [0:(nTarget*distractor_nTheta-1)] (groups = Trial)
+    var IncorrectTrials = 0 (groups = Trial)
+    var IncorrectTrialsTarget = [0:(nTarget*distractor_nTheta-1)] (groups = Trial)
+
+    var CorrectInvisibleTrials = 0 (groups = Trial)
+    var id_bad = 0 (groups = Trial)
 }
 
 group motion {
@@ -491,7 +492,7 @@ group 'occluder1'{
         x_position = occluder1X
         y_position = occluder1Y
         rotation = 0
-        alpha_multiplier = 1
+        alpha_multiplier = occluder_alpha
     )
 }
 group 'occluder2'{
@@ -502,7 +503,7 @@ group 'occluder2'{
         x_position = occluder2X
         y_position = occluder2Y
         rotation = 0
-        alpha_multiplier = 1
+        alpha_multiplier = occluder_alpha
     )
 }
 
@@ -605,7 +606,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
     // sample target
     target_id = disc_rand(0,nTarget-1) // 0 1 2 3:0 90 180 270deg
-    target_theta = target_id*(360/nTarget)+180
+    target_theta = target_id*(360/nTarget)
 
     targetX_final = distractorX_final+ cos(target_theta*pi()/180)*target_radius
     targetY_final = distractorY_final+ sin(target_theta*pi()/180)*target_radius
@@ -656,7 +657,7 @@ protocol 'MemorySaccade' {
             CorrectTrials = 0
             IncorrectTrials = 0
             CorrectInvisibleTrials = 0
-            while (tmp<nTarget){
+            while (tmp<(distractor_nTheta*nTarget)){
                 CorrectTrialsTarget[tmp]=0
                 IncorrectTrialsTarget[tmp]=0
                 tmp=tmp+1
@@ -945,7 +946,7 @@ protocol 'MemorySaccade' {
 
             update_stimulus_display ()
 
-            IncorrectTrialsTarget[target_id] = IncorrectTrialsTarget[target_id]+1
+            IncorrectTrialsTarget[target_id+nTarget*distractor_id] = IncorrectTrialsTarget[target_id+nTarget*distractor_id]+1
             IncorrectTrials = IncorrectTrials+1
 
             //staircase
@@ -1005,7 +1006,7 @@ protocol 'MemorySaccade' {
 //            object_blue=0 // target_blue=0
 //            update_stimulus_display ()
 
-            CorrectTrialsTarget[target_id] = CorrectTrialsTarget[target_id]+1
+            CorrectTrialsTarget[target_id+nTarget*distractor_id] = CorrectTrialsTarget[target_id+nTarget*distractor_id]+1
             CorrectTrials = CorrectTrials+1
             if (id_visible==0){
                 CorrectInvisibleTrials=CorrectInvisibleTrials+1
