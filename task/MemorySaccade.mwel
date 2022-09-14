@@ -607,6 +607,12 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     // sample target
     target_id = disc_rand(0,nTarget-1) // 0 1 2 3:0 90 180 270deg
     target_theta = target_id*(360/nTarget)
+    /*if (distractor_theta==90){
+        target_theta=90
+        }
+    if (distractor_theta==270){
+        target_theta=270
+        }*/
 
     targetX_final = distractorX_final+ cos(target_theta*pi()/180)*target_radius
     targetY_final = distractorY_final+ sin(target_theta*pi()/180)*target_radius
