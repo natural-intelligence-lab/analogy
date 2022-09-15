@@ -571,7 +571,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
     // sample distractors
     distractor_id = disc_rand(0,distractor_nTheta-1)
-    distractor_theta = distractor_id*(360/distractor_nTheta) + 90 // with '+90' default is up
+    distractor_theta = distractor_id*(360/distractor_nTheta) // + 90 // with '+90' default is up
 
     distractorX_final = fixX + cos(distractor_theta*pi()/180)*distractor_radius
     distractorY_final = fixY+ sin(distractor_theta*pi()/180)*distractor_radius
@@ -607,6 +607,12 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     // sample target
     target_id = disc_rand(0,nTarget-1) // 0 1 2 3:0 90 180 270deg
     target_theta = target_id*(360/nTarget)
+    /*if (distractor_theta==90){
+        target_theta=90
+        }
+    if (distractor_theta==270){
+        target_theta=270
+        }*/
 
     targetX_final = distractorX_final+ cos(target_theta*pi()/180)*target_radius
     targetY_final = distractorY_final+ sin(target_theta*pi()/180)*target_radius
@@ -723,7 +729,6 @@ protocol 'MemorySaccade' {
         }
         state 'Target On' {
             tTargetOn = next_frame_time()
-
             live_queue_stimulus(object)
             live_queue_stimulus(distractor1)
             live_queue_stimulus(distractor2)
@@ -1048,6 +1053,8 @@ protocol 'MemorySaccade' {
             fix_green_static = 1
             fix_blue_static = 1
 
+            distractor_alpha=1
+
             occluder2_red=.5
             occluder2_green=.5
             occluder2_blue=.5
@@ -1065,8 +1072,6 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (update_position_circular)
             dequeue_stimulus (update_position_centerout)
             dequeue_stimulus (object_disappear)
-
-            distractor_alpha=1
 
             id_bad = 0
 
