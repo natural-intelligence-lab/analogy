@@ -938,7 +938,7 @@ protocol 'MemorySaccade' {
             dequeue_stimulus(distractor1)
             dequeue_stimulus(distractor2)
             dequeue_stimulus(distractor3)
-
+            dequeue_stimulus(photodiode)
             update_stimulus_display ()
 
             IncorrectTrialsTarget[target_id+nTarget*distractor_id] = IncorrectTrialsTarget[target_id+nTarget*distractor_id]+1
@@ -1061,6 +1061,7 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (update_position_circular)
             dequeue_stimulus (update_position_centerout)
             dequeue_stimulus (object_disappear)
+            dequeue_stimulus(photodiode)
 
             id_bad = 0
 
@@ -1113,6 +1114,7 @@ protocol 'MemorySaccade' {
                 dequeue_stimulus (update_position_circular)
                 dequeue_stimulus (update_position_centerout)
                 dequeue_stimulus (object_disappear)
+                dequeue_stimulus(photodiode)
                 update_stimulus_display ()
             }
             if (id_bad==5 || id_bad==6){ // response fixOff; not able to find target
@@ -1140,7 +1142,6 @@ protocol 'MemorySaccade' {
             play_sound(success_sound) // debug
             dequeue_stimulus(occluder1)
             object_alpha = 1 //target_alpha = 1
-            dequeue_stimulus(photodiode)
             update_stimulus_display ()
 
             pulse ( // micro seconds
