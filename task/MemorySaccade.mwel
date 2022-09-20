@@ -69,7 +69,8 @@ path=/path/to/image.png
 // %include 'eye_interfaces/mouse' // debug
 %include 'eye_interfaces/eyelink' // debug
 
-%include 'firmata_ephys' // debug
+%include 'labjack' // debug
+// %include 'firmata_ephys' // debug
 // %include 'firmata_train' // debug
 
 
@@ -347,6 +348,20 @@ group Global {
     var id_bad = 0 (groups = Trial)
 }
 
+group photodiode{
+    var photodiode_red = .5
+    var photodiode_green = .5
+    var photodiode_blue = .5
+    var photodiode_size = 3
+    var photodiodeX = -21.88 // top left
+    var photodiodeY = 12.8
+}
+
+group labjack{
+    var labjack_target_on = 0
+    var labjack_cue_on = 0
+}
+
 group motion {
     var motion_direction = 0 // -1 for CW 1 for CCW, if circular; angle [0 90 180 270] if linear
     var angle_rotation=0
@@ -556,6 +571,19 @@ group 'Target'{
 }
 
 
+group 'Photodiode'{
+        stimulus/ellipse photodiode(
+        color = photodiode_red,photodiode_green,photodiode_blue
+        x_size = photodiode_size
+        y_size = photodiode_size
+        x_position = photodiodeX
+        y_position = photodiodeY
+        rotation = 0
+        alpha_multiplier = 1
+    )
+}
+
+
 iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(height/2/distance)*2; % 25.6 deg
     background_color = 0,0,0
     )
@@ -654,7 +682,8 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 protocol 'MemorySaccade' {
     start_device_io (eye_tracker)
 
-    start_io_device (firmata) // debug
+    // start_io_device (firmata) // debug
+    start_io_device (labjack) // debug
 
     update_stimulus_display ()
     task Trials {
@@ -729,12 +758,16 @@ protocol 'MemorySaccade' {
         }
         state 'Target On' {
             tTargetOn = next_frame_time()
+            queue_stimulus(photodiode)
             live_queue_stimulus(object)
             live_queue_stimulus(distractor1)
             live_queue_stimulus(distractor2)
             live_queue_stimulus(distractor3)
             update_stimulus_display ()
             id_bad = 2
+
+            labjack_target_on = 1
+            labjack_cue_on = 1
 
             start_timer (
                 timer = timer_target_on
@@ -785,11 +818,11 @@ protocol 'MemorySaccade' {
             if (id_linear_circular==1){
                 queue_stimulus (update_position_circular)
             }
-            if (id_linear_circular==2){
+            if (id_linear_circular==2){ // used now
                 queue_stimulus (update_position_centerout)
             }
 
-            if (id_ramp_opacity==1){
+            if (id_ramp_opacity==1){ // used now
                 queue_stimulus (object_disappear)
             }
             if (id_ramp_opacity==0){
@@ -799,8 +832,11 @@ protocol 'MemorySaccade' {
             if (id_cue_motion==0){
                 distractor_alpha=0
             }
-
+            dequeue_stimulus(photodiode)
             update_stimulus_display ()
+
+            labjack_target_on = 0
+            labjack_cue_on = 0
 
             start_timer (
                 timer = timer_memory
@@ -828,50 +864,17 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (update_position_centerout)
             dequeue_stimulus (update_position_linear)
             dequeue_stimulus (object_disappear)
-
+            queue_stimulus(photodiode)
             if (id_cue_motion==0){
                 distractor_alpha=1
             }
 
             update_stimulus_display ()
+            labjack_cue_on = 1
 
-            goto (
-                target = 'Fixation_reward'
-                when = id_fixation
-                )
             goto (
                 target = 'Response'
                 when = !id_fixation
-                )
-        }
-        state 'Fixation_reward' {
-            report ('Success!: CorrectTrials = $CorrectTrials')
-            tRew = now()
-
-            fix_red_static = 0
-            fix_green_static = 1
-            fix_blue_static = 0
-
-            queue_stimulus(fixCircleStatic)
-            update_stimulus_display ()
-
-            CorrectTrials = CorrectTrials+1
-            if (id_visible==0){
-                CorrectInvisibleTrials=CorrectInvisibleTrials+1
-            }
-
-            pulse ( // micro seconds
-                variable = reward_line
-                duration = (rewardDur+bonusRewDur)*1000
-                )
-            start_timer (
-                timer = GreenTime
-                duration = rewardDur+bonusRewDur
-                duration_units = ms
-                )
-            timer_expired (
-                target = 'End Trial'
-                timer = GreenTime
                 )
         }
 
@@ -949,8 +952,9 @@ protocol 'MemorySaccade' {
             dequeue_stimulus(distractor1)
             dequeue_stimulus(distractor2)
             dequeue_stimulus(distractor3)
-
+            dequeue_stimulus(photodiode)
             update_stimulus_display ()
+            labjack_cue_on = 0
 
             IncorrectTrialsTarget[target_id+nTarget*distractor_id] = IncorrectTrialsTarget[target_id+nTarget*distractor_id]+1
             IncorrectTrials = IncorrectTrials+1
@@ -1003,9 +1007,10 @@ protocol 'MemorySaccade' {
             dequeue_stimulus(distractor1)
             dequeue_stimulus(distractor2)
             dequeue_stimulus(distractor3)
-
+            dequeue_stimulus(photodiode)
             update_stimulus_display ()
-
+            labjack_target_on = 1
+            labjack_cue_on = 0
 
             // make target green
 //            object_red=0 // target_red=0
@@ -1071,6 +1076,7 @@ protocol 'MemorySaccade' {
             dequeue_stimulus (update_position_circular)
             dequeue_stimulus (update_position_centerout)
             dequeue_stimulus (object_disappear)
+            dequeue_stimulus(photodiode)
 
             id_bad = 0
 
@@ -1078,6 +1084,8 @@ protocol 'MemorySaccade' {
             targetWait=targetWait0
 
             update_stimulus_display ()
+            labjack_target_on = 0
+            labjack_cue_on = 0
 
             goto (
                 target = 'Exit System'
@@ -1123,7 +1131,10 @@ protocol 'MemorySaccade' {
                 dequeue_stimulus (update_position_circular)
                 dequeue_stimulus (update_position_centerout)
                 dequeue_stimulus (object_disappear)
+                dequeue_stimulus(photodiode)
                 update_stimulus_display ()
+                labjack_target_on = 0
+                labjack_cue_on = 0
             }
             if (id_bad==5 || id_bad==6){ // response fixOff; not able to find target
                 //staircase
@@ -1132,6 +1143,7 @@ protocol 'MemorySaccade' {
                 object_alpha = 1 //target_alpha = 1
 
                 update_stimulus_display ()
+                labjack_target_on = 1
 
             }
 
@@ -1151,6 +1163,7 @@ protocol 'MemorySaccade' {
             dequeue_stimulus(occluder1)
             object_alpha = 1 //target_alpha = 1
             update_stimulus_display ()
+            labjack_target_on = 1
 
             pulse ( // micro seconds
                 variable = reward_line
