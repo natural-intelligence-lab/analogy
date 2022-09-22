@@ -3,7 +3,7 @@ iodevice/labjack_ljm labjack (
         device_type = T7
         connection_type = USB // ETHERNET
         // identifier = LJM_idANY // 192.168.1.207 // example
-        autostart = true // NO
+        autostart = YES // NO
     ) {
         iochannel/labjack_ljm_digital_output(
             line = FIO0 // example

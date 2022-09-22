@@ -35,8 +35,12 @@
         - Only two cue locations? distractor_nTheta
 
   (TBD)
+    - finalize task -> optimize code
+    - for recording, regular MGS?
+
+
   - test for use of cue/LUT, no cue trial?
-  - for recording, regular MGS?
+  
 
   training curriculum
 1. Overlap saccade
@@ -143,7 +147,7 @@ var var_debug = 0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 90 (groups = Reward)
+    var rewardDur = 70 // 90 (groups = Reward)
     var bonusRewDur = 15  (groups = Reward)
 }
 
@@ -323,7 +327,7 @@ group distractor{ // purple grape
 
     var distractor_radius= 8 // 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
     var distractor_theta=0
-    var distractor_nTheta=2 // 4
+    var distractor_nTheta=4
     var distractor_id=0
 
     var distractorX = 0
@@ -349,12 +353,12 @@ group Global {
 }
 
 group photodiode{
-    var photodiode_red = .5
-    var photodiode_green = .5
-    var photodiode_blue = .5
-    var photodiode_size = 3
-    var photodiodeX = -21.88 // top left
-    var photodiodeY = 12.8
+    var photodiode_red = 1//.5
+    var photodiode_green = 1//.5
+    var photodiode_blue = 1//.5
+    var photodiode_size = 2.5
+    var photodiodeX = -20 // -21.88 // top left
+    var photodiodeY = 11.7 // 12.8
 }
 
 group labjack{

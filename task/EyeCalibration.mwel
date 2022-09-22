@@ -24,7 +24,7 @@
 %include 'eye_interfaces/eyelink'
 //%include 'eye_interfaces/mouse'
 
-%include 'firmata_train'
+%include 'firmata_ephys'
 
 /////////////////
 // Variables
