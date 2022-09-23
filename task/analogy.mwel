@@ -312,6 +312,7 @@ group photodiode{
 group labjack{
     var labjack_target_on = 0
     var labjack_cue_on = 0
+    var t_labjack_cue_on=0
 }
 
 group motion {
@@ -757,20 +758,40 @@ protocol 'Analogy' {
             live_queue_stimulus(cue[1])
             live_queue_stimulus(cue[2])
 
-            update_stimulus_display ()
+            update_stimulus_display () // 25ms from labjack
             id_bad = 2
 
             labjack_target_on = 1
             labjack_cue_on = 1
 
+            t_labjack_cue_on=now()
+
             tmp=(tTargetOn-now())/1000
-            report ('Target On: expected delay b/t labjack & photodiode= $tmp')
+            report ('Target On: expected delay b/t labjack & photodiode= $tmp') // all around <10ms
 
             start_timer (
                 timer = timer_target_on
                 duration = targetTimeDur
                 duration_units = ms
                 )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'Memory' // 'Occluder On'
+                timer = timer_target_on
+                )
+            /*
+            goto (
+                target = 'photodiode_on'
+                when = photodiode_input>5
+                )
+            */
+        }
+        state 'photodiode_on' {
+            tmp=(now()-t_labjack_cue_on)/1000
+            report ('*** Delay in ON photodiode loop= $tmp') // ~30ms
             goto (
                 target = 'Failure to fixate'
                 when = !on_fix_static
@@ -833,10 +854,12 @@ protocol 'Analogy' {
             }
 
             dequeue_stimulus(photodiode)
-            update_stimulus_display ()
+            update_stimulus_display () // 40ms from labjack
 
             labjack_target_on = 0
             labjack_cue_on = 0
+
+            t_labjack_cue_on=now()
 
             tmp=(tTargetOff-now())/1000
             report ('Memory: expected delay b/t labjack & photodiode= $tmp')
@@ -846,6 +869,25 @@ protocol 'Analogy' {
                 duration = memoryTimeDur
                 duration_units = ms
                 )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'FixOff'
+                timer = timer_memory
+                )
+            /*
+            goto (
+                target = 'photodiode_off'
+                when = photodiode_input < 5
+                )
+                */
+        }
+
+        state 'photodiode_off' {
+            tmp=(now()-t_labjack_cue_on)/1000
+            report ('***** Delay in OFF photodiode loop= $tmp') // ~30ms
             goto (
                 target = 'Failure to fixate'
                 when = !on_fix_static

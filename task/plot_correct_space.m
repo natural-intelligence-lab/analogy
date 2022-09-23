@@ -42,11 +42,12 @@ end
 for iP=1:nParam
     indices = ([all_events(:).event_code] == event_code(iP));
     events = all_events(indices);
-    
-    if iP==1 || iP==2 % cell
-    events(:).data
+    disp(iP);
+    if iP==1 || iP==2 % cell   
+        events(:).data 
         tmpDataCell=events(:).data;
-        tmpValues=cast([tmpDataCell{end}], 'double');
+        tmpDataCell
+        tmpValues=cast(cell2mat(tmpDataCell), 'double');
     else
         tmpValues=cast([events(:).data], 'double');        
     end
