@@ -1,0 +1,1189 @@
+
+/* Analogy task - recording version
+
+  generalization idea (space -> object)
+  1. # relations: [0:90:270] -> diagonal
+  2. # cue locations: [0:90:270] -> diagonal
+  3. initial cue locations: [0,0] -> periphery?
+  4. distance
+  ------
+  5. banana(target)+grape(cue) -> mashmallow,peanut,monkeyFace
+  6. multiple objects: transitive
+  7. reward
+  8. green grapes (#)
+
+stimulus/image_file
+path=/path/to/image.png
+
+   */
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// I/O Devices
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// Include one of the following hand interfaces:
+
+%include 'hand_interfaces/keyboard' // debug
+// %include 'hand_interfaces/gamepad'
+// %include 'hand_interfaces/joystick'
+// %include 'hand_interfaces/joystick_monkey' // debug
+
+// Include one of the following eye interfaces
+
+%include 'eye_interfaces/mouse' // debug
+// %include 'eye_interfaces/eyelink' // debug
+
+// %include 'labjack' // debug
+// %include 'firmata_ephys' // debug
+// %include 'firmata_train' // debug
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Choose platform
+//
+///////////////////////////////////////////////////////////////////////////////
+var platform = 'monkey_ephys'
+// var platform = 'monkey_train'
+// var platform = 'psychophysics'
+// var platform = 'laptop'
+// var platform = 'desktop'
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Set data file, pwd, and python_site_packages
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+var pwd = ""
+var python_site_packages = ""
+python_file ('set_pwd.py')
+
+data_file ("$pwd/logs/$(date('%Y_%m_%d'))/mworks/$(date('%Y_%m_%d_%H_%M_%S'))")
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Resources
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// These directories are copied to the machine running MWServer
+resource ('sounds')
+
+// These files are copied to the machine running MWServer and executed when the
+// experiment loads
+// python_file ('calibration_static.py')
+// python_file ('task.py')
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Sounds
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// These directories are copied to the machine running MWServer
+resource ('sounds')
+
+//sound/wav_file success_sound ('sounds/success.wav')
+//sound/wav_file failure_sound ('sounds/failure.wav')
+//sound/wav_file pong_sound ('sounds/pong.wav')
+
+sound/wav_file pong_sound(
+    path='sounds/pong.wav'
+)
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Variables
+//
+///////////////////////////////////////////////////////////////////////////////
+
+var data_file = ""
+var tmp=0
+var var_debug = 0
+
+group Reward {
+    var reward_line = 0 (groups = Reward)
+    var rewardDur = 70 // 90 (groups = Reward)
+    var bonusRewDur = 15  (groups = Reward)
+}
+
+group Fixation {
+    var fixY = 0 (groups = Fixation)
+    var fixX = 0 (groups = Fixation)
+    var fixY_offset=0.8 // to minimize overlap with cue objects
+
+    var fix_win = 6 (
+        groups = Fixation
+        persistant = 1
+        )
+    var fix_sz = 0.3 (groups = Fixation)
+
+    var fixWaitDur = 10000 (groups = Fixation)
+    var fixOn = 0 (groups = Fixation)
+
+    var fix_red = 1 (groups = Fixation)
+    var fix_green = 1 (groups = Fixation)
+    var fix_blue = 1 (groups = Fixation)
+
+    var fix_red_static = 1  (groups = Fixation)
+    var fix_green_static = 1 (groups = Fixation)
+    var fix_blue_static = 1 (groups = Fixation)
+
+    var pursuitTheta = -90 (groups = Fixation) // down; if 0, horizontal
+    var nRep = 1 (groups = Fixation) // 3
+    var trialNum = 1e6  (groups = Fixation) // after this # trials, stop experiment
+    var on_fix_dyn = 0 (groups = Fixation)
+    var on_fix_static = 0 (groups = Fixation)
+
+
+}
+
+
+group Matlab {
+    var sync = 0 (groups = Matlab)
+    var Nback = 100 (
+        groups = Matlab
+        persistant = 1
+        )
+}
+
+group Time {
+    //time stamps for eye movement analysis
+    var tStart = 0
+    var tFix = 0
+    var tTargetOn = 0
+    var tTargetOff = 0
+    var tFixOff = 0
+    var tResponse = 0
+    var tRew = 0
+    var tEnd = 0
+    var flag_response=0 // to count down timer after off from fixation
+    var tResponse0=0
+}
+
+group Duration {
+    var fixTimeDur = 0
+    var fixTimeDurMean = 250
+    var fixTimeDurMin = 250
+
+    var targetTimeDur = 0
+    var targetTimeDurMean = 250
+    var targetTimeDurMin = 750 // 500 // 250
+
+    var occluderTimeDur = 0 // not used
+    var occluderTimeDurMean = 250
+    var occluderTimeDurMin = 500 // 250
+
+    var memoryTimeDur = 0.0001 // to prevent division by zero
+    var memoryTimeDurMean = 250
+    var memoryTimeDurMin = 500
+
+    var targetWait = 5000//10000
+    var targetWait0 = 5000//10000
+
+    var responseRegister = 100
+
+    var incorrectDur = 5000
+    var NoFixWaitDur = 2000
+    var ITI = 500
+    var timeout = 2000
+
+    var id_ramp_opacity= 0 // 1 // if (id_ramp_opacity==0), object_alpha=object_alpha_memory
+}
+
+group target_window{ // just for target fixation window
+    var target_red=1
+    var target_green=1
+    var target_blue=1
+    var target_win = 3 // 5
+    var on_target=0
+    var target_sz = 0.00001 // 0.5
+    var target_radius= 3 // distance b/t target and cue
+    var target_theta=0
+    var target_id=0
+    var targetX = 0
+    var targetY = 0
+    var targetX_final = 0
+    var targetY_final = 0
+    var nTarget = 4 // 2 // 4
+    var target_alpha=0 //1
+    var target_alpha_memory=0.01
+    var delta_alpha=0
+}
+
+group occluder{
+
+    var occluder_red = .5
+    var occluder_green = .5
+    var occluder_blue = .5
+    var occluder_size = 2
+
+    var occluder1X = 0 // # occluder
+    var occluder1Y = 0
+    var occluder2X = 0
+    var occluder2Y = 0
+    var occluder_alpha = 1
+
+}
+
+group occluder_target{ // just for target fixation window // # occluder
+    var on_occluder_target=0
+    var occluder_targetX = 0
+    var occluder_targetY = 0
+}
+
+group object{ // banana
+    var object_red=1 // oragne [1 .5 0]
+    var object_green=.5
+    var object_blue=0
+    var object_sz = 3
+    var object_theta=0
+    var objectX = 0
+    var objectY = 0
+    var objectX_final = 0
+    var objectY_final = 0
+    var object_offsetY = 0.5
+    var object_alpha=1
+    var object_alpha0=1
+    var object_alpha_memory=0 // 0.01
+    var elapsed_time2 = 0
+    var p_memoryTimeDur=0.0001 // 1 // staircase for ramp-down duration
+    var delta_memoryTimeDur=0
+    var p_memoryTimeDurMin=0.0001
+    var p_memoryTimeDurMax=1
+}
+
+
+group cue{ // purple grape
+    var cue_red=.5 // purple [0.5 0 1]
+    var cue_green=0
+    var cue_blue=1
+
+    var circle_size=0.5
+    var within_distance=sqrt(pow(circle_size,2)-pow((circle_size/2),2))/(1+sin(30/180*pi())) // 0.288675
+
+    var cue_radius= 8 // 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
+    var cue_theta=0
+    var cue_nTheta=4
+    var cue_id=0
+
+    var cueX = 0
+    var cueY = 0
+
+    var cueX_final = 0
+    var cueY_final = 0
+    var cue_alpha=1
+}
+
+group Global {
+    var pstop = 0 (groups = Trial)
+    var startTrial = 0 (groups = Trial)
+    var endTrial = 0 (groups = Trial)
+    var localTrials = 0 (groups = Trial)
+    var CorrectTrials = 0 (groups = Trial)
+    var CorrectTrialsTarget = [0:(nTarget*cue_nTheta-1)] (groups = Trial)
+    var IncorrectTrials = 0 (groups = Trial)
+    var IncorrectTrialsTarget = [0:(nTarget*cue_nTheta-1)] (groups = Trial)
+
+    var id_bad = 0 (groups = Trial)
+}
+
+group photodiode{
+    var photodiode_red = 1//.5
+    var photodiode_green = 1//.5
+    var photodiode_blue = 1//.5
+    var photodiode_size = 2.5
+    var photodiodeX = -20 // -21.88 // top left
+    var photodiodeY = 11.7 // 12.8
+}
+
+group labjack{
+    var labjack_target_on = 0
+    var labjack_cue_on = 0
+}
+
+group motion {
+    var id_cue_motion = 0 // 1 // if 0, no cue motion
+    var id_linear_circular = 2 // if 0, linear; if 1, circular(radial); if 2, self-motion
+
+    var motion_direction = 0 // -1 for CW 1 for CCW, if circular; angle [0 90 180 270] if linear
+    var angle_rotation=0
+    var angle_rotation0=0
+    var elapsed_time = 0
+    var nAngle0=4 // initial angle from final location 120/nAngle0
+}
+
+///////////
+// ACTIONS
+///////////
+
+render_actions update_position_centerout ( // self-motion (circular)
+    elapsed_time = elapsed_time
+    ) {
+
+    angle_rotation=elapsed_time/1000/memoryTimeDur // from 0 to 1
+
+    cueX = fixX + cos(cue_theta*pi()/180)*cue_radius*angle_rotation
+    cueY = fixY + sin(cue_theta*pi()/180)*cue_radius*angle_rotation
+
+    targetX  = cueX + cos(target_theta*pi()/180)*target_radius
+    targetY  = cueY + sin(target_theta*pi()/180)*target_radius
+
+    objectX = targetX
+    objectY = targetY
+
+    occluder1X= targetX
+    occluder1Y= targetY
+
+    occluder2X= cueX + cos((180+target_theta)*pi()/180)*target_radius
+    occluder2Y= cueY + sin((180+target_theta)*pi()/180)*target_radius
+
+    occluder_targetX=occluder2X
+    occluder_targetY=occluder2Y
+
+}
+
+render_actions update_position_linear ( // linear
+    elapsed_time = elapsed_time
+    ) {
+
+    angle_rotation=(1-elapsed_time/1000/memoryTimeDur) // from 1 to 0
+
+    cueX = cueX_final + angle_rotation*cos(motion_direction*pi()/180)*angle_rotation0
+    cueY = cueY_final + angle_rotation*sin(motion_direction*pi()/180)*angle_rotation0
+
+    targetX  = cueX + cos(target_theta*pi()/180)*target_radius
+    targetY  = cueY + sin(target_theta*pi()/180)*target_radius
+
+    objectX = targetX
+    objectY = targetY
+
+}
+
+render_actions update_position_circular ( // circular(radial)
+    elapsed_time = elapsed_time
+    ) {
+
+    angle_rotation=angle_rotation0*(1-elapsed_time/1000/memoryTimeDur)
+
+    cueX = fixX + cos(cue_theta*pi()/180+angle_rotation)*cue_radius
+    cueY = fixY + sin(cue_theta*pi()/180+angle_rotation)*cue_radius
+
+    targetX  = cueX + cos(target_theta*pi()/180)*target_radius
+    targetY  = cueY + sin(target_theta*pi()/180)*target_radius
+
+    objectX = targetX
+    objectY = targetY
+
+}
+
+render_actions object_disappear (
+    elapsed_time = elapsed_time2
+    ) {
+    object_alpha=(object_alpha0-object_alpha_memory)*max(0,(1-elapsed_time2/1000/(p_memoryTimeDur*memoryTimeDur)))+object_alpha_memory // ramp down from object_alpha0 to object_alpha_memory
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Stimuli
+//
+///////////////////////////////////////////////////////////////////////////////
+
+group 'object'{
+    stimulus/text object ( // alternative: ellipse rectangle
+            text=')'
+            font_name="Capitals"
+            font_size=64
+
+            color = object_red,object_green,object_blue
+            text_alignment = center
+            x_size = object_sz
+            y_size = object_sz
+            rotation = -45
+            x_position = objectX
+            y_position = objectY-object_offsetY
+            alpha_multiplier = object_alpha
+    )
+}
+
+stimulus_group 'cue'{
+    stimulus/ellipse cue1 ( // below
+            color = cue_red,cue_green,cue_blue
+            x_size = circle_size
+            y_size = circle_size
+            x_position = cueX
+            y_position = cueY-within_distance
+            rotation = 0
+            alpha_multiplier = cue_alpha
+    )
+    stimulus/ellipse cue2 ( // up left
+            color = cue_red,cue_green,cue_blue
+            x_size = circle_size
+            y_size = circle_size
+            x_position = cueX - within_distance*cos(30/180*pi())
+            y_position = cueY + within_distance*sin(30/180*pi())
+            rotation = 0
+            alpha_multiplier = cue_alpha
+    )
+
+    stimulus/ellipse cue3 ( // up right
+            color = cue_red,cue_green,cue_blue
+            x_size = circle_size
+            y_size = circle_size
+            x_position = cueX + within_distance*cos(30/180*pi())
+            y_position = cueY + within_distance*sin(30/180*pi())
+            rotation = 0
+            alpha_multiplier = cue_alpha
+    )
+
+}
+
+/*
+// alterantive: range_replicator or list_replicator
+var index = 0 (scope = local)
+
+stimulus_group images {
+    range_replicator (
+        variable = index
+        from = 1
+        to = 100
+        step = 1
+        ) {
+        image_file image${index} (
+            path = 'images/img${index}.png'
+            x_size = img_size
+            x_position = img_pos_x
+            y_position = img_pos_y
+            )
+    }
+}
+
+*/
+
+group 'occluder1'{
+    stimulus/rectangle occluder1(
+        color = occluder_red,occluder_green,occluder_blue
+        x_size = occluder_size
+        y_size = occluder_size
+        x_position = occluder1X
+        y_position = occluder1Y
+        rotation = 0
+        alpha_multiplier = occluder_alpha
+    )
+}
+group 'occluder2'{
+    stimulus/rectangle occluder2(
+        color = occluder_red,occluder_green,occluder_blue
+        x_size = occluder_size
+        y_size = occluder_size
+        x_position = occluder2X
+        y_position = occluder2Y
+        rotation = 0
+        alpha_multiplier = occluder_alpha
+    )
+}
+
+group 'occluderTarget'{
+    stimulus/circular_fixation_point occluderTarget (
+            color = target_red,target_green,target_blue
+            trigger_width = target_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_occluder_target
+            x_size = target_sz
+            y_size = target_sz
+            x_position = occluder_targetX
+            y_position = occluder_targetY
+            rotation = 0
+            alpha_multiplier = target_alpha
+   )
+}
+
+group 'Fixation' {
+    stimulus/circular_fixation_point fixCircleStatic (
+            color = fix_red_static,fix_green_static,fix_blue_static
+            trigger_width = fix_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_fix_static
+            x_size = fix_sz
+            y_size = fix_sz
+            x_position = fixX
+            y_position = fixY-fixY_offset
+            rotation = 0
+            alpha_multiplier = 1
+    )
+}
+
+group 'Target_window'{
+    stimulus/circular_fixation_point target_window (
+            color = target_red,target_green,target_blue
+            trigger_width = target_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_target
+            x_size = target_sz
+            y_size = target_sz
+            x_position = targetX
+            y_position = targetY
+            rotation = 0
+            alpha_multiplier = target_alpha
+    )
+}
+
+
+group 'Photodiode'{
+        stimulus/ellipse photodiode(
+        color = photodiode_red,photodiode_green,photodiode_blue
+        x_size = photodiode_size
+        y_size = photodiode_size
+        x_position = photodiodeX
+        y_position = photodiodeY
+        rotation = 0
+        alpha_multiplier = 1
+    )
+}
+
+
+iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(height/2/distance)*2; % 25.6 deg
+    background_color = 0,0,0
+    )
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Sampling trials
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+%define sample_trial ()
+
+    // sample cues
+    cue_id = disc_rand(0,cue_nTheta-1)
+    cue_theta = cue_id*(360/cue_nTheta) // + 90 // with '+90' default is up
+
+    cueX_final = fixX + cos(cue_theta*pi()/180)*cue_radius
+    cueY_final = fixY+ sin(cue_theta*pi()/180)*cue_radius
+
+    if (id_linear_circular==0){ // linear
+
+        // decide motion direction based on target_id
+        motion_direction = cue_theta+180
+
+        angle_rotation0=rand(cue_radius/2,cue_radius*3/2) // 5 to 15 dva
+
+        cueX = cueX_final + cos(motion_direction*pi()/180)*angle_rotation0
+        cueY = cueY_final + sin(motion_direction*pi()/180)*angle_rotation0
+
+        angle_rotation=1
+    }
+    if (id_linear_circular==1){ // circular
+        motion_direction=2*(disc_rand(0,1))-1 // -1 for CW 1 for CCW
+
+        angle_rotation0=-motion_direction*disc_rand(0,nAngle0)*pi()/6/2 // +/-15*[-4 4]
+        cueX = fixX + cos(cue_theta*pi()/180+angle_rotation0)*cue_radius
+        cueY = fixY + sin(cue_theta*pi()/180+angle_rotation0)*cue_radius
+
+        angle_rotation=angle_rotation0
+    }
+    if (id_linear_circular==2){ // self motion
+        motion_direction=cue_theta
+        cueX = fixX
+        cueY = fixY
+
+    }
+
+    // sample target
+    target_id = disc_rand(0,nTarget-1) // 0 1 2 3:0 90 180 270deg
+    target_theta = target_id*(360/nTarget)
+    /*if (cue_theta==90){ // training for specific targets
+        target_theta=90
+        }
+    if (cue_theta==270){
+        target_theta=270
+        }*/
+
+    targetX_final = cueX_final+ cos(target_theta*pi()/180)*target_radius
+    targetY_final = cueY_final+ sin(target_theta*pi()/180)*target_radius
+
+    targetX  = cueX + cos(target_theta*pi()/180)*target_radius
+    targetY  = cueY + sin(target_theta*pi()/180)*target_radius
+
+    object_theta = target_theta
+    objectX_final = targetX_final
+    objectY_final = targetY_final
+
+    objectX = targetX
+    objectY = targetY
+
+    // occluder
+    occluder1X=objectX
+    occluder1Y=objectY
+    occluder2X=cueX + cos((180+target_theta)*pi()/180)*target_radius
+    occluder2Y=cueY + sin((180+target_theta)*pi()/180)*target_radius
+    occluder_targetX=occluder2X
+    occluder_targetY=occluder2Y
+
+
+    // sample durations
+    fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
+    targetTimeDur=-targetTimeDurMean*logn(rand(0,1)) + targetTimeDurMin
+    occluderTimeDur=-occluderTimeDurMean*logn(rand(0,1)) + occluderTimeDurMin
+    memoryTimeDur=-memoryTimeDurMean*logn(rand(0,1)) + memoryTimeDurMin
+
+%end
+
+
+%define update_position ()
+
+    cueX = cueX_final
+    cueY = cueY_final
+
+    targetX  = targetX_final
+    targetY  = targetY_final
+
+    objectX = targetX
+    objectY = targetY
+
+    occluder1X= targetX
+    occluder1Y= targetY
+
+    occluder2X= cueX + cos((180+target_theta)*pi()/180)*target_radius
+    occluder2Y= cueY + sin((180+target_theta)*pi()/180)*target_radius
+
+    occluder_targetX=occluder2X
+    occluder_targetY=occluder2Y
+
+
+%end
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Protocols
+//
+///////////////////////////////////////////////////////////////////////////////
+
+protocol 'Analogy' {
+    start_device_io (eye_tracker)
+
+    // start_io_device (labjack) // debug
+
+    update_stimulus_display ()
+    task Trials {
+        state 'Initial' {
+            localTrials = 0
+            CorrectTrials = 0
+            IncorrectTrials = 0
+            while (tmp<(cue_nTheta*nTarget)){
+                CorrectTrialsTarget[tmp]=0
+                IncorrectTrialsTarget[tmp]=0
+                tmp=tmp+1
+            }
+
+            sample_trial () // durations & target location
+
+            goto ('Fix On')
+        }
+        state 'Fix On' {
+
+            //MATLAB
+            sync=0
+            sync=1
+
+            live_queue_stimulus(fixCircleStatic)
+
+            update_stimulus_display ()
+            tStart = now()
+            startTrial = 1
+            id_bad = 0
+
+            start_timer (
+                timer = fixWait
+                duration = fixWaitDur // 10000
+                duration_units = ms
+                )
+            goto (
+                target = 'Static Fix'
+                when = on_fix_static
+                )
+            timer_expired (
+                target = 'Failure to fixate'
+                timer = fixWait
+                )
+        }
+
+        state 'Static Fix' {
+            report ('localTrials = $localTrials')
+            localTrials = localTrials+1
+
+            tFix = now()
+            id_bad = 1
+
+            start_timer (
+                timer = StaticFixWait
+                duration = fixTimeDur // fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'Target On'
+                timer = StaticFixWait
+                )
+
+        }
+        state 'Target On' {
+            tTargetOn = next_frame_time()
+
+            queue_stimulus(photodiode)
+
+            live_queue_stimulus(object)
+            live_queue_stimulus(cue[0])
+            live_queue_stimulus(cue[1])
+            live_queue_stimulus(cue[2])
+
+            update_stimulus_display ()
+            id_bad = 2
+
+            labjack_target_on = 1
+            labjack_cue_on = 1
+
+            tmp=(tTargetOn-now())/1000
+            report ('Target On: expected delay b/t labjack & photodiode= $tmp')
+
+            start_timer (
+                timer = timer_target_on
+                duration = targetTimeDur
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'Memory' // 'Occluder On'
+                timer = timer_target_on
+                )
+        }
+
+        /* state 'Occluder On' {
+            tOccluderOn = next_frame_time()
+
+            live_queue_stimulus(occluder1)
+            live_queue_stimulus(occluder2)
+            update_stimulus_display ()
+            id_bad = 3
+
+            start_timer (
+                timer = timer_occluder_on
+                duration = occluderTimeDur
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'Memory'
+                timer = timer_occluder_on
+                )
+
+        } */
+
+        state 'Memory' {
+            tTargetOff = next_frame_time()
+            id_bad = 4
+
+            if (id_cue_motion==1){
+                if (id_linear_circular==0){
+                    queue_stimulus (update_position_linear)
+                }
+                if (id_linear_circular==1){
+                    queue_stimulus (update_position_circular)
+                }
+                if (id_linear_circular==2){ // used now
+                    queue_stimulus (update_position_centerout)
+                }
+            }
+            if (id_cue_motion==0){ // used now (w/o motion)
+                update_position ()
+                cue_alpha=0
+            }
+
+            if (id_ramp_opacity==1){
+                queue_stimulus (object_disappear)
+            }
+            if (id_ramp_opacity==0){ // used now
+                object_alpha=object_alpha_memory //0
+            }
+
+            dequeue_stimulus(photodiode)
+            update_stimulus_display ()
+
+            labjack_target_on = 0
+            labjack_cue_on = 0
+
+            tmp=(tTargetOff-now())/1000
+            report ('Memory: expected delay b/t labjack & photodiode= $tmp')
+
+            start_timer (
+                timer = timer_memory
+                duration = memoryTimeDur
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'FixOff'
+                timer = timer_memory
+                )
+        }
+
+        state 'FixOff' {
+            tFixOff= next_frame_time()
+            id_bad = 5
+
+            live_queue_stimulus(target_window)
+            live_queue_stimulus(occluderTarget)
+            live_queue_stimulus(occluder1)
+            live_queue_stimulus(occluder2)
+            dequeue_stimulus(fixCircleStatic)
+            queue_stimulus(photodiode)
+
+            if (id_cue_motion==0){ // used now (w/o motion)
+                cue_alpha=1
+            }
+            if (id_cue_motion==1){
+                dequeue_stimulus (update_position_circular)
+                dequeue_stimulus (update_position_centerout)
+                dequeue_stimulus (update_position_linear)
+                dequeue_stimulus (object_disappear)
+            }
+
+            update_stimulus_display ()
+            labjack_cue_on = 1
+
+            tmp=(tFixOff-now())/1000
+            report ('FixOff: expected delay b/t labjack & photodiode= $tmp')
+
+            goto (
+                target = 'Response'
+                )
+        }
+
+        state 'Response' {
+            id_bad = 6
+
+            if (flag_response==0){
+                tResponse0=now()
+                flag_response=1
+            }
+            if (flag_response==1){
+                targetWait=targetWait-(now()-tResponse0)/1000
+            }
+
+            start_timer (
+                timer = timer_response
+                duration = targetWait // 5000
+                duration_units = ms
+                )
+            goto (
+                target = 'post_response'
+                when = on_target
+                )
+           goto (
+            target = 'post_response_incorrect'
+            when = on_occluder_target
+            )
+            timer_expired (
+                target = 'Failure to fixate'
+                timer = timer_response
+                )
+        }
+        state 'post_response_incorrect' {
+            id_bad = 7
+            tResponse= now()
+
+            start_timer (
+                timer = timer_post_response
+                duration = responseRegister // 100
+                duration_units = ms
+                )
+            goto (
+                target = 'Response' // 'Failure to fixate'
+                when = !on_occluder_target
+                )
+            timer_expired (
+                target = 'Bad'
+                timer = timer_post_response
+                )
+        }
+        state 'Bad' {
+            dequeue_stimulus(occluder2)
+            // occluder_red=1
+            // occluder_green=0
+            // occluder_blue=0
+            update_stimulus_display ()
+            start_timer (
+                timer = timer_timeout
+                duration = timeout // 2000
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'Incorrect'
+                timer = timer_timeout
+                )
+        }
+
+        state 'Incorrect' {
+            report ('incorrect!: IncorrectTrials = $IncorrectTrials')
+
+            // make target visible
+            // dequeue_stimulus(occluder1)
+            // dequeue_stimulus(occluder2)
+            // object_alpha = 1 //target_alpha = 1
+
+            dequeue_stimulus(cue[0])
+            dequeue_stimulus(cue[1])
+            dequeue_stimulus(cue[2])
+            dequeue_stimulus(photodiode)
+            update_stimulus_display ()
+            labjack_cue_on = 0
+
+            IncorrectTrialsTarget[target_id+nTarget*cue_id] = IncorrectTrialsTarget[target_id+nTarget*cue_id]+1
+            IncorrectTrials = IncorrectTrials+1
+
+            //staircase
+            p_memoryTimeDur=min(p_memoryTimeDur+2*delta_memoryTimeDur,p_memoryTimeDurMax)
+
+            start_timer (
+                timer = NoFixWait
+                duration = incorrectDur  // 5000
+                duration_units = ms
+                )
+
+            goto (
+                target = 'bonus reward'
+                when = on_target
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = NoFixWait
+                )
+        }
+        state 'post_response' {
+            id_bad = 7
+            tResponse= now()
+
+            start_timer (
+                timer = timer_post_response
+                duration = responseRegister // 100
+                duration_units = ms
+                )
+            goto (
+                target = 'Response' // 'Failure to fixate'
+                when = !on_target
+                )
+            timer_expired (
+                target = 'Reward'
+                timer = timer_post_response
+                )
+        }
+
+        state 'Reward' {
+            report ('Success!: CorrectTrials = $CorrectTrials')
+            tRew = now()
+
+            // make target visible
+            dequeue_stimulus(occluder1)
+            dequeue_stimulus(occluder2)
+            object_alpha = 1 //target_alpha = 1
+            dequeue_stimulus(cue[0])
+            dequeue_stimulus(cue[1])
+            dequeue_stimulus(cue[2])
+            dequeue_stimulus(photodiode)
+            update_stimulus_display ()
+
+            labjack_target_on = 1
+            labjack_cue_on = 0
+
+            tmp=(tRew-now())/1000
+            report ('Reward: expected delay b/t labjack & photodiode= $tmp')
+
+            CorrectTrialsTarget[target_id+nTarget*cue_id] = CorrectTrialsTarget[target_id+nTarget*cue_id]+1
+            CorrectTrials = CorrectTrials+1
+
+            //staircase
+            p_memoryTimeDur=max(p_memoryTimeDur-delta_memoryTimeDur,p_memoryTimeDurMin)
+
+            pulse ( // micro seconds
+                variable = reward_line
+                duration = (rewardDur)*1000
+                )
+            start_timer (
+                timer = GreenTime
+                duration = rewardDur
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = GreenTime
+                )
+        }
+        state 'End Trial' {
+            tEnd = now()
+
+            endTrial = endTrial+1
+
+            // reset stimulus
+            object_red=1 // target_red=1
+            object_green=0.5
+            object_blue=0 // target_blue=1
+            object_alpha = 1 // target_alpha = 1
+
+            elapsed_time = 0
+
+            fix_red_static = 1
+            fix_green_static = 1
+            fix_blue_static = 1
+
+            cue_alpha=1
+
+            occluder_red=.5
+            occluder_green=.5
+            occluder_blue=.5
+
+            dequeue_stimulus (target_window)
+            dequeue_stimulus (occluderTarget)
+            dequeue_stimulus (occluder1)
+            dequeue_stimulus (occluder2)
+            dequeue_stimulus (object)
+            dequeue_stimulus (fixCircleStatic)
+            dequeue_stimulus(cue[0])
+            dequeue_stimulus(cue[1])
+            dequeue_stimulus(cue[2])
+            dequeue_stimulus (update_position_linear)
+            dequeue_stimulus (update_position_circular)
+            dequeue_stimulus (update_position_centerout)
+            dequeue_stimulus (object_disappear)
+            dequeue_stimulus(photodiode)
+
+            id_bad = 0
+
+            flag_response=0
+            targetWait=targetWait0
+
+            update_stimulus_display ()
+            labjack_target_on = 0
+            labjack_cue_on = 0
+
+            goto (
+                target = 'Exit System'
+                when = CorrectTrials >= trialNum
+                )
+            goto (
+                target = 'Exit System'
+                when = pstop
+                )
+            goto (ITI)
+        }
+        state ITI {
+
+            sample_trial () // duration and target locations
+
+            // override eye_x eye_y to reset trigger_flag
+            eye_x=100
+
+            start_timer (
+                timer = fix_pur_ITI
+                duration = ITI // 500
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'Fix On'
+                timer = fix_pur_ITI
+                )
+        }
+
+        state 'Failure to fixate' {
+            report ('Trial Failed: id_bad = $id_bad')
+            tResponse= now()
+
+            if (id_bad==2 || id_bad==3 || id_bad==4){ // target cue memory
+                fix_green_static = 0
+                fix_blue_static = 0
+                dequeue_stimulus (target_window)
+                dequeue_stimulus (object)
+                dequeue_stimulus(cue[0])
+                dequeue_stimulus(cue[1])
+                dequeue_stimulus(cue[2])
+                dequeue_stimulus (update_position_linear)
+                dequeue_stimulus (update_position_circular)
+                dequeue_stimulus (update_position_centerout)
+                dequeue_stimulus (object_disappear)
+                dequeue_stimulus(photodiode)
+                update_stimulus_display ()
+                labjack_target_on = 0
+                labjack_cue_on = 0
+            }
+            if (id_bad==5 || id_bad==6){ // response fixOff; not able to find target
+                //staircase
+                p_memoryTimeDur=min(p_memoryTimeDur+delta_memoryTimeDur,p_memoryTimeDurMax)
+
+                object_alpha = 1 //target_alpha = 1
+
+                update_stimulus_display ()
+                labjack_target_on = 1
+
+            }
+
+            start_timer (
+                timer = NoFixWait
+                duration = NoFixWaitDur  // 2000
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = NoFixWait
+                )
+        }
+
+        state 'bonus reward' {
+            // play_sound(success_sound) // debug
+            dequeue_stimulus(occluder1)
+            object_alpha = 1 //target_alpha = 1
+            update_stimulus_display ()
+            labjack_target_on = 1
+
+            pulse ( // micro seconds
+                variable = reward_line
+                duration = (bonusRewDur)*1000
+                )
+
+            start_timer (
+                timer = timer_timeout2
+                duration = timeout // 2000
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = timer_timeout2
+                )
+        }
+
+        state 'Exit System' {
+            report ('Leaving state system')
+            yield ()
+        }
+    }
+}

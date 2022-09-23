@@ -17,6 +17,10 @@ iodevice/labjack_ljm labjack (
             line = FIO3
             value = labjack_cue_on
             )
+        iochannel/labjack_ljm_analog_input( // photodiode
+            line = AIN1
+            value = photodiode_input
+            )
     }
 
 /* firmata firmata ( // arduino_uno
