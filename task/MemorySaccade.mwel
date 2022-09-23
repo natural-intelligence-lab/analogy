@@ -1106,7 +1106,7 @@ protocol 'MemorySaccade' {
             sample_trial () // duration and target locations
 
             // override eye_x eye_y to reset trigger_flag
-            eye_x=100
+            // eye_x=100
 
             start_timer (
                 timer = fix_pur_ITI
