@@ -44,6 +44,7 @@ for iP=1:nParam
     events = all_events(indices);
     
     if iP==1 || iP==2 % cell
+    events(:).data
         tmpDataCell=events(:).data;
         tmpValues=cast([tmpDataCell{end}], 'double');
     else
