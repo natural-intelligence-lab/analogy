@@ -43,10 +43,14 @@ for iP=1:nParam
     indices = ([all_events(:).event_code] == event_code(iP));
     events = all_events(indices);
     
-    tmpValues=cast([events(:).data], 'double'); 
+    if iP==1 || iP==2 % cell
+        tmpDataCell=events(:).data;
+        tmpValues=cast([tmpDataCell{end}], 'double');
+    else
+        tmpValues=cast([events(:).data], 'double');        
+    end
     tmpValues=tmpValues(:);
     values{iP} =[values{iP}(:); tmpValues];
-    
 end
 
 %% other parameters
