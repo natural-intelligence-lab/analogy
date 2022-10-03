@@ -14,8 +14,7 @@
 
 TBD:
 1. MGS: neural question (when/how neural state reaches to proper IC) -> block design?
-2. parameterize # occluder
-3. parameterize dot stimuli
+2. parameterize dot stimuli
 
    */
 
@@ -112,6 +111,7 @@ group Reward {
     var reward_line = 0 (groups = Reward)
     var rewardDur = 70 // 90 (groups = Reward)
     var bonusRewDur = 15  (groups = Reward)
+    var reward_gain_cue_first=0.5 // 50% of reward
 }
 
 group Fixation {
@@ -218,6 +218,12 @@ group target_window{ // just for target fixation window
     var delta_alpha=0
 }
 
+group cue_window{ // to record p(saccade first to cue) & give penalty
+    var cue_win = 3
+    var on_cue=0
+    var id_cue_first=0
+}
+
 group occluder{
 
     var occluder_red = .5
@@ -300,6 +306,9 @@ group Global {
     var CorrectTrialsTarget = [0:(nTarget*cue_nTheta-1)] (groups = Trial)
     var IncorrectTrials = 0 (groups = Trial)
     var IncorrectTrialsTarget = [0:(nTarget*cue_nTheta-1)] (groups = Trial)
+
+    var CorrectTrialsCueFirst = 0 (groups = Trial)
+    var CorrectTrialsCueFirstTarget = [0:(nTarget*cue_nTheta-1)] (groups = Trial)
 
     var id_bad = 0 (groups = Trial)
 }
@@ -527,6 +536,22 @@ group 'Fixation' {
     )
 }
 
+group 'cue_window'{
+    stimulus/circular_fixation_point cue_window (
+            color = 1,1,1
+            trigger_width = cue_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_cue
+            x_size = 0.00001
+            y_size = 0.00001
+            x_position = cueX
+            y_position = cueY
+            rotation = 0
+            alpha_multiplier = 0
+    )
+}
+
 group 'Target_window'{
     stimulus/circular_fixation_point target_window (
             color = target_red,target_green,target_blue
@@ -695,6 +720,7 @@ protocol 'Analogy' {
             while (tmp<(cue_nTheta*nTarget)){
                 CorrectTrialsTarget[tmp]=0
                 IncorrectTrialsTarget[tmp]=0
+                CorrectTrialsCueFirstTarget[tmp]=0
                 tmp=tmp+1
             }
 
@@ -911,6 +937,7 @@ protocol 'Analogy' {
             id_bad = 5
 
             live_queue_stimulus(target_window)
+            live_queue_stimulus(cue_window)
             index=0
             while (index<(nOccluder-1)){
                 live_queue_stimulus(occluder_targets[index])
@@ -965,90 +992,18 @@ protocol 'Analogy' {
                 target = 'post_response'
                 when = on_target
                 )
-           goto (
-            target = 'post_response_incorrect'
-            when = on_occluder_target0 || on_occluder_target1 || on_occluder_target2 // # occluder
-            // on_occluder_target0 || on_occluder_target1 || on_occluder_target2 || on_occluder_target3 || on_occluder_target4 || on_occluder_target5 || on_occluder_target6 // # occluder
-            )
+            goto (
+                target = 'post_response_cue'
+                when = on_cue && id_cue_first==0
+                )
+            goto (
+                target = 'post_response_incorrect'
+                when = on_occluder_target0 || on_occluder_target1 || on_occluder_target2 // # occluder
+                // on_occluder_target0 || on_occluder_target1 || on_occluder_target2 || on_occluder_target3 || on_occluder_target4 || on_occluder_target5 || on_occluder_target6 // # occluder
+                )
             timer_expired (
                 target = 'Failure to fixate'
                 timer = timer_response
-                )
-        }
-        state 'post_response_incorrect' {
-            id_bad = 7
-            tResponse= now()
-
-            start_timer (
-                timer = timer_post_response
-                duration = responseRegister // 100
-                duration_units = ms
-                )
-            goto (
-                target = 'Response' // 'Failure to fixate'
-                when = !(on_occluder_target0 || on_occluder_target1 || on_occluder_target2) // # occluder
-                // !(  on_occluder_target0 || on_occluder_target1 || on_occluder_target2 || on_occluder_target3 || on_occluder_target4 || on_occluder_target5 || on_occluder_target6) // # occluder
-                )
-            timer_expired (
-                target = 'Bad'
-                timer = timer_post_response
-                )
-        }
-        state 'Bad' {
-            index=1
-            while (index<(nOccluder)){
-                dequeue_stimulus(occluders[index])
-                index=index+1
-            }
-
-
-            // occluder_red=1
-            // occluder_green=0
-            // occluder_blue=0
-            update_stimulus_display ()
-            start_timer (
-                timer = timer_timeout
-                duration = timeout // 2000
-                duration_units = ms
-                )
-            timer_expired (
-                target = 'Incorrect'
-                timer = timer_timeout
-                )
-        }
-
-        state 'Incorrect' {
-            report ('incorrect!: IncorrectTrials = $IncorrectTrials')
-
-            // make target visible
-            // object_alpha = 1 //target_alpha = 1
-
-            dequeue_stimulus(cue[0])
-            dequeue_stimulus(cue[1])
-            dequeue_stimulus(cue[2])
-            dequeue_stimulus(photodiode)
-            update_stimulus_display ()
-            labjack_cue_on = 0
-
-            IncorrectTrialsTarget[target_id+nTarget*cue_id] = IncorrectTrialsTarget[target_id+nTarget*cue_id]+1
-            IncorrectTrials = IncorrectTrials+1
-
-            //staircase
-            p_memoryTimeDur=min(p_memoryTimeDur+2*delta_memoryTimeDur,p_memoryTimeDurMax)
-
-            start_timer (
-                timer = NoFixWait
-                duration = incorrectDur  // 5000
-                duration_units = ms
-                )
-
-            goto (
-                target = 'bonus reward'
-                when = on_target
-                )
-            timer_expired (
-                target = 'End Trial'
-                timer = NoFixWait
                 )
         }
         state 'post_response' {
@@ -1097,12 +1052,17 @@ protocol 'Analogy' {
             CorrectTrialsTarget[target_id+nTarget*cue_id] = CorrectTrialsTarget[target_id+nTarget*cue_id]+1
             CorrectTrials = CorrectTrials+1
 
+            if (id_cue_first==1){
+                CorrectTrialsCueFirstTarget[target_id+nTarget*cue_id] = CorrectTrialsCueFirstTarget[target_id+nTarget*cue_id]+1
+                CorrectTrialsCueFirst = CorrectTrialsCueFirst+1
+            }
+
             //staircase
             p_memoryTimeDur=max(p_memoryTimeDur-delta_memoryTimeDur,p_memoryTimeDurMin)
 
             pulse ( // micro seconds
                 variable = reward_line
-                duration = (rewardDur)*1000
+                duration = (((id_cue_first==0)*1+(id_cue_first==1)*reward_gain_cue_first)*rewardDur)*1000
                 )
             start_timer (
                 timer = GreenTime
@@ -1137,7 +1097,13 @@ protocol 'Analogy' {
             occluder_green=.5
             occluder_blue=.5
 
+            cue_red=.5 // purple [0.5 0 1]
+            cue_green=0
+            cue_blue=1
+            id_cue_first=0
+
             dequeue_stimulus (target_window)
+            dequeue_stimulus (cue_window)
             index=0
             while (index<(nOccluder-1)){
                 dequeue_stimulus(occluder_targets[index])
@@ -1205,6 +1171,7 @@ protocol 'Analogy' {
                 fix_green_static = 0
                 fix_blue_static = 0
                 dequeue_stimulus (target_window)
+                dequeue_stimulus (cue_window)
                 dequeue_stimulus (object)
                 dequeue_stimulus(cue[0])
                 dequeue_stimulus(cue[1])
@@ -1239,6 +1206,161 @@ protocol 'Analogy' {
                 timer = NoFixWait
                 )
         }
+
+        ///////////////
+        // cue first
+        ///////////////
+
+        state 'post_response_cue' {
+            id_bad = 9 // 7
+            tResponse= now()
+
+            start_timer (
+                timer = timer_post_response_cue
+                duration = responseRegister // 100
+                duration_units = ms
+                )
+            goto (
+                target = 'Response' // 'Failure to fixate'
+                when = !on_cue
+                )
+            timer_expired (
+                target = 'Bad_cue'
+                timer = timer_post_response_cue
+                )
+        }
+        state 'Bad_cue' {
+            id_cue_first=1
+
+            // making cue red
+            cue_red=1 // purple [0.5 0 1]
+            cue_green=0
+            cue_blue=0
+            dequeue_stimulus (cue_window)
+
+            // remove choice options
+            dequeue_stimulus (target_window)
+            dequeue_stimulus (cue_window)
+            index=0
+            while (index<(nOccluder-1)){
+                dequeue_stimulus(occluder_targets[index])
+                index=index+1
+            }
+            index=0
+            while (index<(nOccluder)){
+                dequeue_stimulus(occluders[index])
+                index=index+1
+            }
+
+            update_stimulus_display ()
+            start_timer (
+                timer = timer_timeout
+                duration = timeout // 2000
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'Incorrect_cue'
+                timer = timer_timeout
+                )
+        }
+
+        state 'Incorrect_cue' {
+
+            live_queue_stimulus(target_window)
+            index=0
+            while (index<(nOccluder-1)){
+                live_queue_stimulus(occluder_targets[index])
+                index=index+1
+            }
+            index=0
+            while (index<(nOccluder)){
+                live_queue_stimulus(occluders[index])
+                index=index+1
+            }
+            update_stimulus_display ()
+
+            flag_response=0 // to reset targetWait timer
+            targetWait=targetWait0
+
+            goto (
+                target = 'Response'
+                )
+        }
+
+        ///////////////
+        // wrong choice
+        ///////////////
+
+        state 'post_response_incorrect' {
+            id_bad = 8 // 7
+            tResponse= now()
+
+            start_timer (
+                timer = timer_post_response
+                duration = responseRegister // 100
+                duration_units = ms
+                )
+            goto (
+                target = 'Response' // 'Failure to fixate'
+                when = !(on_occluder_target0 || on_occluder_target1 || on_occluder_target2) // # occluder
+                // !(  on_occluder_target0 || on_occluder_target1 || on_occluder_target2 || on_occluder_target3 || on_occluder_target4 || on_occluder_target5 || on_occluder_target6) // # occluder
+                )
+            timer_expired (
+                target = 'Bad'
+                timer = timer_post_response
+                )
+        }
+        state 'Bad' {
+            // remove all non-targets
+            index=1
+            while (index<(nOccluder)){
+                dequeue_stimulus(occluders[index])
+                index=index+1
+            }
+            update_stimulus_display ()
+            start_timer (
+                timer = timer_timeout
+                duration = timeout // 2000
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'Incorrect'
+                timer = timer_timeout
+                )
+        }
+
+        state 'Incorrect' {
+            report ('incorrect!: IncorrectTrials = $IncorrectTrials')
+
+            dequeue_stimulus(cue[0])
+            dequeue_stimulus(cue[1])
+            dequeue_stimulus(cue[2])
+            dequeue_stimulus(photodiode)
+            update_stimulus_display ()
+            labjack_cue_on = 0
+
+            IncorrectTrialsTarget[target_id+nTarget*cue_id] = IncorrectTrialsTarget[target_id+nTarget*cue_id]+1
+            IncorrectTrials = IncorrectTrials+1
+
+            //staircase
+            p_memoryTimeDur=min(p_memoryTimeDur+2*delta_memoryTimeDur,p_memoryTimeDurMax)
+
+            start_timer (
+                timer = NoFixWait
+                duration = incorrectDur  // 5000
+                duration_units = ms
+                )
+
+            goto (
+                target = 'bonus reward'
+                when = on_target
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = NoFixWait
+                )
+        }
+
 
         state 'bonus reward' {
             // play_sound(success_sound) // debug
