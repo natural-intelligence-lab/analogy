@@ -12,8 +12,10 @@
   7. reward
   8. green grapes (#)
 
-stimulus/image_file
-path=/path/to/image.png
+TBD:
+1. MGS: neural question (when/how neural state reaches to proper IC) -> block design?
+2. parameterize # occluder
+3. parameterize dot stimuli
 
    */
 
@@ -222,19 +224,28 @@ group occluder{
     var occluder_green = .5
     var occluder_blue = .5
     var occluder_size = 2
-
-    var occluder1X = 0 // # occluder
-    var occluder1Y = 0
-    var occluder2X = 0
-    var occluder2Y = 0
     var occluder_alpha = 1
 
+    var nOccluder =  4// 8 // 4 // # occluder
+
+    var occluderX=[1:nOccluder]
+    var occluderY=[1:nOccluder]
 }
 
-group occluder_target{ // just for target fixation window // # occluder
-    var on_occluder_target=0
-    var occluder_targetX = 0
-    var occluder_targetY = 0
+group occluder_target{ // just for target fixation window
+    var on_occluder_target0=false
+    var on_occluder_target1=false
+    var on_occluder_target2=false
+    /*
+    var on_occluder_target3=false // # occluder
+    var on_occluder_target4=false
+    var on_occluder_target5=false
+    var on_occluder_target6=false
+    */
+
+    var on_occluder_target=[1:(nOccluder-1)] // does not work
+    var occluder_targetX = [1:(nOccluder-1)]
+    var occluder_targetY = [1:(nOccluder-1)]
 }
 
 group object{ // banana
@@ -300,11 +311,14 @@ group photodiode{
     var photodiode_size = 2.5
     var photodiodeX = -20 // -21.88 // top left
     var photodiodeY = 11.7 // 12.8
+
+    var photodiode_input = 0
 }
 
 group labjack{
     var labjack_target_on = 0
     var labjack_cue_on = 0
+    var t_labjack_cue_on=0
 }
 
 group motion {
@@ -337,14 +351,15 @@ render_actions update_position_centerout ( // self-motion (circular)
     objectX = targetX
     objectY = targetY
 
+    /* TBD with occluderX
     occluder1X= targetX
     occluder1Y= targetY
-
     occluder2X= cueX + cos((180+target_theta)*pi()/180)*target_radius
     occluder2Y= cueY + sin((180+target_theta)*pi()/180)*target_radius
 
     occluder_targetX=occluder2X
     occluder_targetY=occluder2Y
+    */
 
 }
 
@@ -395,6 +410,9 @@ render_actions object_disappear (
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// stimulus/image_file
+// path=/path/to/image.png
+
 group 'object'{
     stimulus/text object ( // alternative: ellipse rectangle
             text=')'
@@ -444,65 +462,53 @@ stimulus_group 'cue'{
 
 }
 
-/*
-// alterantive: range_replicator or list_replicator
-var index = 0 (scope = local)
 
-stimulus_group images {
+// alterantive: range_replicator or list_replicator
+
+var index = 0 (scope = local)
+stimulus_group occluders {
     range_replicator (
         variable = index
-        from = 1
-        to = 100
+        from = 0
+        to = (nOccluder-1)
         step = 1
         ) {
-        image_file image${index} (
-            path = 'images/img${index}.png'
-            x_size = img_size
-            x_position = img_pos_x
-            y_position = img_pos_y
+
+        stimulus/rectangle occluder${index}(
+            color = occluder_red,occluder_green,occluder_blue
+            x_size = occluder_size
+            y_size = occluder_size
+            x_position = occluderX[${index}]
+            y_position = occluderY[${index}]
+            rotation = 0
+            alpha_multiplier = occluder_alpha
             )
     }
 }
 
-*/
 
-group 'occluder1'{
-    stimulus/rectangle occluder1(
-        color = occluder_red,occluder_green,occluder_blue
-        x_size = occluder_size
-        y_size = occluder_size
-        x_position = occluder1X
-        y_position = occluder1Y
-        rotation = 0
-        alpha_multiplier = occluder_alpha
-    )
-}
-group 'occluder2'{
-    stimulus/rectangle occluder2(
-        color = occluder_red,occluder_green,occluder_blue
-        x_size = occluder_size
-        y_size = occluder_size
-        x_position = occluder2X
-        y_position = occluder2Y
-        rotation = 0
-        alpha_multiplier = occluder_alpha
-    )
-}
+stimulus_group occluder_targets {
+    range_replicator (
+        variable = index
+        from = 0
+        to = (nOccluder-1-1)
+        step = 1
+        ) {
 
-group 'occluderTarget'{
-    stimulus/circular_fixation_point occluderTarget (
+        stimulus/circular_fixation_point occluder_target${index} (
             color = target_red,target_green,target_blue
             trigger_width = target_win
             trigger_watch_x = eye_x
             trigger_watch_y = eye_y
-            trigger_flag = on_occluder_target
+            trigger_flag = on_occluder_target${index} // on_occluder_target[${index}]
             x_size = target_sz
             y_size = target_sz
-            x_position = occluder_targetX
-            y_position = occluder_targetY
+            x_position = occluder_targetX[${index}]
+            y_position = occluder_targetY[${index}]
             rotation = 0
             alpha_multiplier = target_alpha
-   )
+        )
+    }
 }
 
 group 'Fixation' {
@@ -592,7 +598,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 
         angle_rotation=angle_rotation0
     }
-    if (id_linear_circular==2){ // self motion
+    if (id_linear_circular==2){ // self motion // used now
         motion_direction=cue_theta
         cueX = fixX
         cueY = fixY
@@ -623,13 +629,17 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     objectY = targetY
 
     // occluder
-    occluder1X=objectX
-    occluder1Y=objectY
-    occluder2X=cueX + cos((180+target_theta)*pi()/180)*target_radius
-    occluder2Y=cueY + sin((180+target_theta)*pi()/180)*target_radius
-    occluder_targetX=occluder2X
-    occluder_targetY=occluder2Y
-
+    index=0
+    while (index<(nOccluder)){
+        occluderX[index]=cueX + cos((target_theta+360/nOccluder*index)*pi()/180)*target_radius
+        occluderY[index]=cueY + sin((target_theta+360/nOccluder*index)*pi()/180)*target_radius
+        if (index>0){
+            occluder_targetX[index-1]=occluderX[index]
+            occluder_targetY[index-1]=occluderY[index]
+            on_occluder_target[index-1] = false // does not work
+        }
+        index=index+1
+    }
 
     // sample durations
     fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
@@ -651,14 +661,16 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
     objectX = targetX
     objectY = targetY
 
-    occluder1X= targetX
-    occluder1Y= targetY
-
-    occluder2X= cueX + cos((180+target_theta)*pi()/180)*target_radius
-    occluder2Y= cueY + sin((180+target_theta)*pi()/180)*target_radius
-
-    occluder_targetX=occluder2X
-    occluder_targetY=occluder2Y
+    index=0
+    while (index<(nOccluder)){
+        occluderX[index]=cueX + cos((target_theta+360/nOccluder*index)*pi()/180)*target_radius
+        occluderY[index]=cueY + sin((target_theta+360/nOccluder*index)*pi()/180)*target_radius
+        if (index>0){
+            occluder_targetX[index-1]=occluderX[index]
+            occluder_targetY[index-1]=occluderY[index]
+        }
+        index=index+1
+    }
 
 
 %end
@@ -750,14 +762,16 @@ protocol 'Analogy' {
             live_queue_stimulus(cue[1])
             live_queue_stimulus(cue[2])
 
-            update_stimulus_display ()
+            update_stimulus_display () // 25ms from labjack
             id_bad = 2
 
             labjack_target_on = 1
             labjack_cue_on = 1
 
+            t_labjack_cue_on=now()
+
             tmp=(tTargetOn-now())/1000
-            report ('Target On: expected delay b/t labjack & photodiode= $tmp')
+            report ('Target On: expected delay b/t labjack & photodiode= $tmp') // all around <10ms
 
             start_timer (
                 timer = timer_target_on
@@ -772,13 +786,35 @@ protocol 'Analogy' {
                 target = 'Memory' // 'Occluder On'
                 timer = timer_target_on
                 )
+            /*
+            goto (
+                target = 'photodiode_on'
+                when = photodiode_input>5
+                )
+            */
+        }
+        state 'photodiode_on' {
+            tmp=(now()-t_labjack_cue_on)/1000
+            report ('*** Delay in ON photodiode loop= $tmp') // ~30ms
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'Memory' // 'Occluder On'
+                timer = timer_target_on
+                )
         }
 
         /* state 'Occluder On' {
             tOccluderOn = next_frame_time()
 
-            live_queue_stimulus(occluder1)
-            live_queue_stimulus(occluder2)
+            index=0
+            while (index<(nOccluder)){
+                live_queue_stimulus(occluders[index])
+                index=index+1
+            }
+
             update_stimulus_display ()
             id_bad = 3
 
@@ -826,10 +862,12 @@ protocol 'Analogy' {
             }
 
             dequeue_stimulus(photodiode)
-            update_stimulus_display ()
+            update_stimulus_display () // 40ms from labjack
 
             labjack_target_on = 0
             labjack_cue_on = 0
+
+            t_labjack_cue_on=now()
 
             tmp=(tTargetOff-now())/1000
             report ('Memory: expected delay b/t labjack & photodiode= $tmp')
@@ -847,6 +885,25 @@ protocol 'Analogy' {
                 target = 'FixOff'
                 timer = timer_memory
                 )
+            /*
+            goto (
+                target = 'photodiode_off'
+                when = photodiode_input < 5
+                )
+                */
+        }
+
+        state 'photodiode_off' {
+            tmp=(now()-t_labjack_cue_on)/1000
+            report ('***** Delay in OFF photodiode loop= $tmp') // ~30ms
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'FixOff'
+                timer = timer_memory
+                )
         }
 
         state 'FixOff' {
@@ -854,9 +911,16 @@ protocol 'Analogy' {
             id_bad = 5
 
             live_queue_stimulus(target_window)
-            live_queue_stimulus(occluderTarget)
-            live_queue_stimulus(occluder1)
-            live_queue_stimulus(occluder2)
+            index=0
+            while (index<(nOccluder-1)){
+                live_queue_stimulus(occluder_targets[index])
+                index=index+1
+            }
+            index=0
+            while (index<(nOccluder)){
+                live_queue_stimulus(occluders[index])
+                index=index+1
+            }
             dequeue_stimulus(fixCircleStatic)
             queue_stimulus(photodiode)
 
@@ -903,7 +967,8 @@ protocol 'Analogy' {
                 )
            goto (
             target = 'post_response_incorrect'
-            when = on_occluder_target
+            when = on_occluder_target0 || on_occluder_target1 || on_occluder_target2 // # occluder
+            // on_occluder_target0 || on_occluder_target1 || on_occluder_target2 || on_occluder_target3 || on_occluder_target4 || on_occluder_target5 || on_occluder_target6 // # occluder
             )
             timer_expired (
                 target = 'Failure to fixate'
@@ -921,7 +986,8 @@ protocol 'Analogy' {
                 )
             goto (
                 target = 'Response' // 'Failure to fixate'
-                when = !on_occluder_target
+                when = !(on_occluder_target0 || on_occluder_target1 || on_occluder_target2) // # occluder
+                // !(  on_occluder_target0 || on_occluder_target1 || on_occluder_target2 || on_occluder_target3 || on_occluder_target4 || on_occluder_target5 || on_occluder_target6) // # occluder
                 )
             timer_expired (
                 target = 'Bad'
@@ -929,7 +995,13 @@ protocol 'Analogy' {
                 )
         }
         state 'Bad' {
-            dequeue_stimulus(occluder2)
+            index=1
+            while (index<(nOccluder)){
+                dequeue_stimulus(occluders[index])
+                index=index+1
+            }
+
+
             // occluder_red=1
             // occluder_green=0
             // occluder_blue=0
@@ -949,8 +1021,6 @@ protocol 'Analogy' {
             report ('incorrect!: IncorrectTrials = $IncorrectTrials')
 
             // make target visible
-            // dequeue_stimulus(occluder1)
-            // dequeue_stimulus(occluder2)
             // object_alpha = 1 //target_alpha = 1
 
             dequeue_stimulus(cue[0])
@@ -1005,8 +1075,12 @@ protocol 'Analogy' {
             tRew = now()
 
             // make target visible
-            dequeue_stimulus(occluder1)
-            dequeue_stimulus(occluder2)
+            index=0
+            while (index<(nOccluder)){
+                dequeue_stimulus(occluders[index])
+                index=index+1
+            }
+
             object_alpha = 1 //target_alpha = 1
             dequeue_stimulus(cue[0])
             dequeue_stimulus(cue[1])
@@ -1064,9 +1138,17 @@ protocol 'Analogy' {
             occluder_blue=.5
 
             dequeue_stimulus (target_window)
-            dequeue_stimulus (occluderTarget)
-            dequeue_stimulus (occluder1)
-            dequeue_stimulus (occluder2)
+            index=0
+            while (index<(nOccluder-1)){
+                dequeue_stimulus(occluder_targets[index])
+                index=index+1
+            }
+            index=0
+            while (index<(nOccluder)){
+                dequeue_stimulus(occluders[index])
+                index=index+1
+            }
+
             dequeue_stimulus (object)
             dequeue_stimulus (fixCircleStatic)
             dequeue_stimulus(cue[0])
@@ -1102,7 +1184,7 @@ protocol 'Analogy' {
             sample_trial () // duration and target locations
 
             // override eye_x eye_y to reset trigger_flag
-            eye_x=100
+            // eye_x=100
 
             start_timer (
                 timer = fix_pur_ITI
@@ -1160,7 +1242,13 @@ protocol 'Analogy' {
 
         state 'bonus reward' {
             // play_sound(success_sound) // debug
-            dequeue_stimulus(occluder1)
+            index=0
+            while (index<(nOccluder)){
+                dequeue_stimulus(occluders[index])
+                index=index+1
+            }
+
+
             object_alpha = 1 //target_alpha = 1
             update_stimulus_display ()
             labjack_target_on = 1
