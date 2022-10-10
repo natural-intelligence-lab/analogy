@@ -1,5 +1,12 @@
 
-/* Analogy task - recording version
+/*
+    memory-guided saccade task
+- banana as target
+- number of banana differs across trials [1 2 4]
+- 4cue x 4relation x 3# x 15 repetition = 720
+
+
+Analogy task - recording version
 
   generalization idea (space -> object)
   1. # relations: [0:90:270] -> diagonal
@@ -27,17 +34,17 @@ TBD:
 
 // Include one of the following hand interfaces:
 
-%include 'hand_interfaces/keyboard' // debug
+// %include 'hand_interfaces/keyboard' // debug
 // %include 'hand_interfaces/gamepad'
 // %include 'hand_interfaces/joystick'
-// %include 'hand_interfaces/joystick_monkey' // debug
+%include 'hand_interfaces/joystick_monkey' // debug
 
 // Include one of the following eye interfaces
 
-%include 'eye_interfaces/mouse' // debug
-// %include 'eye_interfaces/eyelink' // debug
+// %include 'eye_interfaces/mouse' // debug
+%include 'eye_interfaces/eyelink' // debug
 
-// %include 'labjack' // debug
+%include 'labjack' // debug
 // %include 'firmata_ephys' // debug
 // %include 'firmata_train' // debug
 
@@ -105,7 +112,6 @@ sound/wav_file pong_sound(
 
 var data_file = ""
 var tmp=0
-var index=0
 var var_debug = 0
 
 group Reward {
@@ -475,21 +481,21 @@ stimulus_group 'cue'{
 
 // alterantive: range_replicator or list_replicator
 
-var local_index = 0 (scope = local)
+var index = 0 (scope = local)
 stimulus_group occluders {
     range_replicator (
-        variable = local_index
+        variable = index
         from = 0
         to = (nOccluder-1)
         step = 1
         ) {
 
-        stimulus/rectangle occluder${local_index}(
+        stimulus/rectangle occluder${index}(
             color = occluder_red,occluder_green,occluder_blue
             x_size = occluder_size
             y_size = occluder_size
-            x_position = occluderX[${local_index}]
-            y_position = occluderY[${local_index}]
+            x_position = occluderX[${index}]
+            y_position = occluderY[${index}]
             rotation = 0
             alpha_multiplier = occluder_alpha
             )
@@ -499,22 +505,22 @@ stimulus_group occluders {
 
 stimulus_group occluder_targets {
     range_replicator (
-        variable = local_index
+        variable = index
         from = 0
         to = (nOccluder-1-1)
         step = 1
         ) {
 
-        stimulus/circular_fixation_point occluder_target${local_index} (
+        stimulus/circular_fixation_point occluder_target${index} (
             color = target_red,target_green,target_blue
             trigger_width = target_win
             trigger_watch_x = eye_x
             trigger_watch_y = eye_y
-            trigger_flag = on_occluder_target${local_index} // on_occluder_target[${local_index}]
+            trigger_flag = on_occluder_target${index} // on_occluder_target[${index}]
             x_size = target_sz
             y_size = target_sz
-            x_position = occluder_targetX[${local_index}]
-            y_position = occluder_targetY[${local_index}]
+            x_position = occluder_targetX[${index}]
+            y_position = occluder_targetY[${index}]
             rotation = 0
             alpha_multiplier = target_alpha
         )
@@ -710,7 +716,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 protocol 'Analogy' {
     start_device_io (eye_tracker)
 
-    // start_io_device (labjack) // debug
+    start_io_device (labjack) // debug
 
     update_stimulus_display ()
     task Trials {
