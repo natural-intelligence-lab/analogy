@@ -2,19 +2,15 @@
 /* Analogy task - recording version
 
   generalization idea (space -> object)
-  1. # relations: [0:90:270] -> diagonal
-  2. # cue locations: [0:90:270] -> diagonal
-  3. initial cue locations: [0,0] -> periphery?
-  4. distance
+  1. # cue locations: [0:90:270] -> diagonal
+  2. # relations: [0:90:270] -> diagonal
+  3. initial cue locations: [0,0] -> vector subtraction
   ------
   5. banana(target)+grape(cue) -> mashmallow,peanut,monkeyFace
-  6. multiple objects: transitive
-  7. reward
-  8. green grapes (#)
 
 TBD:
-1. MGS: neural question (when/how neural state reaches to proper IC) -> block design?
-2. parameterize dot stimuli
+1. implement old/new trial mixing for generalization
+2. subtraction task
 
    */
 
