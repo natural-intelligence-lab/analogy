@@ -18,17 +18,17 @@ based on analogy.mwel
 
 // Include one of the following hand interfaces:
 
-// %include 'hand_interfaces/keyboard' // debug
+%include 'hand_interfaces/keyboard' // debug
 // %include 'hand_interfaces/gamepad'
 // %include 'hand_interfaces/joystick'
-%include 'hand_interfaces/joystick_monkey' // debug
+// %include 'hand_interfaces/joystick_monkey' // debug
 
 // Include one of the following eye interfaces
 
-// %include 'eye_interfaces/mouse' // debug
-%include 'eye_interfaces/eyelink' // debug
+%include 'eye_interfaces/mouse' // debug
+// %include 'eye_interfaces/eyelink' // debug
 
-%include 'labjack' // debug
+// %include 'labjack' // debug
 // %include 'firmata_ephys' // debug
 // %include 'firmata_train' // debug
 
@@ -717,7 +717,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 protocol 'MemorySaccadeNumber' {
     start_device_io (eye_tracker)
 
-    start_io_device (labjack) // debug
+    // start_io_device (labjack) // debug
 
     update_stimulus_display ()
     task Trials {
