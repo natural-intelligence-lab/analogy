@@ -106,8 +106,8 @@ var var_debug = 0
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 70 // 90 (groups = Reward)
-    var bonusRewDur = 15  (groups = Reward)
+    var rewardDur = 80 // 70 // 90 (groups = Reward)
+    var bonusRewDur = 5 // 15  (groups = Reward)
     var reward_gain_cue_first=0.5 // 50% of reward
 }
 
