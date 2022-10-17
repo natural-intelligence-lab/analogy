@@ -24,7 +24,8 @@
 %include 'eye_interfaces/eyelink'
 //%include 'eye_interfaces/mouse'
 
-%include 'firmata_ephys'
+%include 'labjack'
+// %include 'firmata_ephys'
 
 /////////////////
 // Variables
@@ -165,7 +166,8 @@ protocol 'Manual+Pursuit' {
         state 'Initial' {
             localTrials = 0
             CorrectTrials = 0
-            start_io_device (firmata)
+            start_io_device (labjack)
+            // start_io_device (firmata)
             goto ('Fix On')
         }
         state 'Fix On' {

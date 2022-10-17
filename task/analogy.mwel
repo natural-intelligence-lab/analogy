@@ -71,11 +71,6 @@ data_file ("$pwd/logs/$(date('%Y_%m_%d'))/mworks/$(date('%Y_%m_%d_%H_%M_%S'))")
 // These directories are copied to the machine running MWServer
 resource ('sounds')
 
-// These files are copied to the machine running MWServer and executed when the
-// experiment loads
-// python_file ('calibration_static.py')
-// python_file ('task.py')
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Sounds
