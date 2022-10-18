@@ -104,6 +104,12 @@ group EyeCalibrator {
     var eye_on_fixation_point = false
 }
 
+group labjack{
+    var labjack_target_on = 0
+    var labjack_cue_on = 0
+    var t_labjack_cue_on=0
+}
+
 ///////////
 // Sounds
 ///////////

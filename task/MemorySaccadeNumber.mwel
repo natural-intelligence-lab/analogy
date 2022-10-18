@@ -328,7 +328,7 @@ group photodiode{
 
 group labjack{
     var labjack_target_on = 0
-    var labjack_cue_on = 0
+    var labjack_cue_on = 0 // now tied to labjack_fix_off
     var labjack_fix_off=0
     var t_labjack_cue_on=0
 }
@@ -859,6 +859,7 @@ protocol 'MemorySaccadeNumber' {
 
             update_stimulus_display ()
             labjack_fix_off=1
+            labjack_cue_on=1
 
             goto (
                 target = 'Response'
@@ -1053,6 +1054,7 @@ protocol 'MemorySaccadeNumber' {
             update_stimulus_display ()
             labjack_target_on = 0
             labjack_fix_off = 0
+            labjack_cue_on = 0
 
             goto (
                 target = 'Exit System'
