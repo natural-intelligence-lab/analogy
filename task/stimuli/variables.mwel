@@ -7,7 +7,7 @@ group Reward {
     var reward_line = 0 (groups = Reward)
     var rewardDur = 80 // 70 // 90 (groups = Reward)
     var bonusRewDur = 5 // 15  (groups = Reward)
-    var reward_gain_cue_first=0.5 // 50% of reward
+    var reward_gain_cue_first=0.2 // 0.5 // 50% of reward
 }
 
 group Fixation {
@@ -182,7 +182,7 @@ group cue{ // purple grape
 
     var cue_radius= 8 // 6*circle_size// 8*circle_size// 2*circle_size+object_sz // relative to target/object
     var cue_theta=0
-    var cue_nTheta=1 // 2 // 4
+    var cue_nTheta=4
     var cue_id=0
 
     var cueX = 0
