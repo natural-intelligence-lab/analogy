@@ -398,7 +398,7 @@ protocol 'Analogy' {
             t_labjack_cue_on=now()
 
             tmp=(tTargetOn-now())/1000
-            report ('Target On: expected delay b/t labjack & photodiode= $tmp') // all around <10ms
+            //report ('Target On: expected delay b/t labjack & photodiode= $tmp') // all around <10ms
 
             start_timer (
                 timer = timer_target_on
@@ -497,7 +497,7 @@ protocol 'Analogy' {
             t_labjack_cue_on=now()
 
             tmp=(tTargetOff-now())/1000
-            report ('Memory: expected delay b/t labjack & photodiode= $tmp')
+            //report ('Memory: expected delay b/t labjack & photodiode= $tmp')
 
             start_timer (
                 timer = timer_memory
@@ -566,7 +566,7 @@ protocol 'Analogy' {
             labjack_cue_on = 1
 
             tmp=(tFixOff-now())/1000
-            report ('FixOff: expected delay b/t labjack & photodiode= $tmp')
+            //report ('FixOff: expected delay b/t labjack & photodiode= $tmp')
 
             goto (
                 target = 'Response'
@@ -648,7 +648,7 @@ protocol 'Analogy' {
             labjack_cue_on = 0
 
             tmp=(tRew-now())/1000
-            report ('Reward: expected delay b/t labjack & photodiode= $tmp')
+            //report ('Reward: expected delay b/t labjack & photodiode= $tmp')
 
             CorrectTrialsTarget[target_id+nTarget*cue_id] = CorrectTrialsTarget[target_id+nTarget*cue_id]+1
             CorrectTrials = CorrectTrials+1
