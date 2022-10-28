@@ -330,6 +330,7 @@ group labjack{
     var labjack_target_on = 0
     var labjack_cue_on = 0 // now tied to labjack_fix_off
     var labjack_fix_off=0
+    var labjack_fixation_on=0
     var t_labjack_cue_on=0
 }
 
