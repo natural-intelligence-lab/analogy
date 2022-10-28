@@ -56,6 +56,7 @@ group Time {
     var tFix = 0
     var tTargetOn = 0
     var tTargetOff = 0
+    var tCueOn=0
     var tFixOff = 0
     var tResponse = 0
     var tRew = 0
@@ -76,6 +77,10 @@ group Duration {
     var occluderTimeDur = 0 // not used
     var occluderTimeDurMean = 250
     var occluderTimeDurMin = 500 // 250
+
+    var cueToGoDur = 0.0001 // to prevent division by zero
+    var cueToGoDurMean = 250
+    var cueToGoDurMin = 500
 
     var memoryTimeDur = 0.0001 // to prevent division by zero
     var memoryTimeDurMean = 250
@@ -224,6 +229,7 @@ group labjack{
     var labjack_target_on = 0
     var labjack_cue_on = 0
     var t_labjack_cue_on=0
+    var labjack_fixation_on=0
 }
 
 group motion {

@@ -17,6 +17,10 @@ iodevice/labjack_ljm labjack (
             line = FIO3
             value = labjack_cue_on
             )
+        iochannel/labjack_ljm_digital_output( // fixation
+            line = FIO4
+            value = labjack_fixation_on
+            )
             /*
         iochannel/labjack_ljm_analog_input( // photodiode
             line = AIN1

@@ -8,9 +8,13 @@
   ------
   5. banana(target)+grape(cue) -> mashmallow,peanut,monkeyFace
 
+2022/10/27 change after recording start
+- impose fixation delay after cue reappears
+- added variables to be included in mworks: tCueOn, cueToGoDur, cueToGoDurMean, cueToGoDurMin
+
 TBD:
 1. implement old/new trial mixing for generalization
-2. subtraction task
+2. subtraction task (separate presentation of cue/target)
 
    */
 
@@ -70,11 +74,6 @@ data_file ("$pwd/logs/$(date('%Y_%m_%d'))/mworks/$(date('%Y_%m_%d_%H_%M_%S'))")
 
 // These directories are copied to the machine running MWServer
 resource ('sounds')
-
-// These files are copied to the machine running MWServer and executed when the
-// experiment loads
-// python_file ('calibration_static.py')
-// python_file ('task.py')
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -231,12 +230,20 @@ render_actions object_disappear (
     // sample target
     target_id = disc_rand(0,nTarget-1) // 0 1 2 3:0 90 180 270deg
     target_theta = target_id*(360/nTarget)
-    /*if (cue_theta==90){ // training for specific targets
-        target_theta=90
+/*
+    if (cue_theta==0){ // 90){ // training for specific targets
+        target_theta=0 // 90
         }
-    if (cue_theta==270){
-        target_theta=270
-        }*/
+    if (cue_theta==180){ // 270){
+        target_theta=180 // 270
+        }
+    if (cue_theta==90){ // 90){ // training for specific targets
+        target_theta=90 // 90
+        }
+    if (cue_theta==270){ // 270){
+        target_theta=270 // 270
+        }
+  */
 
     targetX_final = cueX_final+ cos(target_theta*pi()/180)*target_radius
     targetY_final = cueY_final+ sin(target_theta*pi()/180)*target_radius
@@ -269,6 +276,7 @@ render_actions object_disappear (
     targetTimeDur=-targetTimeDurMean*logn(rand(0,1)) + targetTimeDurMin
     occluderTimeDur=-occluderTimeDurMean*logn(rand(0,1)) + occluderTimeDurMin
     memoryTimeDur=-memoryTimeDurMean*logn(rand(0,1)) + memoryTimeDurMin
+    cueToGoDur=-cueToGoDurMean*logn(rand(0,1)) + cueToGoDurMin
 
 %end
 
@@ -333,6 +341,7 @@ protocol 'Analogy' {
             sync=1
 
             live_queue_stimulus(fixCircleStatic)
+            labjack_fixation_on =1
 
             update_stimulus_display ()
             tStart = now()
@@ -395,7 +404,7 @@ protocol 'Analogy' {
             t_labjack_cue_on=now()
 
             tmp=(tTargetOn-now())/1000
-            report ('Target On: expected delay b/t labjack & photodiode= $tmp') // all around <10ms
+            //report ('Target On: expected delay b/t labjack & photodiode= $tmp') // all around <10ms
 
             start_timer (
                 timer = timer_target_on
@@ -494,7 +503,7 @@ protocol 'Analogy' {
             t_labjack_cue_on=now()
 
             tmp=(tTargetOff-now())/1000
-            report ('Memory: expected delay b/t labjack & photodiode= $tmp')
+            //report ('Memory: expected delay b/t labjack & photodiode= $tmp')
 
             start_timer (
                 timer = timer_memory
@@ -506,7 +515,7 @@ protocol 'Analogy' {
                 when = !on_fix_static
                 )
             timer_expired (
-                target = 'FixOff'
+                target = 'CueToGo'
                 timer = timer_memory
                 )
             /*
@@ -530,12 +539,45 @@ protocol 'Analogy' {
                 )
         }
 
+        state 'CueToGo' {
+            tCueOn= next_frame_time()
+            id_bad = 10
+
+            live_queue_stimulus(cue_window)
+            if (id_cue_motion==0){ // used now (w/o motion)
+                cue_alpha=1
+            }
+            if (id_cue_motion==1){
+                dequeue_stimulus (update_position_circular)
+                dequeue_stimulus (update_position_centerout)
+                dequeue_stimulus (update_position_linear)
+                dequeue_stimulus (object_disappear)
+            }
+            queue_stimulus(photodiode)
+            update_stimulus_display ()
+            labjack_cue_on = 1
+
+            start_timer (
+                timer = timer_cue2go
+                duration = cueToGoDur
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'FixOff'
+                timer = timer_cue2go
+                )
+
+        }
+
         state 'FixOff' {
             tFixOff= next_frame_time()
             id_bad = 5
 
             live_queue_stimulus(target_window)
-            live_queue_stimulus(cue_window)
             index=0
             while (index<(nOccluder-1)){
                 live_queue_stimulus(occluder_targets[index])
@@ -547,23 +589,14 @@ protocol 'Analogy' {
                 index=index+1
             }
             dequeue_stimulus(fixCircleStatic)
-            queue_stimulus(photodiode)
+            labjack_fixation_on =0
 
-            if (id_cue_motion==0){ // used now (w/o motion)
-                cue_alpha=1
-            }
-            if (id_cue_motion==1){
-                dequeue_stimulus (update_position_circular)
-                dequeue_stimulus (update_position_centerout)
-                dequeue_stimulus (update_position_linear)
-                dequeue_stimulus (object_disappear)
-            }
 
             update_stimulus_display ()
             labjack_cue_on = 1
 
             tmp=(tFixOff-now())/1000
-            report ('FixOff: expected delay b/t labjack & photodiode= $tmp')
+            //report ('FixOff: expected delay b/t labjack & photodiode= $tmp')
 
             goto (
                 target = 'Response'
@@ -645,7 +678,7 @@ protocol 'Analogy' {
             labjack_cue_on = 0
 
             tmp=(tRew-now())/1000
-            report ('Reward: expected delay b/t labjack & photodiode= $tmp')
+            //report ('Reward: expected delay b/t labjack & photodiode= $tmp')
 
             CorrectTrialsTarget[target_id+nTarget*cue_id] = CorrectTrialsTarget[target_id+nTarget*cue_id]+1
             CorrectTrials = CorrectTrials+1
@@ -732,6 +765,7 @@ protocol 'Analogy' {
             update_stimulus_display ()
             labjack_target_on = 0
             labjack_cue_on = 0
+            labjack_fixation_on = 0
 
             goto (
                 target = 'Exit System'
@@ -765,7 +799,7 @@ protocol 'Analogy' {
             report ('Trial Failed: id_bad = $id_bad')
             tResponse= now()
 
-            if (id_bad==2 || id_bad==3 || id_bad==4){ // target cue memory
+            if (id_bad==2 || id_bad==3 || id_bad==4 || id_bad==10){ // target cue memory cue2go
                 fix_green_static = 0
                 fix_blue_static = 0
                 dequeue_stimulus (target_window)
