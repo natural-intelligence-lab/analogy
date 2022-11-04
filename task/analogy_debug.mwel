@@ -12,6 +12,10 @@
 - impose fixation delay after cue reappears
 - added variables to be included in mworks: tCueOn, cueToGoDur, cueToGoDurMean, cueToGoDurMin
 
+2022/11/4
+- remove cue later during delay (secondCueDur)
+- added variables to be included in mworks: secondCueDur, tCueOff
+
 TBD:
 1. implement old/new trial mixing for generalization
 2. subtraction task (separate presentation of cue/target)
@@ -515,7 +519,7 @@ protocol 'Analogy' {
                 when = !on_fix_static
                 )
             timer_expired (
-                target = 'CueToGo'
+                target = 'secondCueOn' // 'CueToGo'
                 timer = timer_memory
                 )
             /*
@@ -539,7 +543,7 @@ protocol 'Analogy' {
                 )
         }
 
-        state 'CueToGo' {
+        state 'secondCueOn' {
             tCueOn= next_frame_time()
             id_bad = 10
 
@@ -558,7 +562,40 @@ protocol 'Analogy' {
             labjack_cue_on = 1
 
             start_timer (
-                timer = timer_cue2go
+                timer = timer_2cueOn
+                duration = secondCueDur
+                duration_units = ms
+                )
+            goto (
+                target = 'Failure to fixate'
+                when = !on_fix_static
+                )
+            timer_expired (
+                target = 'secondCueOff'
+                timer = timer_2cueOn
+                )
+
+        }
+
+        state 'secondCueOff'{
+            tCueOff= next_frame_time()
+            id_bad = 11
+
+            if (id_cue_motion==0){ // used now (w/o motion)
+                cue_alpha=0
+            }
+            if (id_cue_motion==1){
+                dequeue_stimulus (update_position_circular)
+                dequeue_stimulus (update_position_centerout)
+                dequeue_stimulus (update_position_linear)
+                dequeue_stimulus (object_disappear)
+            }
+            dequeue_stimulus(photodiode)
+            update_stimulus_display ()
+            labjack_cue_on = 0
+
+            start_timer (
+                timer = timer_2cueOff
                 duration = cueToGoDur
                 duration_units = ms
                 )
@@ -568,8 +605,10 @@ protocol 'Analogy' {
                 )
             timer_expired (
                 target = 'FixOff'
-                timer = timer_cue2go
+                timer = timer_2cueOff
                 )
+
+
 
         }
 
@@ -593,7 +632,7 @@ protocol 'Analogy' {
 
 
             update_stimulus_display ()
-            labjack_cue_on = 1
+            // labjack_cue_on = 1
 
             tmp=(tFixOff-now())/1000
             //report ('FixOff: expected delay b/t labjack & photodiode= $tmp')
@@ -799,7 +838,7 @@ protocol 'Analogy' {
             report ('Trial Failed: id_bad = $id_bad')
             tResponse= now()
 
-            if (id_bad==2 || id_bad==3 || id_bad==4 || id_bad==10){ // target cue memory cue2go
+            if (id_bad==2 || id_bad==3 || id_bad==4 || id_bad==10 || id_bad==11){ // target cue memory cue2go
                 fix_green_static = 0
                 fix_blue_static = 0
                 dequeue_stimulus (target_window)

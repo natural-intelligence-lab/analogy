@@ -57,6 +57,7 @@ group Time {
     var tTargetOn = 0
     var tTargetOff = 0
     var tCueOn=0
+    var tCueOff=0
     var tFixOff = 0
     var tResponse = 0
     var tRew = 0
@@ -78,9 +79,11 @@ group Duration {
     var occluderTimeDurMean = 250
     var occluderTimeDurMin = 500 // 250
 
-    var cueToGoDur = 0 // 0.0001 // to prevent division by zero
-    var cueToGoDurMean = 0//250
-    var cueToGoDurMin = 0//500
+    var cueToGoDur = 0.0001 // to prevent division by zero
+    var cueToGoDurMean = 250
+    var cueToGoDurMin = 500
+
+    var secondCueDur=200
 
     var memoryTimeDur = 0.0001 // to prevent division by zero
     var memoryTimeDurMean = 250
