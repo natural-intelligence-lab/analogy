@@ -904,6 +904,7 @@ protocol 'Analogy' {
             id_cue_first=1
 
             // making cue red
+            cue_alpha=1
             cue_red=1 // purple [0.5 0 1]
             cue_green=0
             cue_blue=0
@@ -988,6 +989,7 @@ protocol 'Analogy' {
                 dequeue_stimulus(occluders[index])
                 index=index+1
             }
+            cue_alpha=1
             update_stimulus_display ()
             start_timer (
                 timer = timer_timeout

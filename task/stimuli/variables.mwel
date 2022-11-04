@@ -134,7 +134,7 @@ group occluder{
     var occluder_green = .5
     var occluder_blue = .5
     var occluder_size = 2
-    var occluder_alpha = 1
+    var occluder_alpha = 0 // 1
 
     var nOccluder =  4// 8 // 4 // # occluder
 
