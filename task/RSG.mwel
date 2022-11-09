@@ -1,0 +1,418 @@
+// WIP
+
+
+//////////////////////////////////////////////////////////
+
+// RSG 2 prior
+// based on RSG.mwel -- ACF 20200719
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// I/O Devices
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// Include one of the following hand interfaces:
+
+// %include 'hand_interfaces/keyboard' // debug
+// %include 'hand_interfaces/gamepad'
+// %include 'hand_interfaces/joystick'
+%include 'hand_interfaces/joystick_monkey' // debug
+
+// Include one of the following eye interfaces
+
+// %include 'eye_interfaces/mouse' // debug
+%include 'eye_interfaces/eyelink' // debug
+
+%include 'labjack' // debug
+// %include 'firmata_ephys' // debug
+// %include 'firmata_train' // debug
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Choose platform
+//
+///////////////////////////////////////////////////////////////////////////////
+var platform = 'monkey_ephys'
+// var platform = 'monkey_train'
+// var platform = 'psychophysics'
+// var platform = 'laptop'
+// var platform = 'desktop'
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Set data file, pwd, and python_site_packages
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+var pwd = ""
+var python_site_packages = ""
+python_file ('set_pwd.py')
+
+data_file ("$pwd/logs/$(date('%Y_%m_%d'))/mworks/$(date('%Y_%m_%d_%H_%M_%S'))")
+
+
+
+//////////////////////////////////////////////////////////
+
+// Variables
+
+/////////////////////////////////////////////////////////
+
+
+stimulus_display 'black_disp' (
+    background_color = 0, 0, 0
+    redraw_on_every_refresh = true
+)
+
+%include keyboard_device
+
+var a_pressed = 0
+var q_pressed = 0
+var xPos = 0
+var intertrialTime = 0
+var displayFeedbackTime = 0
+var fix_sz = 0.5
+var beforeReadyTime = 0
+var message = 'END'
+
+keyboard_device keyboard {
+    keyboard_channel (key = 'q'; value = q_pressed)
+    keyboard_channel (key = 'a'; value = a_pressed)
+}
+
+text greeting_or_prompt (
+    text = message
+    font_name = 'Helvetica Neue'
+    font_size = 48
+    x_size = 15.0
+    y_size = 10.0
+    )
+
+%define show_message (msg)
+    dequeue_stimulus (greeting_or_prompt)
+    update_display ()
+    message = msg
+    queue_stimulus (greeting_or_prompt)
+    update_display ()
+%end
+
+stimulus/circle fix (
+x_size= fix_sz
+x_position=0
+y_position=0
+color=1,1,1
+)
+
+stimulus/circle annulus(
+x_size= fix_sz*3
+x_position=0
+y_position=0
+color=an_R, an_G, an_B
+)
+
+stimulus/circle innercircle (
+x_size= fix_sz*2.7
+x_position=0
+y_position=0
+color= 0.5,0.5,0.5
+)
+
+stimulus/circle dot1 (
+x_size=.5
+x_position=xPos
+y_position=0
+color=1,1,1
+)
+
+stimulus/circle hit_dot (
+x_size=.5
+x_position=xPos
+y_position=0
+color=0,1,0
+)
+stimulus/circle miss_dot (
+x_size=0.5
+x_position=xPos
+y_position=0
+color=1,0,0
+)
+
+text greeting_or_prompt (
+    text = message
+    font_name = 'Helvetica Neue'
+    font_size = 48
+    x_size = 15.0
+    y_size = 10.0
+    )
+
+var correctDur = 1000
+var responseDur = 0
+var set_time = 0
+var errorThreshold = 0.25
+var error = 0
+var errorMult = 0.25
+
+var errorBase = 0
+var ballSpeed = 7 //7 units per 1s
+var sync = 0
+var yPos = 0
+var prior = [0.66, 0.780, 0.900, 1.020, 1.140]
+var whichTs = 0
+
+var trialResult = 0
+var rewardWin_ts = [0.2, 0.2, 0.2, 0.2, 0.2]
+var correctDur_s = correctDur
+var responseDur_s = responseDur
+var rewardWin_ts_s = rewardWin_ts
+var whichTs_s = whichTs
+var trialResult_s = trialResult
+var intertrialTime_s = intertrialTime
+var displayFeedbackTime_s =  displayFeedbackTime
+var protocol = 0
+
+var timeOut_time = 15
+var RSG_feedback = 1
+var beforeReadyTime_s = 1
+var num_trials = 0
+var tot_trials = 600
+var this_protocol = 0
+var an_R = 1
+var an_G = 1
+var an_B = 0
+
+//////////////////////////////////////////////////
+
+// RSG
+
+/////////////////////////////////////////////////
+
+protocol 'RSG'{
+ start_io_device(keyboard)
+ trial {
+   task{
+     state 'init'{
+        protocol = this_protocol
+        num_trials = num_trials + 1
+        start_timer(timer = timeOut; duration = timeOut_time * pow(10, 6))
+        sync = 0
+        sync = 1
+        //ballSpeed = 5
+        whichTs = (disc_rand(0, 4))
+        correctDur = prior[whichTs] * 1000
+        intertrialTime = exp_rand(0.5, 0.5, 1)
+        beforeReadyTime = exp_rand(0.5, 0.5, 1)
+        displayFeedbackTime = exp_rand(0.5, 0.5, 1)
+        dequeue_stimulus(fix)
+        update_display()
+        start_timer(timer = ITITimer; duration = intertrialTime * pow(10, 6))
+        goto(
+         target = 'end session'
+         when = num_trials #GE tot_trials
+        )
+        goto(
+         target = 'session break'
+         when = num_trials % 100 == 0
+        )
+        goto(
+          target = 'fixon'
+          when = timer_expired(ITITimer)
+        )
+     }
+     state 'fixon'{
+       queue_stimulus(fix)
+       update_display()
+       start_timer(timer = beforeReadyTimer; duration = beforeReadyTime * pow(10, 6))
+       goto(
+         target = 'ready'
+         when = timer_expired(beforeReadyTimer)
+       )
+     }
+     state 'ready'{
+        start_timer(timer = RStimer; duration = correctDur * pow(10,3))
+        set_time = now()
+        xPos = 0
+        an_R = 1
+        an_G = 1
+        an_B = 1
+        queue_stimulus(annulus)
+        queue_stimulus(innercircle)
+        queue_stimulus(fix)
+        update_display()
+        wait(100ms)
+        dequeue_stimulus(annulus)
+        dequeue_stimulus(innercircle)
+        update_display()
+        goto(
+          target = 'set'
+          when = timer_expired(RStimer)
+        )
+     }
+     state 'set'{
+        set_time = now()
+        xPos = 0
+        queue_stimulus(annulus)
+        queue_stimulus(innercircle)
+        queue_stimulus(fix)
+        update_display()
+        wait(100ms)
+        dequeue_stimulus(annulus)
+        dequeue_stimulus(innercircle)
+        update_display()
+        goto(
+          target = 'performance'
+          when = a_pressed
+        )
+        goto(
+          target = 'miss'
+          when = timer_expired(timeOut)
+        )
+     }
+
+     state 'performance'{
+        responseDur = (now()-(set_time + 1e6/refreshRate()))/1e3
+        error = abs(responseDur - correctDur)
+        errorThreshold = (rewardWin_ts[whichTs] * correctDur)
+        goto(
+          target = 'hit'
+          when = a_pressed #AND (error #LT errorThreshold)
+        )
+        goto(
+          target = 'miss'
+          when = a_pressed #AND (error #GT errorThreshold)
+        )
+        goto(
+          target = 'time out'
+          when = timer_expired(timeOut)
+        )
+     }
+
+     state 'hit'{
+       //report('hit')
+       if (RSG_feedback){
+         xPos = ballSpeed * responseDur/1000
+         rewardWin_ts[whichTs] = max(rewardWin_ts[whichTs] - 0.01, 0.1)
+         queue_stimulus(hit_dot)
+       }
+       else{
+         an_R = 0
+         an_G = 1
+         an_B = 0
+         queue_stimulus(annulus)
+         queue_stimulus(innercircle)
+         queue_stimulus(fix)
+       }
+       update_display()
+       if (RSG_feedback){
+         xPos = ballSpeed * correctDur/1000
+         queue_stimulus(dot1)
+         update_display()
+       }
+       wait(displayFeedbackTime * pow(10, 6))
+       dequeue_stimulus(hit_dot)
+       dequeue_stimulus(dot1)
+       dequeue_stimulus(annulus)
+       dequeue_stimulus(innercircle)
+       update_display()
+       trialResult = 1
+       goto(
+         target = 'end trial'
+       )
+     }
+     state 'miss'{
+       //report('miss')
+       if (RSG_feedback){
+         xPos = ballSpeed * responseDur/1000
+         rewardWin_ts[whichTs] = min(rewardWin_ts[whichTs] + 0.01, 0.3)
+         queue_stimulus(miss_dot)
+       }
+       else{
+         an_R = 1
+         an_G = 0
+         an_B = 0
+         queue_stimulus(annulus)
+         queue_stimulus(innercircle)
+         queue_stimulus(fix)
+       }
+       update_display()
+       if (RSG_feedback){
+         xPos = ballSpeed * correctDur/1000
+         queue_stimulus(dot1)
+         update_display()
+       }
+       wait(displayFeedbackTime * pow(10, 6))
+       dequeue_stimulus(annulus)
+       dequeue_stimulus(innercircle)
+       dequeue_stimulus(miss_dot)
+       dequeue_stimulus(dot1)
+       update_display()
+       trialResult = 1.5
+       goto(
+         target = 'end trial'
+       )
+     }
+     state 'time out'{
+       an_R = 1
+       an_G = 0
+       an_B = 0
+       dequeue_stimulus(miss_dot)
+       queue_stimulus(annulus)
+       queue_stimulus(innercircle)
+       queue_stimulus(fix)
+       update_display()
+       wait(displayFeedbackTime * pow(10, 6))
+       dequeue_stimulus(dot1)
+       dequeue_stimulus(annulus)
+       dequeue_stimulus(innercircle)
+       dequeue_stimulus(fix)
+       update_display()
+       trialResult = 3
+       goto(
+         target = 'end trial'
+       )
+     }
+     state 'end trial'{
+       xPos = 0
+       correctDur_s = correctDur
+       responseDur_s = responseDur
+       rewardWin_ts_s = rewardWin_ts
+       whichTs_s = whichTs
+       trialResult_s = trialResult
+       intertrialTime_s = intertrialTime
+       beforeReadyTime_s = beforeReadyTime
+       displayFeedbackTime_s =  displayFeedbackTime
+       report('correctDur = $correctDur; error = $error; rewardWin_ts = $rewardWin_ts trialResult = $trialResult')
+       goto(
+         target = 'init'
+       )
+     }
+     state 'session break'{
+       message = 'BREAK - press q to go on'
+       queue_stimulus (greeting_or_prompt)
+       update_display ()
+       goto(
+         target = 'clear break'
+         when = q_pressed
+       )
+     }
+     state 'clear break'{
+       dequeue_stimulus (greeting_or_prompt)
+       update_display ()
+       goto(
+         target = 'init'
+       )
+     }
+     state 'end session'{
+       message = 'END'
+       queue_stimulus (greeting_or_prompt)
+       update_display ()
+       wait(100s)
+       goto(
+         target = 'init'
+       )
+     }
+   }
+ }
+}

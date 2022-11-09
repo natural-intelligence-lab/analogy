@@ -1,0 +1,425 @@
+
+/*
+
+    smooth pursuit of moving ball on the screen
+    - based on manual eye calibration
+    - 3 x 3 point
+    - vertical/horizontal
+
+    -labjack_target_on = 1 for fixation target;labjack_cue_on=1 for reward
+
+   */
+
+
+////////////////
+// I/O Devices
+////////////////
+
+// %include 'hand_interfaces/keyboard' // debug
+// %include 'hand_interfaces/gamepad'
+// %include 'hand_interfaces/joystick'
+%include 'hand_interfaces/joystick_monkey' // debug
+
+// %include 'eye_interfaces/mouse' // debug
+%include 'eye_interfaces/eyelink' // debug
+
+%include 'labjack'
+// %include 'firmata_ephys'
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Choose platform
+//
+///////////////////////////////////////////////////////////////////////////////
+var platform = 'monkey_ephys'
+// var platform = 'monkey_train'
+// var platform = 'psychophysics'
+// var platform = 'laptop'
+// var platform = 'desktop'
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Set data file, pwd, and python_site_packages
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+var pwd = ""
+var python_site_packages = ""
+python_file ('set_pwd.py')
+
+data_file ("$pwd/logs/$(date('%Y_%m_%d'))/mworks/$(date('%Y_%m_%d_%H_%M_%S'))")
+
+
+/////////////////
+// Variables
+/////////////////
+
+    // var space_pressed = 0 (groups = I/O)
+
+group Reward {
+    var reward_line = 0 (groups = Reward)
+    var rewardDur = 20 (groups = Reward)
+    var bonusRewDur = 0  (groups = Reward)
+}
+group Fixation {
+    var fixY = 0 (groups = Fixation)
+    var fixX = 0 (groups = Fixation)
+    var fix_win = 7 (
+        groups = Fixation
+        persistant = 1
+        )
+    var fix_sz = 0.5 (groups = Fixation)
+    var NoFixWaitDur = 500 (groups = Fixation)
+    var fixWaitDur = 10000 (groups = Fixation)
+    var fixOn = 0 (groups = Fixation)
+    var fix_red = 1 (groups = Fixation)
+    var fix_green = 1 (groups = Fixation)
+    var fix_blue = 1 (groups = Fixation)
+}
+
+
+group Global {
+    var pstop = 0 (groups = Trial)
+    var startTrial = 0 (groups = Trial)
+    var endTrial = 0 (groups = Trial)
+    var localTrials = 0 (groups = Trial)
+    var CorrectTrials = 0 (groups = Trial)
+}
+group 'Fixation+Pursuit' {
+
+    var pursuitTheta = 0 (groups = Fixation)
+    var nRep = 1 (groups = Fixation) // 3
+    var trialNum = 1e6  (groups = Fixation)
+    var on_fix_dyn = 0 (groups = Fixation)
+    var fixHz = 0.25 (groups = Fixation)
+    var fixDynMag = 8 (groups = Fixation)
+    var tStart = 0 (groups = Fixation)
+    var fix_pur_HoldDur = 2500 (groups = Fixation)
+    var fix_pur_ITI_Dur = 250 (groups = Fixation)
+    var fix_pur_timeoutDur = 500 (groups = Fixation)
+}
+
+group Matlab {
+    var sync = 0 (groups = Matlab)
+    var Nback = 100 (
+        groups = Matlab
+        persistant = 1
+        )
+}
+
+group EyeCalibrator {
+    var cal_fixation_duration = 800ms
+    var cal_fix_pos_x = 0 (scope = local)
+    var cal_fix_pos_y = 0 (scope = local)
+    var num_stims_shown = 0
+    var miss_count = 0
+    var success = 0
+    var failure = 0
+    var ignore = 0
+
+    var fixation_width = 10                      //Y: was 1
+    var fixation_point_size = 0.65               //Y: was 0.4
+    var fixation_pos_x = 0
+    var fixation_pos_y = 0
+
+    var fixation_point_r = 0                 //Y: was var
+    var fixation_point_g = 0                 //Y: was var
+    var fixation_point_b = 0                 //Y: was var
+    var eye_on_fixation_point = false
+}
+
+group photodiode{
+    var photodiode_red = 1//.5
+    var photodiode_green = 1//.5
+    var photodiode_blue = 1//.5
+    var photodiode_size = 2.5
+    var photodiodeX = -20 // -21.88 // top left
+    var photodiodeY = 11.7 // 12.8
+
+    var photodiode_input = 0
+}
+
+group labjack{
+    var labjack_target_on = 0
+    var labjack_cue_on = 0 // now tied to labjack_fix_off
+    var labjack_fix_off=0
+    var labjack_fixation_on=0
+    var t_labjack_cue_on=0
+}
+
+///////////
+// Sounds
+///////////
+
+
+////////////
+// Stimuli
+////////////
+
+group 'Global' {
+    white_noise_background 'White Noise Background' ()
+    blank_screen 'New Blank Screen' (color = 0,0,0)
+}
+group 'Fixation+Pursuit 2' {
+    frame_list dynamicFix (
+        stimulus_group = dynamicFixFrames
+        loop = YES
+        autoplay = YES
+        )
+    stimulus_group dynamicFixFrames {
+        circular_fixation_point fixCircleDyn (
+            color = fix_red,fix_green,fix_blue
+            trigger_width = fix_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_fix_dyn
+            x_size = fix_sz
+            y_size = fix_sz
+            x_position = fixX+cos(pursuitTheta*pi()/180)*fixDynMag*sin(2*pi()*fixHz*(nextFrameTime() - tStart)/1e6)
+            y_position = fixY+sin(pursuitTheta*pi()/180)*fixDynMag*sin(2*pi()*fixHz*(nextFrameTime() - tStart)/1e6)
+            rotation = 0
+            alpha_multiplier = 1
+            )
+    }
+}
+
+circular_fixation_point fixation_point (
+    trigger_width = fixation_width
+    trigger_watch_x = eye_x
+    trigger_watch_y = eye_y
+    trigger_flag = eye_on_fixation_point
+    //color = 0,0,0                                               //Y: was 1,0,0
+    color = fixation_point_r, fixation_point_g, fixation_point_b  //Y: added this so we can send to blackrock
+    x_size = fixation_point_size
+    x_position = fixation_pos_x
+    y_position = fixation_pos_y
+    )
+
+group 'Photodiode'{
+        stimulus/ellipse photodiode(
+        color = photodiode_red,photodiode_green,photodiode_blue
+        x_size = photodiode_size
+        y_size = photodiode_size
+        x_position = photodiodeX
+        y_position = photodiodeY
+        rotation = 0
+        alpha_multiplier = 1
+    )
+}
+
+iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(height/2/distance)*2; % 25.6 deg
+    background_color = 0,0,0
+    )
+
+
+///////////////
+// actions
+//////////////
+
+%define sample_stimulus ()
+
+    pursuitTheta = 90*disc_rand(0,1) // 0 90
+
+    if (pursuitTheta==90) { // vertical
+        fixX = fixDynMag*(disc_rand(0,2)-1) // -8 0 8
+        fixY = 0
+    }
+    if (pursuitTheta==0) { // horizontal
+        fixX = 0
+        fixY = fixDynMag*(disc_rand(0,2)-1) // -8 0 8
+    }
+
+%end
+
+///////////////
+// Protocols
+///////////////
+
+
+protocol 'Manual+Pursuit' {
+    start_device_io (eye_tracker)
+    start_io_device (labjack) // debug
+
+    // queue_stimulus ('New Blank Screen')
+    update_stimulus_display ()
+
+    task Trials {
+        state 'Initial' {
+            localTrials = 0
+            CorrectTrials = 0
+            // start_io_device (labjack)
+            // start_io_device (firmata)
+            goto ('Fix On')
+        }
+        state 'Fix On' {
+            fix_red = 1
+            fix_blue = 1
+            fix_green = 1
+
+            sample_stimulus () // sample fixX fixY pursuitTheta
+
+            tStart = nextFrameTime()
+            live_queue_stimulus (dynamicFix)
+
+            queue_stimulus(photodiode)
+
+            update_stimulus_display ()
+
+            labjack_target_on = 1
+
+            start_timer (
+                timer = fixWait
+                duration = fixWaitDur // 10000
+                duration_units = ms
+                )
+            goto (
+                target = 'Trial Start'
+                when = on_fix_dyn
+                )
+            timer_expired (
+                target = 'Failure to fixate'
+                timer = fixWait
+                )
+        }
+        state 'Trial Start' {
+            report ('Fixation acquired.')
+            startTrial = 1
+            start_timer (
+                timer = HoldFix
+                duration = fix_pur_HoldDur // 2500
+                duration_units = ms
+                )
+            goto (
+                target = Bad
+                when = !on_fix_dyn
+                )
+            timer_expired (
+                target = Reward
+                timer = HoldFix
+                )
+        }
+        state Reward {
+            report ('Success!')
+            CorrectTrials = CorrectTrials+1
+
+            fix_red = 0
+            fix_blue = 0
+
+            reward_line = true
+
+            labjack_cue_on=1
+
+            start_timer (
+                timer = GreenTime
+                duration = rewardDur+bonusRewDur
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = GreenTime
+                )
+        }
+        state 'End Trial' {
+            report ('Ending Trial.')
+            reward_line = false
+            dequeue_stimulus (dynamicFix)
+            dequeue_stimulus(photodiode)
+
+            labjack_target_on = 0
+            labjack_cue_on=0
+
+            update_stimulus_display ()
+
+            /*  1) horizon left/right for vertical center
+                2) horizon left/right for vertical upper
+                3) vertical up/down for horizontal center
+                4) vertical up/down for horizontal right
+
+
+            if (CorrectTrials%(2*nRep)==0){
+                pursuitTheta = 90 - pursuitTheta
+                fixX=0
+                fixY=0
+            }
+            if (CorrectTrials%(2*nRep)!=0){
+                if (CorrectTrials%nRep==0){
+                    if (pursuitTheta==0){ // horizontal -> move up
+                        fixY = fixDynMag // 8
+                        fixX = 0
+                    }
+                    if (pursuitTheta==90){ // vertical -> mve right
+                        fixX = fixDynMag
+                        fixY = 0
+                    }
+                }
+            }
+
+            */
+
+            localTrials = localTrials+1
+            endTrial = 1
+            goto (
+                target = 'Exit Fixation Pursuit System'
+                when = CorrectTrials >= trialNum
+                )
+            goto (
+                target = 'Exit Fixation Pursuit System'
+                when = pstop
+                )
+            goto (ITI)
+        }
+        state ITI {
+            report ('ITI.')
+            start_timer (
+                timer = fix_pur_ITI
+                duration = fix_pur_ITI_Dur // 250
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'Fix On'
+                timer = fix_pur_ITI
+                )
+        }
+        state Bad {
+            report ('Trial Failed.')
+            dequeue_stimulus (dynamicFix)
+            dequeue_stimulus(photodiode)
+            update_stimulus_display ()
+
+            labjack_target_on = 0
+
+            start_timer (
+                timer = fix_pur_timeout
+                duration = fix_pur_timeoutDur // 500
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'End Trial'
+                timer = fix_pur_timeout
+                )
+        }
+        state 'Failure to fixate' {
+            report ('Failure to fixate.')
+            dequeue_stimulus (dynamicFix)
+            dequeue_stimulus(photodiode)
+            update_stimulus_display ()
+
+            labjack_target_on = 0
+
+            start_timer (
+                timer = NoFixWait
+                duration = NoFixWaitDur  // 500
+                duration_units = ms
+                )
+            timer_expired (
+                target = 'Fix On'
+                timer = NoFixWait
+                )
+        }
+        state 'Exit Fixation Pursuit System' {
+            report ('Leaving state system')
+            yield ()
+        }
+    }
+}

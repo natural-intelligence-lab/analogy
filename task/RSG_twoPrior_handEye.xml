@@ -1,0 +1,831 @@
+<?xml version="1.0" standalone="no"?>
+<monkeyml version="1.0">
+    <io_devices tag="IO Devices">
+        <iodevice type="stimulus_display" tag="Stimulus Display" background_color="0.5, 0.5, 0.5" announce_stimuli_on_implicit_updates="NO"></iodevice>
+        <iodevice tag="Eyelink 1000" type="eyelink" data_interval="1ms" tracker_ip="100.1.1.1" eye_rx="" eye_ry="" eye_lx="" eye_ly="" eye_x="" eye_y="" eye_z="" href_rx="" href_ry="" href_lx="" href_ly="" pupil_rx="" pupil_ry="" pupil_lx="eyeRX" pupil_ly="eyeRY" pupil_size_r="" pupil_size_l="pupil_size" eye_time="" tracking_dist="1024"></iodevice>
+        <iodevice type="mouse_input" tag="Mouse Input Device" mouse_position_x="mouseX" mouse_position_y="mouseY" mouse_down="mouseDown" hide_cursor="YES"></iodevice>
+        <calibrator type="linear_eye_calibrator" tag="Eye Cal" eyeh_raw="eyeRX" eyev_raw="eyeRY" eyeh_calibrated="eye_x" eyev_calibrated="eye_y"></calibrator>
+        <iodevice type="labjack_ljm" tag="labjack_ljm" name="labjack" update_interval="3ms" device_type="T7" connection_type="USB" autostart="YES">
+            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output" line="FIO0" value="reward_line"></iochannel>
+            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 2" line="FIO2" value="labjack_target_on"></iochannel>
+            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 3" line="FIO3" value="labjack_cue_on"></iochannel>
+            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 4" line="FIO1" value="labjack_fixation_on"></iochannel>
+            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 5" line="AIN1" value="photodiode_input"></iochannel>
+        </iodevice>
+    </io_devices>
+    <variables tag="Variables">
+        <folder tag="Eye">
+            <variable tag="eyeRX" groups="Eye" scope="global" logging="never" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="eyeRY" groups="Eye" scope="global" logging="never" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="eye_x" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="eye_y" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="pupil_size" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="eyeFix">
+            <variable tag="fix_win" groups="eyeFix" scope="global" logging="when_changed" default_value="7" type="any" persistant="1"></variable>
+            <variable tag="fix_sz" groups="eyeFix" scope="global" logging="when_changed" default_value="0.5" type="any" persistant="0"></variable>
+            <variable tag="fixX" groups="eyeFix" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="fixY" groups="eyeFix" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="fix_red" groups="eyeFix" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="fix_green" groups="eyeFix" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="fix_blue" groups="eyeFix" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="fixOn" groups="eyeFix" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="dFixY" groups="eyeFix" scope="global" logging="when_changed" default_value="0.0001" type="any" persistant="0"></variable>
+            <variable tag="fixWaitDur" groups="eyeFix" scope="global" logging="when_changed" default_value="300000" type="any" persistant="1"></variable>
+            <variable tag="NoFixWaitDur" groups="eyeFix" scope="global" logging="when_changed" default_value="1000" type="any" persistant="1"></variable>
+            <variable tag="GraceTimeDur" groups="eyeFix" scope="global" logging="when_changed" default_value="200" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="target">
+            <variable tag="targetOn" groups="target" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="theta" groups="target" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="thetaFeedback" groups="target" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="theta_min" groups="target" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="theta_max" groups="target" scope="global" logging="when_changed" default_value="180" type="any" persistant="0"></variable>
+            <variable tag="theta_N" groups="target" scope="global" logging="when_changed" default_value="2" type="any" persistant="0"></variable>
+            <variable tag="StartTheta" groups="target" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="ballArcLength" groups="target" scope="global" logging="when_changed" default_value="180" type="any" persistant="1"></variable>
+            <variable tag="override" groups="target" scope="global" logging="when_changed" default_value="0" type="integer" persistant="0"></variable>
+            <variable tag="theta_override" groups="target" scope="global" logging="when_changed" default_value="0" type="float" persistant="0"></variable>
+            <variable tag="amp" groups="target" scope="global" logging="when_changed" default_value="10" type="any" persistant="0"></variable>
+            <variable tag="on_targ" groups="target" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="targ_red" groups="target" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="targ_green" groups="target" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="targ_blue" groups="target" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="targ_sz" groups="target" scope="global" logging="when_changed" default_value="0.5" type="any" persistant="0"></variable>
+            <variable tag="target_x" groups="target" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="target_y" groups="target" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="target_alpha" groups="target" scope="global" logging="when_changed" default_value="1" type="any" persistant="1"></variable>
+        </folder>
+        <folder tag="IO_potentiometer">
+            <variable tag="ao0" groups="IO_potentiometer" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="ai0" groups="IO_potentiometer" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="doWord" groups="IO_potentiometer" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="doStrobe" groups="IO_potentiometer" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="leftV" groups="IO_potentiometer" scope="global" logging="when_changed" default_value="-0.001" type="any" persistant="0"></variable>
+            <variable tag="rightV" groups="IO_potentiometer" scope="global" logging="when_changed" default_value="-5.02" type="any" persistant="0"></variable>
+            <variable tag="centerV" groups="IO_potentiometer" scope="global" logging="when_changed" default_value="-2.51" type="any" persistant="0"></variable>
+            <variable tag="gainV" groups="IO_potentiometer" scope="global" logging="when_changed" default_value="1.8" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="handFixation">
+            <variable tag="leverFixWin" groups="handFixation" scope="global" logging="when_changed" default_value="2" type="any" persistant="0"></variable>
+            <variable tag="leverFixWinBackCenter" groups="handFixation" scope="global" logging="when_changed" default_value="2" type="any" persistant="0"></variable>
+            <variable tag="leverFixWinInit" groups="handFixation" scope="global" logging="when_changed" default_value="2" type="any" persistant="0"></variable>
+            <variable tag="leverTarWin" groups="handFixation" scope="global" logging="when_changed" default_value="18" type="any" persistant="0"></variable>
+            <variable tag="leverTarWinBackCenter" groups="handFixation" scope="global" logging="when_changed" default_value="18" type="any" persistant="0"></variable>
+            <variable tag="leverTarWinInit" groups="handFixation" scope="global" logging="when_changed" default_value="18" type="any" persistant="0"></variable>
+            <variable tag="handFixWin" groups="handFixation" scope="global" logging="when_changed" default_value="5" type="any" persistant="0"></variable>
+            <variable tag="handFixOn" groups="handFixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="handFixSz" groups="handFixation" scope="global" logging="when_changed" default_value="0.5" type="any" persistant="0"></variable>
+            <variable tag="handFixAlpha" groups="handFixation" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="handFixAlpha2" groups="handFixation" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="pHandFix2" groups="handFixation" scope="global" logging="when_changed" default_value="0.8" type="any" persistant="0"></variable>
+            <variable tag="handFixX" groups="handFixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="handFixX2" groups="handFixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="handFixY" groups="handFixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="handFixB" groups="handFixation" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="handFixG" groups="handFixation" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="handFixR" groups="handFixation" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="cursorX" groups="handFixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="cursor2x" groups="handFixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="cursor2x0" groups="handFixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="cursorAlpha" groups="handFixation" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="cursorAlpha2" groups="handFixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="handTarget">
+            <variable tag="mouseX" groups="handTarget" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="mouseY" groups="handTarget" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="mouseDown" groups="handTarget" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="handTargetWin" groups="handTarget" scope="global" logging="when_changed" default_value="4" type="any" persistant="0"></variable>
+            <variable tag="handTargetOn" groups="handTarget" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="handTarg_sz" groups="handTarget" scope="global" logging="when_changed" default_value="0.5" type="any" persistant="0"></variable>
+            <variable tag="cursor2Alpha" groups="handTarget" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="durCursorMove" groups="handTarget" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="dtHandTargetHandFix" groups="handTarget" scope="global" logging="when_changed" default_value="300" type="any" persistant="0"></variable>
+            <variable tag="dtSetHandTarget" groups="handTarget" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="dtReadyHandTarget" groups="handTarget" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="Reward">
+            <variable tag="rewardOut" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="rewardDur" groups="Reward" scope="global" logging="when_changed" default_value="70" type="any" persistant="0"></variable>
+            <variable tag="bonusRewDur" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="totalRewDur" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="dbonus" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="consecutiveCorrect" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="consecutiveIncorrect" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="win_fraction" groups="Reward" scope="global" logging="when_changed" default_value="0.15" type="any" persistant="1"></variable>
+            <variable tag="dwin" scope="global" groups="Reward" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+        </folder>
+        <folder tag="RSGtiming">
+            <variable tag="tStart" groups="RSGtiming" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="fix_time_dur" groups="RSGtiming" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="fix_dur_min" groups="RSGtiming" scope="global" logging="when_changed" default_value="500" type="any" persistant="1"></variable>
+            <variable tag="fix_dur_mean" groups="RSGtiming" scope="global" logging="when_changed" default_value="250" type="any" persistant="1"></variable>
+            <variable tag="targetTimeDur" groups="RSGtiming" scope="global" logging="when_changed" default_value="1000" type="any" persistant="0"></variable>
+            <variable tag="target_dur_min" groups="RSGtiming" scope="global" logging="when_changed" default_value="250" type="any" persistant="1"></variable>
+            <variable tag="target_dur_mean" groups="RSGtiming" scope="global" logging="when_changed" default_value="250" type="any" persistant="1"></variable>
+            <variable tag="saccade_wait_dur" groups="RSGtiming" scope="global" logging="when_changed" default_value="1000" type="any" persistant="0"></variable>
+            <variable tag="saccadeTimeDur" groups="RSGtiming" scope="global" logging="when_changed" default_value="200" type="any" persistant="0"></variable>
+            <variable tag="handTimeDur" groups="RSGtiming" scope="global" logging="when_changed" default_value="200" type="any" persistant="0"></variable>
+            <variable tag="dtProdRew" groups="RSGtiming" scope="global" logging="when_changed" default_value="0" type="any"></variable>
+            <variable tag="FeedbackTimeDur" groups="RSGtiming" scope="global" logging="when_changed" default_value="500" type="any" persistant="1"></variable>
+            <variable tag="iti" groups="RSGtiming" scope="global" logging="when_changed" default_value="500" type="any" persistant="1"></variable>
+            <variable tag="itiShort" groups="RSGtiming" scope="global" logging="when_changed" default_value="1220" type="any" persistant="1"></variable>
+            <variable tag="itiLong" groups="RSGtiming" scope="global" logging="when_changed" default_value="500" type="any" persistant="1"></variable>
+            <variable tag="timeout" groups="RSGtiming" scope="global" logging="when_changed" default_value="1000" type="any" persistant="1"></variable>
+        </folder>
+        <folder tag="trialBlock">
+            <variable tag="localTrials" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="localCompleteTrials" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="MovingBall_trials" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="N_complete" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="MovingBall_correct" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="MovingBall_correctLeft" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="MovingBall_correctRight" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="N_correctShortHandLeft" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="N_correctShortHandRight" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="N_correctShortEyeLeft" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="N_correctShortEyeRight" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="N_correctLongHandLeft" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="N_correctLongHandRight" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="N_correctLongEyeLeft" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="N_correctLongEyeRight" groups="trialBlock" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="minTrialNumBlock" groups="trialBlock" scope="global" logging="when_changed" default_value="10" type="any" persistant="0"></variable>
+            <variable tag="meanTrialNumBlock" groups="trialBlock" scope="global" logging="when_changed" default_value="3" type="any" persistant="0"></variable>
+            <variable tag="maxTrialNumBlock" groups="trialBlock" scope="global" logging="when_changed" default_value="25" type="any" persistant="0"></variable>
+            <variable tag="trialNumBlockLong" groups="trialBlock" scope="global" logging="when_changed" default_value="10" type="any" persistant="0"></variable>
+            <variable tag="trialNumBlockShort" groups="trialBlock" scope="global" logging="when_changed" default_value="10" type="any" persistant="0"></variable>
+            <variable tag="trialNum" groups="trialBlock" scope="global" logging="when_changed" default_value="5000" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="noSet">
+            <variable tag="pNoSet" scope="global" logging="when_changed" default_value="0.05" type="any"></variable>
+            <variable tag="idNoSet" scope="global" logging="when_changed" default_value="0" type="any"></variable>
+            <variable tag="nNoSet" scope="global" logging="when_changed" default_value="0" type="any"></variable>
+            <variable tag="nCorrectNoSet" scope="global" logging="when_changed" default_value="0" type="any"></variable>
+            <variable tag="waitDur" scope="global" logging="when_changed" default_value="400" type="any"></variable>
+        </folder>
+        <folder tag="RSG">
+            <variable tag="interval" groups="RSG" scope="global" logging="when_changed" default_value="800" type="any" persistant="0"></variable>
+            <variable tag="productionInterval" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="idShortLong" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="idHandEye" groups="RSG" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="randTmp" groups="RSG" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="interval_min" groups="RSG" scope="global" logging="when_changed" default_value="500" type="any" persistant="1"></variable>
+            <variable tag="interval_minShort" groups="RSG" scope="global" logging="when_changed" default_value="480" type="any" persistant="1"></variable>
+            <variable tag="interval_minLong" groups="RSG" scope="global" logging="when_changed" default_value="800" type="any" persistant="1"></variable>
+            <variable tag="interval_max" groups="RSG" scope="global" logging="when_changed" default_value="1200" type="any" persistant="1"></variable>
+            <variable tag="interval_maxShort" groups="RSG" scope="global" logging="when_changed" default_value="800" type="any" persistant="1"></variable>
+            <variable tag="interval_maxLong" groups="RSG" scope="global" logging="when_changed" default_value="1200" type="any" persistant="1"></variable>
+            <variable tag="interval_N" groups="RSG" scope="global" logging="when_changed" default_value="5" type="any" persistant="1"></variable>
+            <variable tag="radius" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+            <variable tag="ballFeedback_red" groups="RSG" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="ballFeedback_green" groups="RSG" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="ballFeedback_blue" groups="RSG" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="Interval1_ending" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="Interval2_ending" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="ready_ended" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="set_ended" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="occluder_ended" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="set2_ended" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="acquisitionTime" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="ready_cue_onset_time_us" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="set1_cue_onset_time_us" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="set2_cue_onset_time_us" groups="RSG" scope="global" logging="when_changed" default_value="1e1000" type="any" persistant="0"></variable>
+            <variable tag="intervalFrames" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="cue_duration_frames" groups="RSG" scope="global" logging="when_changed" default_value="6" type="any" persistant="1"></variable>
+            <variable tag="cue_size_deg" groups="RSG" scope="global" logging="when_changed" default_value="2.2" type="any" persistant="1"></variable>
+            <variable tag="afterReady" groups="RSG" scope="global" logging="when_changed" default_value="0" type="boolean" persistant="0"></variable>
+            <variable tag="afterSet1" groups="RSG" scope="global" logging="when_changed" default_value="0" type="boolean" persistant="0"></variable>
+            <variable tag="afterSet2" groups="RSG" scope="global" logging="when_changed" default_value="0" type="boolean" persistant="0"></variable>
+            <variable tag="set2Off" groups="RSG" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="OverlapSaccade">
+            <variable tag="idHandEyeOverlap" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_correct" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_correctLeft" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_correctLeftHand" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_correctLeftEye" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_correctRight" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_correctRightHand" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_correctRightEye" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_NoEyeFixDuringFix" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_NoHandFixDuringFix" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_NoEyeFixDuringOverlap" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_NoHandFixDuringOverlap" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_Hand2OtherTarget" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_NoEyeFixDuringRT" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_NoHandFixDuringRT" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_LateRT" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_NoFix" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="OverlapSaccade_trials" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="trialNum_OverlapSaccade" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="5000" type="any" persistant="0"></variable>
+            <variable tag="RTfromTargetOn" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="minEyeRT" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="100" type="any" persistant="0"></variable>
+            <variable tag="minHandRT" groups="OverlapSaccade" scope="global" logging="when_changed" default_value="100" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="Global">
+            <variable tag="pstop" groups="Global" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="startTrial" groups="Global" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="endTrial" groups="Global" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="sync">
+            <variable tag="syncX" groups="Matlab" scope="global" logging="when_changed" default_value="-21" type="any" persistant="0"></variable>
+            <variable tag="syncY" groups="Matlab" scope="global" logging="when_changed" default_value="12" type="any" persistant="0"></variable>
+            <variable tag="syncSize" groups="Matlab" scope="global" logging="when_changed" default_value="3" type="any" persistant="0"></variable>
+            <variable tag="stateAnalogOut" groups="STATE" scope="global" logging="when_changed" default_value="0" type="float" persistant="0"></variable>
+            <variable tag="trialSync" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+        </folder>
+        <folder tag="Fixation+Pursuit">
+            <variable tag="pursuitTheta" groups="Fixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="on_fix_dyn" groups="Fixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="fixHz" groups="Fixation" scope="global" logging="when_changed" default_value="0.25" type="any" persistant="0"></variable>
+            <variable tag="fixDynMag" groups="Fixation" scope="global" logging="when_changed" default_value="5" type="any" persistant="0"></variable>
+            <variable tag="fix_pur_trials" groups="Fixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="fix_pur_correct" groups="Fixation" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="fix_pur_HoldDur" groups="Fixation" scope="global" logging="when_changed" default_value="3000" type="any" persistant="1"></variable>
+            <variable tag="fix_pur_ITI_Dur" groups="Fixation" scope="global" logging="when_changed" default_value="750" type="any" persistant="1"></variable>
+            <variable tag="fix_pur_timeoutDur" groups="Fixation" scope="global" logging="when_changed" default_value="1500" type="any" persistant="1"></variable>
+        </folder>
+        <folder tag="Fixation+Distractor">
+            <variable tag="idDistOverlap" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="any"></variable>
+            <variable tag="trialDuration" groups="Distractor" scope="global" logging="when_changed" default_value="2500" type="any" persistant="0"></variable>
+            <variable tag="timeRemaining" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="fix_dis_trials" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="fix_dis_correct" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="distractorOnset_min" groups="Distractor" scope="global" logging="when_changed" default_value="500" type="any" persistant="1"></variable>
+            <variable tag="distractorOnset_mu" groups="Distractor" scope="global" logging="when_changed" default_value="500" type="any" persistant="1"></variable>
+            <variable tag="distractorOnset_time" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="distractorTime_min" groups="Distractor" scope="global" logging="when_changed" default_value="500" type="any" persistant="1"></variable>
+            <variable tag="distractorTime_mu" groups="Distractor" scope="global" logging="when_changed" default_value="500" type="any" persistant="1"></variable>
+            <variable tag="distractorTime" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="distractorSize" groups="Distractor" scope="global" logging="when_changed" default_value="0.5" type="any" persistant="0"></variable>
+            <variable tag="distractor_alpha" groups="Distractor" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="distractor_x" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="distractor_y" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="distractorOn" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="DistractorSimultaneous" groups="Distractor" scope="global" logging="when_changed" default_value="0" type="boolean" persistant="0"></variable>
+            <variable tag="fix_dis_ITI_Dur" groups="Distractor" scope="global" logging="when_changed" default_value="750" type="any" persistant="1"></variable>
+        </folder>
+        <folder tag="MemorySaccade">
+            <variable tag="MemorySaccade_correct" groups="Memory" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="MemorySaccade_trials" groups="Memory" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="memoryTimeDur" groups="Memory" scope="global" logging="when_changed" default_value="1000" type="any" persistant="0"></variable>
+            <variable tag="memory_dur_min" groups="Memory" scope="global" logging="when_changed" default_value="100" type="any" persistant="1"></variable>
+            <variable tag="memory_dur_mean" groups="Memory" scope="global" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+        </folder>
+        <folder tag="RSGlegacy">
+            <variable tag="ballAlpha" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="maxBallAlpha" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0.07" type="any" persistant="0"></variable>
+            <variable tag="ballAlphaProd" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="maxBallAlphaProd" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0.07" type="any" persistant="0"></variable>
+            <variable tag="dAlpha" scope="global" groups="RSGlegacy" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+            <variable tag="dballAlphaProd" scope="global" groups="RSGlegacy" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+            <variable tag="dballAlphaIncorrect" scope="global" groups="RSGlegacy" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+            <variable tag="stimEnding" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="Nsets" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="1"></variable>
+            <variable tag="ball_sz" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0.25" type="any" persistant="1"></variable>
+            <variable tag="radiusBall" groups="RSGlegacy" scope="global" logging="when_changed" default_value="10" type="any" persistant="1"></variable>
+            <variable tag="radiusStep" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+            <variable tag="numRadiusStepBoost" groups="RSGlegacy" scope="global" logging="when_changed" default_value="10" type="any"></variable>
+            <variable tag="flashRate" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="flashAlpha" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="1"></variable>
+            <variable tag="setFlashAlpha" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="1"></variable>
+            <variable tag="thSetFlashAlpha" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="1"></variable>
+            <variable tag="idFlashAlpha" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+            <variable tag="dflashRate" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="ballRed" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="ballGreen" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="ballBlue" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="0"></variable>
+            <variable tag="prodBallOn" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="1"></variable>
+            <variable tag="Interval2BallOn" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="1"></variable>
+            <variable tag="Interval1BallOn" groups="RSGlegacy" scope="global" logging="when_changed" default_value="1" type="any" persistant="1"></variable>
+            <variable tag="fixOffMovingBall" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0" type="boolean" persistant="1"></variable>
+            <variable tag="relativeFixOffTime" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+            <variable tag="idRandSet" groups="RSGlegacy" scope="global" logging="when_changed" default_value="0" type="any"></variable>
+        </folder>
+        <folder tag="Matlab">
+            <variable tag="sync" groups="Matlab" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="Nback" groups="Matlab" scope="global" logging="when_changed" default_value="0" type="any" persistant="1"></variable>
+        </folder>
+    </variables>
+    <sounds tag="Sounds"></sounds>
+    <stimuli tag="Stimuli">
+        <folder tag="Gobal">
+            <stimulus type="blank_screen" tag="New Blank Screen" color="0, 0, 0"></stimulus>
+            <stimulus type="circular_fixation_point" tag="Fix" color="fix_red,fix_green,fix_blue" trigger_width="fix_win" trigger_watch_x="eye_x" trigger_watch_y="eye_y" trigger_flag="fixOn" x_size="fix_sz" y_size="fix_sz" x_position="fixX" y_position="fixY" rotation="0" alpha_multiplier="1*(!((fixOffMovingBall)*((now()-set2_cue_onset_time_us)/1000 >= interval - relativeFixOffTime)*set2Off))"></stimulus>
+            <stimulus type="circular_fixation_point" tag="Fix2" color="0,0,0" trigger_width="fix_win" trigger_watch_x="eye_x" trigger_watch_y="eye_y" trigger_flag="fixOn" x_size="(fix_sz+handFixSz)*2" y_size="(fix_sz+handFixSz)*2" x_position="(fixX+handFixX)/2" y_position="(fixY+handFixY)/2" rotation="0" alpha_multiplier="1*(!((fixOffMovingBall)*((now()-set2_cue_onset_time_us)/1000 >= interval - relativeFixOffTime)*set2Off))"></stimulus>
+            <stimulus type="fixation_point" tag="handFix" color="handFixR,handFixG,handFixB" trigger_width="handFixWin" trigger_watch_x="mouseX" trigger_watch_y="mouseY" trigger_flag="handFixOn" x_size="handFixSz" y_size="handFixSz" x_position="handFixX" y_position="handFixY" rotation="0" alpha_multiplier="handFixAlpha"></stimulus>
+            <stimulus type="rectangle" tag="handFix2" color="0,0,0" x_size="handFixSz*pHandFix2" y_size="handFixSz*pHandFix2" x_position="handFixX" y_position="handFixY" rotation="0" alpha_multiplier="1"></stimulus>
+            <stimulus type="circular_fixation_point" tag="target" color="targ_red,targ_green,targ_blue" trigger_width="fix_win" trigger_watch_x="eye_x" trigger_watch_y="eye_y" trigger_flag="on_targ" x_size="targ_sz" y_size="targ_sz" x_position="target_x" y_position="target_y" rotation="0" alpha_multiplier="target_alpha"></stimulus>
+            <stimulus type="circular_fixation_point" tag="handTarget" color="targ_red,targ_green,targ_blue" trigger_width="handTargetWin" trigger_watch_x="mouseX" trigger_watch_y="mouseY" trigger_flag="handTargetOn" x_size="handTarg_sz" y_size="handTarg_sz" x_position="target_x" y_position="target_y" rotation="0" alpha_multiplier="target_alpha"></stimulus>
+            <stimulus type="frame_list" tag="cursor" stimulus_group="cursorFrames" ending="" ended="" loop="YES" repeats="0" autoplay="YES"></stimulus>
+            <stimulus_group tag="cursorFrames">
+                <stimulus type="rectangle" tag="cursorDynamic" color="1,1,1" x_size="ball_sz" y_size="ball_sz" x_position="(ai0-centerV)/(rightV-centerV)*amp*gainV" y_position="handFixY" rotation="1" alpha_multiplier="cursorAlpha"></stimulus>
+            </stimulus_group>
+            <stimulus type="frame_list" tag="cursor 2" stimulus_group="cursorFrames 2" ending="" ended="" loop="YES" repeats="0" autoplay="YES"></stimulus>
+            <stimulus_group tag="cursorFrames 2">
+                <stimulus type="rectangle" tag="cursorDynamic 2" color="1,1,1" x_size="ball_sz" y_size="ball_sz" x_position="cursor2x0+(target_x-cursor2x0)/(1e3*durCursorMove)*(nextFrameTime() - acquisitionTime)" y_position="handFixY" rotation="1" alpha_multiplier="cursor2Alpha"></stimulus>
+            </stimulus_group>
+            <stimulus type="frame_list" tag="syncFlash" stimulus_group="syncFlashFrames" ending="" ended="" loop="NO" repeats="0" autoplay="YES"></stimulus>
+            <stimulus_group tag="syncFlashFrames">
+                <range_replicator tag="Repeat 2 times" from="1" to="2" step="1" variable="rr_index">
+                    <stimulus type="circle" tag="syncFlashFrames_frame_${rr_index}" color="1,1,1" x_size="syncSize" y_size="syncSize" x_position="syncX" y_position="syncY" rotation="0" alpha_multiplier="1"></stimulus>
+                </range_replicator>
+            </stimulus_group>
+        </folder>
+        <folder tag="Fixation+Pursuit">
+            <stimulus type="frame_list" tag="dynamicFix" stimulus_group="dynamicFixFrames" ending="" ended="" loop="YES" repeats="0" autoplay="YES"></stimulus>
+            <stimulus_group tag="dynamicFixFrames">
+                <stimulus type="circular_fixation_point" tag="fixCircleDyn" color="fix_red,fix_green,fix_blue" trigger_width="fix_win" trigger_watch_x="eye_x" trigger_watch_y="eye_y" trigger_flag="on_fix_dyn" x_size="fix_sz" y_size="fix_sz" x_position="fixX+cos(pursuitTheta*pi()/180)*fixDynMag*sin(2*pi()*fixHz*(nextFrameTime() - tStart)/1e6)" y_position="fixY+sin(pursuitTheta*pi()/180)*fixDynMag*sin(2*pi()*fixHz*(nextFrameTime() - tStart)/1e6)" rotation="0" alpha_multiplier="1"></stimulus>
+            </stimulus_group>
+        </folder>
+        <folder tag="Fixation+Distractor">
+            <stimulus type="circle" tag="Distractor" color="1,1,1" x_size="distractorSize" y_size="distractorSize" x_position="distractor_x" y_position="distractor_y" rotation="0" alpha_multiplier="distractor_alpha"></stimulus>
+        </folder>
+        <folder tag="MovingBall">
+            <stimulus type="circle" tag="ballFeedback" color="ballFeedback_red,ballFeedback_green,ballFeedback_blue" x_size="ball_sz" y_size="ball_sz" x_position="amp*cos((pi()/180)*(StartTheta+ballArcLength*(acquisitionTime - tStart)/(1e3*(Nsets+1)*interval)))" y_position="amp*sin((pi()/180)*(StartTheta+ballArcLength*(acquisitionTime - tStart)/(1e3*(Nsets+1)*interval)))" rotation="1" alpha_multiplier="1"></stimulus>
+            <stimulus type="frame_list" tag="ready_cue" stimulus_group="ready_frames" ending="" ended="ready_ended" loop="NO" repeats="cue_duration_frames" autoplay="YES"></stimulus>
+            <stimulus_group tag="ready_frames">
+                <stimulus type="circle" tag="ready_frame" color="1,1,1" x_size="cue_size_deg" y_size="cue_size_deg" x_position="radius*cos(pi()/180*(StartTheta))" y_position="radius*sin(pi()/180*(StartTheta))+(fixY+handFixY)/2" rotation="0" alpha_multiplier="flashAlpha"></stimulus>
+            </stimulus_group>
+            <stimulus type="frame_list" tag="occluder_cue" stimulus_group="occluder_frames" ending="" ended="occluder_ended" loop="NO" repeats="cue_duration_frames" autoplay="YES"></stimulus>
+            <stimulus_group tag="occluder_frames">
+                <stimulus type="circle" tag="occluder_frame" color="0,0,0" x_size="cue_size_deg*4/5" y_size="cue_size_deg*4/5" x_position="radius*cos(pi()/180*(StartTheta))" y_position="radius*sin(pi()/180*(StartTheta))+fixY" rotation="0" alpha_multiplier="flashAlpha"></stimulus>
+            </stimulus_group>
+            <stimulus type="frame_list" tag="set_cue" stimulus_group="set_frames" ending="" ended="set_ended" loop="NO" repeats="cue_duration_frames" autoplay="YES"></stimulus>
+            <stimulus_group tag="set_frames">
+                <stimulus type="circle" tag="set_frame" color="1,1,1" x_size="cue_size_deg" y_size="cue_size_deg" x_position="radius*cos(pi()/180*(StartTheta+ballArcLength/3))" y_position="radius*sin(pi()/180*(StartTheta+ballArcLength/3))+fixY" rotation="0" alpha_multiplier="flashAlpha"></stimulus>
+            </stimulus_group>
+            <stimulus type="frame_list" tag="set2_cue" stimulus_group="set2_frames" ending="" ended="set2_ended" loop="NO" repeats="cue_duration_frames" autoplay="YES"></stimulus>
+            <stimulus_group tag="set2_frames">
+                <stimulus type="circle" tag="set2_frame" color="1,1,1" x_size="cue_size_deg" y_size="cue_size_deg" x_position="radius*cos(pi()/180*(StartTheta+ballArcLength*Nsets/(Nsets+1)))" y_position="radius*sin(pi()/180*(StartTheta+ballArcLength*Nsets/(Nsets+1)))+(fixY+handFixY)/2" rotation="0" alpha_multiplier="setFlashAlpha"></stimulus>
+            </stimulus_group>
+            <stimulus type="frame_list" tag="Interval1" stimulus_group="Interval1_frames" ending="Interval1_ending" ended="" loop="NO" repeats="intervalFrames" autoplay="YES"></stimulus>
+            <stimulus_group tag="Interval1_frames">
+                <stimulus type="circle" tag="Interval1Stim" color="0,0,0" x_size="0" y_size="0" x_position="100" y_position="100" rotation="0" alpha_multiplier="0"></stimulus>
+            </stimulus_group>
+            <stimulus type="frame_list" tag="Interval2" stimulus_group="Interval2_frames" ending="Interval2_ending" ended="" loop="NO" repeats="intervalFrames" autoplay="YES"></stimulus>
+            <stimulus_group tag="Interval2_frames">
+                <stimulus type="circle" tag="Interval2Stim" color="0,0,0" x_size="0" y_size="0" x_position="100" y_position="100" rotation="0" alpha_multiplier="1"></stimulus>
+            </stimulus_group>
+            <stimulus type="frame_list" tag="ball" stimulus_group="ballFrames" ended="" ending="stimEnding" repeats="(Nsets+1)*intervalFrames" loop="NO" autoplay="YES"></stimulus>
+            <stimulus_group tag="ballFrames">
+                <stimulus type="circle" tag="ballDynamic" color="ballRed,ballGreen,ballBlue" x_size="ball_sz" y_size="ball_sz" x_position="radiusBall*cos((pi()/180)*(StartTheta+ballArcLength*(nextFrameTime() - tStart)/(1e3*(Nsets+1)*interval)))" y_position="radiusBall*sin((pi()/180)*(StartTheta+ballArcLength*(nextFrameTime() - tStart)/(1e3*(Nsets+1)*interval)))+fixY" rotation="1" alpha_multiplier="(ballAlpha*(!(Nsets == 1))*(rand(0,1) &lt;= flashRate)*(!(!prodBallOn*Interval2_ending))*(!(!Interval2BallOn*Interval1_ending*!Interval2_ending))*(!(!Interval1BallOn*!Interval1_ending)) + ballAlpha*(!(Nsets == 2))*(rand(0,1) &lt;= flashRate)*(!(!prodBallOn*Interval1_ending))*(!(!Interval1BallOn*!Interval1_ending)))*(!Interval1_ending) +(Interval1_ending*ballAlphaProd)"></stimulus>
+            </stimulus_group>
+        </folder>
+    </stimuli>
+    <filters tag="Filters"></filters>
+    <optimizers tag="Optimizers"></optimizers>
+    <experiment tag="New Experiment" full_name="" description="">
+        <protocol tag="RSG_twoPrior_handEye_seqSwitch photosync" nsamples="1" sampling_method="cycles" selection="sequential" interruptible="YES">
+            <action tag="Start Eyelink 2" type="start_device_IO" device="Eyelink 1000"></action>
+            <action tag="Start NIDaq Device 2" type="start_device_IO" device="NIDaq Device"></action>
+            <action type="assignment" tag="Assign bonusRewDur 2" variable="bonusRewDur" value="0"></action>
+            <action type="assignment" tag="Assign consecutiveCorrect 2" variable="consecutiveCorrect" value="-1"></action>
+            <action type="assignment" tag="Assign pstop 3" variable="pstop" value="0"></action>
+            <action type="assignment" tag="Assign fix_red 5" variable="fix_red" value="1"></action>
+            <action type="assignment" tag="Assign fix_green 4" variable="fix_green" value="1"></action>
+            <action type="assignment" tag="Assign fix_blue 5" variable="fix_blue" value="1"></action>
+            <action tag="Queue Stimulus 4" type="queue_stimulus" stimulus="New Blank Screen"></action>
+            <action tag="Update Stimulus Display 5" type="update_stimulus_display"></action>
+            <action type="assignment" tag="Assign ao1" variable="ao0" value="10"></action>
+            <action type="assignment" tag="Assign stateAnalogOut 19" variable="stateAnalogOut" value="0"></action>
+            <action type="assignment" tag="Assign idShortLong: initially longHand" variable="idShortLong" value="1"></action>
+            <action type="assignment" tag="Assign idHandEye 7" variable="idHandEye" value="1"></action>
+            <action type="assignment" tag="Assign fixY" variable="fixY" value="-dFixY"></action>
+            <action type="assignment" tag="Assign handFixY 13" variable="handFixY" value="fixY-(fix_sz+handFixSz)/2"></action>
+            <action type="assignment" tag="Assign iti 3" variable="iti" value="(idShortLong==0)*itiShort+(idShortLong==1)*itiLong"></action>
+            <action type="assignment" tag="Select interval_min 3" variable="interval_min" value="(idShortLong==0)*interval_minShort+(idShortLong==1)*interval_minLong"></action>
+            <action type="assignment" tag="Select interval_max 3" variable="interval_max" value="(idShortLong==0)*interval_maxShort+(idShortLong==1)*interval_maxLong"></action>
+            <action type="assignment" tag="Assign localTrials 2" variable="localTrials" value="0"></action>
+            <block tag="block_RSG_twoPrior_handEye_rand" nsamples="10000" sampling_method="cycles" selection="sequential" interruptible="YES">
+                <task_system tag="Trials 333329" interruptible="YES">
+                    <task_system_state tag="Initial" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign stateAnalogOut 110" variable="stateAnalogOut" value="0"></action>
+                        <action type="assignment" tag="Assign randTmp" variable="randTmp" value="1-randTmp"></action>
+                        <action type="if" tag="If randTmp==0 &amp;&amp; localTrials>0, change idShortLong" condition="randTmp==0 &amp;&amp; localTrials>0">
+                            <action type="assignment" tag="Set idShortLong" variable="idShortLong" value="1-idShortLong"></action>
+                            <action type="assignment" tag="Assign fixY 9" variable="fixY" value="-fixY"></action>
+                            <action type="assignment" tag="Assign handFixY 9" variable="handFixY" value="fixY-(fix_sz+handFixSz)/2"></action>
+                            <action type="assignment" tag="Assign iti 2" variable="iti" value="(idShortLong==0)*itiShort+(idShortLong==1)*itiLong"></action>
+                            <action type="assignment" tag="Select interval_min" variable="interval_min" value="(idShortLong==0)*interval_minShort+(idShortLong==1)*interval_minLong"></action>
+                            <action type="assignment" tag="Select interval_max" variable="interval_max" value="(idShortLong==0)*interval_maxShort+(idShortLong==1)*interval_maxLong"></action>
+                        </action>
+                        <action type="if" tag="If randTmp==1 &amp;&amp; localTrials>0, change idHandEye" condition="randTmp==1 &amp;&amp; localTrials>0">
+							<action type="assignment" tag="Set idShortLong" variable="idShortLong" value="1-idShortLong"></action>
+                            <action type="assignment" tag="Assign fixY 9" variable="fixY" value="-fixY"></action>
+                            <action type="assignment" tag="Assign handFixY 9" variable="handFixY" value="fixY-(fix_sz+handFixSz)/2"></action>
+                            <action type="assignment" tag="Assign iti 2" variable="iti" value="(idShortLong==0)*itiShort+(idShortLong==1)*itiLong"></action>
+                            <action type="assignment" tag="Select interval_min" variable="interval_min" value="(idShortLong==0)*interval_minShort+(idShortLong==1)*interval_minLong"></action>
+                            <action type="assignment" tag="Select interval_max" variable="interval_max" value="(idShortLong==0)*interval_maxShort+(idShortLong==1)*interval_maxLong"></action>
+                        </action>
+                        <action type="if" tag="If randTmp==2 &amp;&amp; localTrials>0, change idShortLong &amp; idHandEye" condition="randTmp==2 &amp;&amp; localTrials>0">
+                            <action type="assignment" tag="Set idShortLong" variable="idShortLong" value="1-idShortLong"></action>
+                            <action type="assignment" tag="Assign fixY 9" variable="fixY" value="-fixY"></action>
+                            <action type="assignment" tag="Assign handFixY 9" variable="handFixY" value="fixY-(fix_sz+handFixSz)/2"></action>
+                            <action type="assignment" tag="Assign iti 2" variable="iti" value="(idShortLong==0)*itiShort+(idShortLong==1)*itiLong"></action>
+                            <action type="assignment" tag="Select interval_min" variable="interval_min" value="(idShortLong==0)*interval_minShort+(idShortLong==1)*interval_minLong"></action>
+                            <action type="assignment" tag="Select interval_max" variable="interval_max" value="(idShortLong==0)*interval_maxShort+(idShortLong==1)*interval_maxLong"></action>
+                            <action type="assignment" tag="Assign idHandEye 8" variable="idHandEye" value="1-idHandEye"></action>
+                        </action>
+                        <action type="report" tag="Announce shortLong/handEye" message="idShortLong: $idShortLong, idHandEye: $idHandEye"></action>
+                        <action type="assignment" tag="Assign localTrials" variable="localTrials" value="0"></action>
+                        <action type="assignment" tag="Assign localCompleteTrials" variable="localCompleteTrials" value="0"></action>
+                        <action type="assignment" tag="Assign trialNum" variable="trialNum" value="min(round(-meanTrialNumBlock*logn(rand(0,1))) + minTrialNumBlock, maxTrialNumBlock)"></action>
+                        <action type="assignment" tag="Assign theta" variable="theta" value="180"></action>
+                        <action type="assignment" tag="Assign consecutiveCorrect 4" variable="consecutiveCorrect" value="0"></action>
+                        <action type="assignment" tag="Assign consecutiveIncorrect 5" variable="consecutiveIncorrect" value="0"></action>
+                        <action type="assignment" tag="Assign centerV 2" variable="centerV" value="(leftV+rightV)/2"></action>
+                        <action type="assignment" tag="Assign fix_red" variable="fix_red" value="(idShortLong!=1)||(idHandEye!=1)"></action>
+                        <action type="assignment" tag="Assign fix_green" variable="fix_green" value="idHandEye==0"></action>
+                        <action type="assignment" tag="Assign fix_blue" variable="fix_blue" value="(idShortLong!=0)||(idHandEye!=1)"></action>
+                        <action type="assignment" tag="Set handFixR to 9" variable="handFixR" value="(idShortLong!=1)||(idHandEye!=0)"></action>
+                        <action type="assignment" tag="Set handFixG to 8" variable="handFixG" value="idHandEye==1"></action>
+                        <action type="assignment" tag="Set handFixB to 7" variable="handFixB" value="(idShortLong!=0)||(idHandEye!=0)"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition tag="Go to Fix On" type="direct" target="Fix On"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Fix On" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign targ_red" variable="targ_red" value="1"></action>
+                        <action type="assignment" tag="Assign targ_blue" variable="targ_blue" value="1"></action>
+                        <action type="assignment" tag="Assign targ_green" variable="targ_green" value="1"></action>
+                        <action type="assignment" tag="Assign ballFeedback_red" variable="ballFeedback_red" value="1"></action>
+                        <action type="assignment" tag="Assign ballFeedback_blue" variable="ballFeedback_blue" value="1"></action>
+                        <action type="assignment" tag="Assign ballFeedback_green" variable="ballFeedback_green" value="1"></action>
+                        <action type="assignment" tag="Assign afterReady" variable="afterReady" value="0"></action>
+                        <action type="assignment" tag="Assign afterSet2" variable="afterSet2" value="0"></action>
+                        <action tag="Live Queue Fix 11" type="live_queue_stimulus" stimulus="Fix2"></action>
+                        <action tag="Live Queue Fix" type="live_queue_stimulus" stimulus="Fix"></action>
+                        <action tag="Live Queue Fix 13" type="live_queue_stimulus" stimulus="handFix"></action>
+                        <action type="assignment" tag="Assign cursorAlpha 5" variable="cursorAlpha" value="1"></action>
+                        <action tag="Live Queue Stimulus 3" type="live_queue_stimulus" stimulus="cursor"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 111" variable="stateAnalogOut" value="5/50*5"></action>
+                        <action type="pulse" tag="Pulse trialSync 2" variable="trialSync" duration="10*1000"></action>
+                        <action type="start_timer" tag="Start fixWait" timer="fixWait" timebase="" duration="fixWaitDur" duration_units="ms"></action>
+                        <action type="report" tag="Report fix on" message="Fixation on."></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If fixOn &amp; handFixOn, Transition to Trial Start" condition="fixOn &amp;&amp; abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX)&lt;leverFixWinBackCenter/2" target="Trial Start"></transition>
+                        <transition type="timer_expired" tag="If fix_wait Expired, Transition to No Fix" target="No Fix" timer="fixWait"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Trial Start" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign stateAnalogOut 113" variable="stateAnalogOut" value="10/50*5"></action>
+                        <action type="assignment" tag="Assign startTrial" variable="startTrial" value="1"></action>
+                        <action type="assignment" tag="Assign sync" variable="sync" value="1"></action>
+                        <action type="assignment" tag="Assign fixY 7" variable="fixY" value="fixY"></action>
+                        <action type="assignment" tag="Assign cursorAlpha" variable="cursorAlpha" value="cursorAlpha2"></action>
+                        <action type="if" tag="If override, use theta_override" condition="override">
+                            <action type="assignment" tag="Set theta" variable="theta" value="theta_override"></action>
+                        </action>
+                        <action type="if" tag="(disabled) If consecutiveCorrect==0&amp;&amp;localTrials>0, repeat theta &amp; interval" condition="0==1">
+                            <action type="if_else" tag="If/Else 4">
+                                <action type="if" tag="If consecutiveIncorrect==4, sample theta &amp; interval" condition="consecutiveIncorrect ==4">
+                                    <action type="assignment" tag="Select theta" variable="theta" value="theta_min + disc_rand(0,theta_N-1)*(theta_max-theta_min)/(theta_N-1)"></action>
+                                    <action type="assignment" tag="Select interval" variable="interval" value="interval_min + disc_rand(0,interval_N-1)*(interval_max-interval_min)/(interval_N-1)"></action>
+                                    <action type="assignment" tag="assign consecutiveIncorrect 2" variable="consecutiveIncorrect" value="0"></action>
+                                </action>
+                                <action type="if" tag="Else, Select repeat" condition="consecutiveIncorrect !=4">
+                                    <action type="assignment" tag="Select theta" variable="theta" value="theta"></action>
+                                    <action type="assignment" tag="Select interval" variable="interval" value="interval"></action>
+                                </action>
+                            </action>
+                        </action>
+                        <action type="if" tag="(always true) If consecutiveCorrect!=0||localTrials==0, sample theta &amp; interval" condition="0==0">
+                            <action type="assignment" tag="Select theta" variable="theta" value="theta_min + disc_rand(0,theta_N-1)*(theta_max-theta_min)/(theta_N-1)"></action>
+                            <action type="assignment" tag="Select interval" variable="interval" value="interval_min + disc_rand(0,interval_N-1)*(interval_max-interval_min)/(interval_N-1)"></action>
+                        </action>
+                        <action type="assignment" tag="Assign handFixX2" variable="handFixX2" value="(ai0-centerV)/(rightV-centerV)*amp*gainV"></action>
+                        <action type="assignment" tag="Assign intervalFrames" variable="intervalFrames" value="round(refreshRate()*interval/1000)"></action>
+                        <action type="assignment" tag="Assign saccade_wait_dur" variable="saccade_wait_dur" value="3*interval"></action>
+                        <action type="assignment" tag="Set target_x" variable="target_x" value="amp*cos(theta*pi()/180)"></action>
+                        <action type="assignment" tag="Set target_y" variable="target_y" value="amp*sin(theta*pi()/180)"></action>
+                        <action type="assignment" tag="Assign StartTheta" variable="StartTheta" value="theta-ballArcLength"></action>
+                        <action type="report" tag="Annonce target direction" message="target direction = $theta"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If !!fixOn | !handFixOn, Transition to Abort" condition="!fixOn || abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)>leverFixWinInit/2" target="Abort"></transition>
+                        <transition type="direct" tag="Always Go to Fix Time" target="Fix Time"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Fix Time" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Determine time to target on" variable="fix_time_dur" value="-fix_dur_mean*logn(rand(0,1)) + fix_dur_min"></action>
+                        <action type="start_timer" tag="Start fix_time" timer="fix_time" timebase="" duration="fix_time_dur" duration_units="ms"></action>
+                        <action tag="Queue syncFlash 2" type="queue_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Update Stimulus Display 110" type="update_stimulus_display"></action>
+                        <action type="report" tag="Report fixating" message="Fixating."></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If !fixOn | !handFixOn, Transition to Abort" condition="!fixOn || abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)> leverFixWinInit/2" target="Abort"></transition>
+                        <transition type="timer_expired" tag="If fix_time Expired, Transition to Target On" target="Target On" timer="fix_time"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Target On" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action tag="Live Queue target" type="live_queue_stimulus" stimulus="target"></action>
+                        <action tag="reset syncFlash 2" type="stop_dynamic_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Queue syncFlash 3" type="queue_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 114" variable="stateAnalogOut" value="15/50*5"></action>
+                        <action type="assignment" tag="Deterimine time to until fix off" variable="targetTimeDur" value="-target_dur_mean*logn(rand(0,1)) + target_dur_min"></action>
+                        <action type="start_timer" tag="Start targetTime" timer="targetTime" timebase="" duration="targetTimeDur" duration_units="ms"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If fixOn == 0 | !handFixOn, Transition to Abort" condition="!fixOn || abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)>leverFixWinInit/2" target="Abort"></transition>
+                        <transition type="timer_expired" tag="If targetTime Expired, Transition to Ready" target="Ready" timer="targetTime"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Ready" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign tStart" variable="tStart" value="nextFrameTime()"></action>
+                        <action type="assignment" tag="Reset ready_ended" variable="ready_ended" value="0"></action>
+                        <action tag="Queue ready cue" type="queue_stimulus" stimulus="ready_cue"></action>
+                        <action tag="Queue Interval1" type="queue_stimulus" stimulus="Interval1"></action>
+                        <action tag="Live Queue Fix 3" type="live_queue_stimulus" stimulus="Fix2"></action>
+                        <action tag="Live Queue Fix 2" type="live_queue_stimulus" stimulus="Fix"></action>
+                        <action tag="Live Queue Fix 14" type="live_queue_stimulus" stimulus="handFix"></action>
+                        <action tag="reset syncFlash 3" type="stop_dynamic_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Queue syncFlash 4" type="queue_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 115" variable="stateAnalogOut" value="20/50*5"></action>
+                        <action type="assignment" tag="Store ready cue onset time" variable="ready_cue_onset_time_us" value="now()"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If wrong modality, Transition to Abort" condition="(idHandEye==0)*(!fixOn)+(idHandEye==1)*(abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)>leverFixWinInit/2)" target="Abort"></transition>
+                        <transition type="conditional" tag="If (idHandEye==1)*(!fixOn)+(idHandEye==0)*(!handFixOn), Transition to After Ready 2" condition="!fixOn || abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)>leverFixWinInit/2" target="After Ready"></transition>
+                        <transition type="conditional" tag="When Interval1_ending, go to Set" condition="Interval1_ending" target="Set"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Set" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action tag="Dequeue ready cue" type="dequeue_stimulus" stimulus="ready_cue"></action>
+                        <action type="assignment" tag="Reset set2_ended" variable="set2_ended" value="0"></action>
+                        <action tag="Queue set2 cue" type="queue_stimulus" stimulus="set2_cue"></action>
+                        <action tag="Live Queue Fix 10" type="live_queue_stimulus" stimulus="Fix2"></action>
+                        <action tag="Live Queue Fix 4" type="live_queue_stimulus" stimulus="Fix"></action>
+                        <action tag="Live Queue Fix 15" type="live_queue_stimulus" stimulus="handFix"></action>
+                        <action tag="reset syncFlash 4" type="stop_dynamic_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Queue syncFlash 5" type="queue_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 116" variable="stateAnalogOut" value="25/50*5"></action>
+                        <action type="assignment" tag="Store set2 cue onset time" variable="set2_cue_onset_time_us" value="now()"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If (idHandEye==1)*(!fixOn)+(idHandEye==0)*(!handFixOn), Transition to After Set2" condition="!fixOn || abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)>leverFixWinInit/2" target="After Set2"></transition>
+                        <transition type="conditional" tag="If wrong modality, Transition to Abort 2" condition="(idHandEye==0)*(!fixOn)+(idHandEye==1)*(abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)>leverFixWinInit/2)" target="Abort"></transition>
+                        <transition type="conditional" tag="When set2 cue presentation completes, go to Production Interval" condition="set2_ended" target="Production Interval"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Production Interval" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Store set2Off" variable="set2Off" value="1"></action>
+                        <action tag="Dequeue set2 cue" type="dequeue_stimulus" stimulus="set2_cue"></action>
+                        <action tag="Update Stimulus Display 9" type="update_stimulus_display"></action>
+                        <action type="assignment" tag="Assign afterSet2" variable="afterSet2" value="1"></action>
+                        <action type="start_timer" tag="Start saccade_wait" timer="saccade_wait" timebase="" duration="saccade_wait_dur" duration_units="ms"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If (idHandEye==1)*(!fixOn)+(idHandEye==0)*!handFixOn, Transition to Production" condition="(idHandEye==1)*(!fixOn)+(idHandEye==0)*(abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)>leverFixWinInit/2)" target="Production"></transition>
+                        <transition type="conditional" tag="If (idHandEye==0)*(!fixOn)+(idHandEye==1)*(!handFixOn), Transition to Abort" condition="(idHandEye==0)*(!fixOn)+(idHandEye==1)*(abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)>leverFixWinInit/2)" target="Abort"></transition>
+                        <transition type="timer_expired" tag="If saccade_wait Expired, Transition to No Saccade" target="No Saccade" timer="saccade_wait"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Production" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="start_timer" tag="Start saccadeTime" timer="saccadeTime" timebase="" duration="(idHandEye==0)*handTimeDur+(idHandEye==1)*saccadeTimeDur" duration_units="ms"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 117" variable="stateAnalogOut" value="30/50*5"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If on_targ, Transition to TargetAcquired" condition="(idHandEye==1)*on_targ+(idHandEye==0)*(abs((ai0-centerV)/(rightV-centerV)*amp*gainV-(target_x+handFixX2))&lt;leverTarWinInit/2)" target="TargetAcquired"></transition>
+                        <transition type="conditional" tag="If !fixOn, Transition to Abort 2" condition="(idHandEye==0)*!fixOn+(idHandEye==1)*(abs((ai0-centerV)/(rightV-centerV)*amp*gainV-handFixX2)>leverFixWinInit/2)" target="Abort"></transition>
+                        <transition type="conditional" tag="(not used but keep) If go to the other target, Transition to Abort" condition="abs((ai0-centerV)/(rightV-centerV)*amp*gainV-(-target_x+handFixX2))&lt;leverTarWinInit/2" target="Abort"></transition>
+                        <transition type="timer_expired" tag="If saccadeTime Expired, Transition to No Saccade" target="No Saccade" timer="saccadeTime"></transition>
+                    </task_system_state>
+                    <task_system_state tag="TargetAcquired" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign productionInterval" variable="productionInterval" value="(now()-set2_cue_onset_time_us)/1000"></action>
+                        <action type="assignment" tag="Assign acquisitionTime" variable="acquisitionTime" value="now()"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 118" variable="stateAnalogOut" value="35/50*5"></action>
+                        <action type="assignment" tag="Assign cursorX 2" variable="cursorX" value="(ai0-centerV)/(rightV-centerV)*amp*gainV"></action>
+                        <action type="assignment" tag="Increment N_complete" variable="N_complete" value="N_complete +1"></action>
+                        <action type="assignment" tag="Increment localCompleteTrials" variable="localCompleteTrials" value="localCompleteTrials +1"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If correct, Transition to Reward 2" condition="abs(productionInterval - interval)/interval &lt;= win_fraction" target="reward delay"></transition>
+                        <transition type="direct" tag="Always Go to Early or Late 2" target="Early or Late"></transition>
+                    </task_system_state>
+                    <task_system_state tag="reward delay" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="start_timer" tag="Start cursorMove" timer="cursorMove" timebase="" duration="dtProdRew" duration_units="ms"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 119" variable="stateAnalogOut" value="40/50*5"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="timer_expired" tag="If cursorMove Expired, Transition to Reward" target="Reward" timer="cursorMove"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Reward" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="report" tag="Report success" message="Success!"></action>
+                        <action type="assignment" tag="Set targ_red to 0" variable="targ_red" value="0"></action>
+                        <action type="assignment" tag="Set targ_blue to 0" variable="targ_blue" value="0"></action>
+                        <action type="assignment" tag="Set targ_green to 1" variable="targ_green" value="1"></action>
+                        <action type="assignment" tag="Set ballFeedback_red to 0" variable="ballFeedback_red" value="0"></action>
+                        <action type="assignment" tag="Set ballFeedback_blue to 0" variable="ballFeedback_blue" value="0"></action>
+                        <action type="assignment" tag="Assign ballFeedback_green 3" variable="ballFeedback_green" value="1"></action>
+                        <action tag="Live Queue ballFeedback" type="live_queue_stimulus" stimulus="ballFeedback"></action>
+                        <action tag="reset syncFlash 5" type="stop_dynamic_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Queue syncFlash 6" type="queue_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 1110" variable="stateAnalogOut" value="45/50*5"></action>
+                        <action type="assignment" tag="Increment consecutiveCorrect" variable="consecutiveCorrect" value="consecutiveCorrect + 1"></action>
+                        <action type="assignment" tag="Assign ballAlpha" variable="ballAlpha" value="max(ballAlpha-dAlpha,0)"></action>
+                        <action type="assignment" tag="Assign ballAlphaProd" variable="ballAlphaProd" value="max(ballAlphaProd-dballAlphaProd,0)"></action>
+                        <action type="assignment" tag="Assign radius" variable="radius" value="max(radius-radiusStep,0)"></action>
+                        <action type="assignment" tag="Assign flashRate" variable="flashRate" value="flashRate-dflashRate"></action>
+                        <action type="assignment" tag="assign consecutiveIncorrect" variable="consecutiveIncorrect" value="0"></action>
+                        <action type="assignment" tag="Assign bonusRewDur" variable="bonusRewDur" value="min(200, (min(4,consecutiveCorrect)-1)*dbonus)"></action>
+                        <action type="assignment" tag="Assign win_fraction 2" variable="win_fraction" value="win_fraction-dwin"></action>
+                        <action type="pulse" tag="Pulse rewardOut" variable="rewardOut" duration="bonusRewDur*1000+rewardDur*1000*max(0.00001,1-abs(productionInterval - interval)/interval/win_fraction )"></action>
+                        <action type="assignment" tag="Assign totalRewDur" variable="totalRewDur" value="bonusRewDur*1000+rewardDur*1000*max(0.00001,1-abs(productionInterval - interval)/interval/win_fraction )"></action>
+                        <action type="assignment" tag="Increment MovingBall_correct" variable="MovingBall_correct" value="MovingBall_correct+1"></action>
+                        <action type="assignment" tag="Increment N_correctShortHandLeft" variable="N_correctShortHandLeft" value="N_correctShortHandLeft +(idShortLong==0)*(idHandEye==0)*(theta>90)"></action>
+                        <action type="assignment" tag="Increment N_correctShortHandRight 2" variable="N_correctShortHandRight" value="N_correctShortHandRight +(idShortLong==0)*(idHandEye==0)*(theta&lt;90)"></action>
+                        <action type="assignment" tag="Increment N_correctShortEyeLeft 3" variable="N_correctShortEyeLeft" value="N_correctShortEyeLeft +(idShortLong==0)*(idHandEye==1)*(theta>90)"></action>
+                        <action type="assignment" tag="Increment N_correctShortEyeRight 4" variable="N_correctShortEyeRight" value="N_correctShortEyeRight +(idShortLong==0)*(idHandEye==1)*(theta&lt;90)"></action>
+                        <action type="assignment" tag="Increment N_correctLongHandLeft 5" variable="N_correctLongHandLeft" value="N_correctLongHandLeft +(idShortLong==1)*(idHandEye==0)*(theta>90)"></action>
+                        <action type="assignment" tag="Increment N_correctLongHandRight 6" variable="N_correctLongHandRight" value="N_correctLongHandRight +(idShortLong==1)*(idHandEye==0)*(theta&lt;90)"></action>
+                        <action type="assignment" tag="Increment N_correctLongEyeLeft 7" variable="N_correctLongEyeLeft" value="N_correctLongEyeLeft +(idShortLong==1)*(idHandEye==1)*(theta>90)"></action>
+                        <action type="assignment" tag="Increment N_correctLongEyeRight 8" variable="N_correctLongEyeRight" value="N_correctLongEyeRight +(idShortLong==1)*(idHandEye==1)*(theta&lt;90)"></action>
+                        <action type="if" tag="If theta>90, increment MovingBall_correctLeft 2" condition="theta>90">
+                            <action type="assignment" tag="increment MovingBall_correctLeft" variable="MovingBall_correctLeft" value="MovingBall_correctLeft +1"></action>
+                        </action>
+                        <action type="if" tag="If theta&lt;=90, increment MovingBall_correctRight 2" condition="theta&lt;=90">
+                            <action type="assignment" tag="increment MovingBall_correctRight" variable="MovingBall_correctRight" value="MovingBall_correctRight +1"></action>
+                        </action>
+                        <action type="assignment" tag="Assign thetaFeedback 4" variable="thetaFeedback" value="StartTheta+ballArcLength*(acquisitionTime - tStart)/(1e3*(Nsets+1)*interval)"></action>
+                        <action type="start_timer" tag="Start GreenTime" timer="GreenTime" timebase="" duration="bonusRewDur+rewardDur*max(0.00001,1-abs(productionInterval - interval)/interval/win_fraction )" duration_units="ms"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="timer_expired" tag="If GreenTime Expired, Transition to End Trial" target="End Trial" timer="GreenTime"></transition>
+                    </task_system_state>
+                    <task_system_state tag="End Trial" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action tag="Dequeue Fix" type="dequeue_stimulus" stimulus="Fix"></action>
+                        <action tag="Dequeue Fix 11" type="dequeue_stimulus" stimulus="handFix"></action>
+                        <action tag="Dequeue Fix 5" type="dequeue_stimulus" stimulus="Fix2"></action>
+                        <action tag="Dequeue target" type="dequeue_stimulus" stimulus="target"></action>
+                        <action tag="Dequeue ballFeedback" type="dequeue_stimulus" stimulus="ballFeedback"></action>
+                        <action tag="Dequeue Interval1" type="dequeue_stimulus" stimulus="Interval1"></action>
+                        <action tag="Dequeue Interval2" type="dequeue_stimulus" stimulus="Interval2"></action>
+                        <action tag="Dequeue syncFlash" type="dequeue_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Stop ready cue" type="stop_dynamic_stimulus" stimulus="ready_cue"></action>
+                        <action tag="Stop set2 cue" type="stop_dynamic_stimulus" stimulus="set2_cue"></action>
+                        <action tag="Stop Interval1" type="stop_dynamic_stimulus" stimulus="Interval1"></action>
+                        <action tag="Stop Interval2" type="stop_dynamic_stimulus" stimulus="Interval2"></action>
+                        <action type="assignment" tag="Increment MovingBall_trials" variable="MovingBall_trials" value="MovingBall_trials+1"></action>
+                        <action type="assignment" tag="Increment localTrials" variable="localTrials" value="localTrials+1"></action>
+                        <action type="assignment" tag="Reset Interval1_ending" variable="Interval1_ending" value="0"></action>
+                        <action type="assignment" tag="Reset Interval2_ending" variable="Interval2_ending" value="0"></action>
+                        <action type="assignment" tag="Reset ready_ended" variable="ready_ended" value="0"></action>
+                        <action type="assignment" tag="Reset set2_ended" variable="set_ended" value="0"></action>
+                        <action type="assignment" tag="Assign Nback" variable="Nback" value="Nback"></action>
+                        <action type="assignment" tag="Set targ_green to 3" variable="targ_green" value="1"></action>
+                        <action type="assignment" tag="Set targ_blue to 4" variable="targ_blue" value="1"></action>
+                        <action type="assignment" tag="Set targ_red to 5" variable="targ_red" value="1"></action>
+                        <action type="assignment" tag="Store set2Off" variable="set2Off" value="0"></action>
+                        <action type="assignment" tag="Assign sync" variable="sync" value="0"></action>
+                        <action type="assignment" tag="Assign endTrial" variable="endTrial" value="1"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 1111" variable="stateAnalogOut" value="50/50*5"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="direct" tag="Always Go to ITI" target="ITI"></transition>
+                    </task_system_state>
+                    <task_system_state tag="ITI" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="start_timer" tag="Start ITI" timer="ITI" timebase="" duration="iti" duration_units="ms"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 1112" variable="stateAnalogOut" value="0"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="timer_expired" tag="If ITI Expired, Transition to ITI2" target="ITI2" timer="ITI"></transition>
+                    </task_system_state>
+                    <task_system_state tag="ITI2" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="conditional" tag="If localCompleteTrials == trialNum, Transition to Exit State System 2" condition="localCompleteTrials >= trialNum || pstop" target="Exit State System"></transition>
+                        <transition type="direct" tag="Always Go to Fix On" target="Fix On"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Early or Late" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action tag="Dequeue Fix" type="dequeue_stimulus" stimulus="Fix"></action>
+                        <action tag="Dequeue Fix 4" type="dequeue_stimulus" stimulus="Fix2"></action>
+                        <action tag="Dequeue Fix 12" type="dequeue_stimulus" stimulus="handFix"></action>
+                        <action type="assignment" tag="Assign ballFeedback_blue 2" variable="ballFeedback_blue" value="0"></action>
+                        <action type="assignment" tag="Assign ballFeedback_red" variable="ballFeedback_red" value="1"></action>
+                        <action type="assignment" tag="Assign ballFeedback_green 2" variable="ballFeedback_green" value="0"></action>
+                        <action type="assignment" tag="Set targ_red to 1" variable="targ_red" value="1"></action>
+                        <action type="assignment" tag="Set targ_blue to 1" variable="targ_blue" value="0"></action>
+                        <action type="assignment" tag="Set targ_green to 6" variable="targ_green" value="0"></action>
+                        <action tag="Live Queue ballFeedback" type="live_queue_stimulus" stimulus="ballFeedback"></action>
+                        <action tag="reset syncFlash 6" type="stop_dynamic_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Queue syncFlash 7" type="queue_stimulus" stimulus="syncFlash"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 1113" variable="stateAnalogOut" value="40/50*5"></action>
+                        <action type="assignment" tag="Assign thetaFeedback 2" variable="thetaFeedback" value="StartTheta+ballArcLength*(acquisitionTime - tStart)/(1e3*(Nsets+1)*interval)"></action>
+                        <action type="start_timer" tag="Start FeedbackTime" timer="FeedbackTime" timebase="" duration="FeedbackTimeDur" duration_units="ms"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="timer_expired" tag="If FeedbackTime Expired, Transition to End Trial" target="End Trial" timer="FeedbackTime"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Abort" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="report" tag="Report trial aborted" message="Trial aborted!"></action>
+                        <action type="assignment" tag="Compute Production Time" variable="productionInterval" value="-2*interval"></action>
+                        <action type="assignment" tag="Assign acquisitionTime" variable="acquisitionTime" value="now()"></action>
+                        <action tag="Dequeue ready cue 4" type="dequeue_stimulus" stimulus="ready_cue"></action>
+                        <action tag="Dequeue set2 cue 6" type="dequeue_stimulus" stimulus="set2_cue"></action>
+                        <action tag="Update Stimulus Display 19" type="update_stimulus_display"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="direct" tag="Always Go to Bad" target="Bad"></transition>
+                    </task_system_state>
+                    <task_system_state tag="After Ready" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Compute Production Time" variable="productionInterval" value="(ready_cue_onset_time_us-now())/1000"></action>
+                        <action type="assignment" tag="Assign acquisitionTime" variable="acquisitionTime" value="now()"></action>
+                        <action type="assignment" tag="Assign afterReady" variable="afterReady" value="1"></action>
+                        <action tag="Dequeue ready cue" type="dequeue_stimulus" stimulus="ready_cue"></action>
+                        <action type="assignment" tag="Assign ballFeedback_blue 3" variable="ballFeedback_blue" value="0"></action>
+                        <action type="assignment" tag="Assign ballFeedback_red 2" variable="ballFeedback_red" value="1"></action>
+                        <action type="assignment" tag="Assign ballFeedback_green 4" variable="ballFeedback_green" value="0"></action>
+                        <action type="assignment" tag="Set targ_red to 2" variable="targ_red" value="1"></action>
+                        <action type="assignment" tag="Set targ_blue to 7" variable="targ_blue" value="0"></action>
+                        <action type="assignment" tag="Set targ_green to 7" variable="targ_green" value="0"></action>
+                        <action tag="Live Queue ballFeedback 2" type="live_queue_stimulus" stimulus="ballFeedback"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="start_timer" tag="Start FeedbackTime 2" timer="FeedbackTime" timebase="" duration="FeedbackTimeDur" duration_units="ms"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="timer_expired" tag="If FeedbackTime Expired, Transition to Bad 2" target="Bad" timer="FeedbackTime"></transition>
+                    </task_system_state>
+                    <task_system_state tag="After Set2" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Compute Production Time" variable="productionInterval" value="(ready_cue_onset_time_us-now())/1000"></action>
+                        <action type="assignment" tag="Assign acquisitionTime" variable="acquisitionTime" value="now()"></action>
+                        <action type="assignment" tag="Assign afterSet2" variable="afterSet2" value="1"></action>
+                        <action tag="Dequeue set2 cue" type="dequeue_stimulus" stimulus="set2_cue"></action>
+                        <action type="assignment" tag="Assign ballFeedback_blue 3" variable="ballFeedback_blue" value="0"></action>
+                        <action type="assignment" tag="Assign ballFeedback_red 2" variable="ballFeedback_red" value="1"></action>
+                        <action type="assignment" tag="Assign ballFeedback_green 4" variable="ballFeedback_green" value="0"></action>
+                        <action type="assignment" tag="Set targ_red to 2" variable="targ_red" value="1"></action>
+                        <action type="assignment" tag="Set targ_blue to 7" variable="targ_blue" value="0"></action>
+                        <action type="assignment" tag="Set targ_green to 7" variable="targ_green" value="0"></action>
+                        <action tag="Live Queue ballFeedback 2" type="live_queue_stimulus" stimulus="ballFeedback"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="start_timer" tag="Start FeedbackTime 2" timer="FeedbackTime" timebase="" duration="FeedbackTimeDur" duration_units="ms"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="timer_expired" tag="If FeedbackTime Expired, Transition to Bad 2" target="Bad" timer="FeedbackTime"></transition>
+                    </task_system_state>
+                    <task_system_state tag="No Saccade" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Compute Production Time" variable="productionInterval" value="(now() - set2_cue_onset_time_us) / 1000.0"></action>
+                        <action type="assignment" tag="Assign acquisitionTime" variable="acquisitionTime" value="now()"></action>
+                        <action tag="Dequeue set2 cue" type="dequeue_stimulus" stimulus="set2_cue"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="direct" tag="Always Go to Bad" target="Bad"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Bad" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action tag="Dequeue Fix" type="dequeue_stimulus" stimulus="Fix"></action>
+                        <action tag="Dequeue Fix 3" type="dequeue_stimulus" stimulus="Fix2"></action>
+                        <action tag="Dequeue Fix 13" type="dequeue_stimulus" stimulus="handFix"></action>
+                        <action tag="Dequeue target" type="dequeue_stimulus" stimulus="target"></action>
+                        <action tag="Dequeue ballFeedback" type="dequeue_stimulus" stimulus="ballFeedback"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="assignment" tag="Assign stateAnalogOut 1114" variable="stateAnalogOut" value="0"></action>
+                        <action type="if_else" tag="If/Else 2">
+                            <action type="if" tag="If afterSet2, update win_fraction and flashRate" condition="afterSet2">
+                                <action type="assignment" tag="Assign ballAlpha" variable="ballAlpha" value="min(ballAlpha+dballAlphaIncorrect, maxBallAlpha)"></action>
+                                <action type="assignment" tag="Assign radius" variable="radius" value="radius + radiusStep"></action>
+                                <action type="assignment" tag="Assign win_fraction 3" variable="win_fraction" value="win_fraction+dwin"></action>
+                                <action type="assignment" tag="Assign ballAlphaProd 3" variable="ballAlphaProd" value="min(ballAlphaProd+dballAlphaIncorrect, maxBallAlphaProd)"></action>
+                                <action type="assignment" tag="Assign flashRate" variable="flashRate" value="flashRate+dflashRate"></action>
+                            </action>
+                            <action type="if" tag="Else" condition="!afterSet2">
+                                <action type="assignment" tag="Assign ballAlpha 2" variable="ballAlpha" value="ballAlpha"></action>
+                                <action type="assignment" tag="Assign radius 6" variable="radius" value="radius "></action>
+                                <action type="assignment" tag="Assign win_fraction" variable="win_fraction" value="win_fraction"></action>
+                                <action type="assignment" tag="Assign flashRate" variable="flashRate" value="flashRate"></action>
+                            </action>
+                        </action>
+                        <action type="assignment" tag="Assign consecutiveCorrect" variable="consecutiveCorrect" value="0"></action>
+                        <action type="assignment" tag="Assign totalRewDur 3" variable="totalRewDur" value="0"></action>
+                        <action type="assignment" tag="increment consecutiveIncorrect" variable="consecutiveIncorrect" value="consecutiveIncorrect+1"></action>
+                        <action type="report" tag="Report failure" message="Failure."></action>
+                        <action type="start_timer" tag="Start Timeout" timer="Timeout" timebase="" duration="timeout" duration_units="ms"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="timer_expired" tag="If Timeout Expired, Transition to End Trial" target="End Trial" timer="Timeout"></transition>
+                    </task_system_state>
+                    <task_system_state tag="No Fix" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action tag="Dequeue Fix" type="dequeue_stimulus" stimulus="Fix"></action>
+                        <action tag="Dequeue Fix 115" type="dequeue_stimulus" stimulus="cursor"></action>
+                        <action tag="Dequeue Fix 14" type="dequeue_stimulus" stimulus="handFix"></action>
+                        <action tag="Dequeue Fix 2" type="dequeue_stimulus" stimulus="Fix2"></action>
+                        <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
+                        <action type="report" tag="Report no fixation" message="Failed to fixate."></action>
+                        <action type="start_timer" tag="Start NoFixWait" timer="NoFixWait" timebase="" duration="NoFixWaitDur" duration_units="ms"></action>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition type="timer_expired" tag="If NoFixWait Expired, Transition to Fix On" target="Fix On" timer="NoFixWait"></transition>
+                    </task_system_state>
+                    <task_system_state tag="Exit State System" interruptible="YES">
+                        <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
+                        <transition tag="Return to parent task system" type="yield"></transition>
+                    </task_system_state>
+                </task_system>
+            </block>
+        </protocol>
+    </experiment>
+</monkeyml>
