@@ -1,11 +1,8 @@
 
 /*
-    memory-guided saccade task
-- banana as target
-- number of banana differs across trials [1 2 4]
-- 4cue x 4relation x 3# x 15 repetition = 720
-
-based on analogy.mwel
+    resting state 10 min (restDur)
+    monitor eye
+    turn on photodiode and labjack_target_on
 
    */
 
@@ -161,6 +158,8 @@ group Time {
 }
 
 group Duration {
+    var restDur = 10*60*1000 // 10 min
+
     var fixTimeDur = 0
     var fixTimeDurMean = 250
     var fixTimeDurMin = 250
@@ -715,7 +714,7 @@ iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(hei
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-protocol 'MemorySaccadeNumber' {
+protocol 'rest' {
     start_device_io (eye_tracker)
 
     start_io_device (labjack) // debug
@@ -735,358 +734,56 @@ protocol 'MemorySaccadeNumber' {
 
             sample_MGS_trial () // durations & target location
 
-            goto ('Fix On')
+            goto ('rest')
         }
-        state 'Fix On' {
+        state 'Rest' {
 
             //MATLAB
             sync=0
             sync=1
 
-            live_queue_stimulus(fixCircleStatic)
-
+            queue_stimulus(photodiode)
             update_stimulus_display ()
+
+            labjack_target_on = 1
+
             tStart = now()
             startTrial = 1
             id_bad = 0
 
             start_timer (
                 timer = fixWait
-                duration = fixWaitDur // 10000
+                duration = restDur // 10000
                 duration_units = ms
                 )
             goto (
                 target = 'Static Fix'
                 when = on_fix_static
                 )
+            goto (
+                target = 'sleep'
+                when = eye_x < -30 && eye_y < -30
+                )
             timer_expired (
-                target = 'Failure to fixate'
+                target = 'done'
                 timer = fixWait
                 )
         }
 
-        state 'Static Fix' {
-            report ('localTrials = $localTrials')
-            localTrials = localTrials+1
-
-            tFix = now()
-            id_bad = 1
-
-            start_timer (
-                timer = StaticFixWait
-                duration = fixTimeDur // fixTimeDur=-fixTimeDurMean*logn(rand(0,1)) + fixTimeDurMin // exp_rand(fixTimeDurMean,fixTimeDurMin)
-                duration_units = ms
-                )
+        state 'sleep' {
             goto (
-                target = 'Bad'
-                when = !on_fix_static
+                target = 'Rest'
+                when = eye_x > -30 || eye_y > -30
                 )
             timer_expired (
-                target = 'Target On'
-                timer = StaticFixWait
-                )
-
-        }
-        state 'Target On' {
-            tTargetOn = next_frame_time()
-
-            queue_stimulus(photodiode)
-
-            // MGS
-            index=0
-            while (index<number){
-                queue_stimulus(objects[index])
-                index=index+1
-            }
-
-            update_stimulus_display () // 25ms from labjack
-            id_bad = 2
-
-            labjack_target_on = 1
-
-            start_timer (
-                timer = timer_target_on
-                duration = targetTimeDur
-                duration_units = ms
-                )
-            goto (
-                target = 'Bad'
-                when = !on_fix_static
-                )
-            timer_expired (
-                target = 'Memory' // 'Occluder On'
-                timer = timer_target_on
-                )
-        }
-
-
-        state 'Memory' {
-            tTargetOff = next_frame_time()
-            id_bad = 4
-
-            // MGS
-            index=0
-            while (index<number){
-                dequeue_stimulus(objects[index])
-                index=index+1
-            }
-
-            dequeue_stimulus(photodiode)
-            update_stimulus_display () // 40ms from labjack
-
-            labjack_target_on = 0
-
-            start_timer (
-                timer = timer_memory
-                duration = memoryTimeDur
-                duration_units = ms
-                )
-            goto (
-                target = 'Bad'
-                when = !on_fix_static
-                )
-            timer_expired (
-                target = 'FixOff'
-                timer = timer_memory
-                )
-        }
-
-        state 'FixOff' {
-            tFixOff= next_frame_time()
-            id_bad = 5
-
-            live_queue_stimulus(target_window)
-            dequeue_stimulus(fixCircleStatic)
-
-            update_stimulus_display ()
-            labjack_fix_off=1
-            labjack_cue_on=1
-
-            goto (
-                target = 'Response'
-                )
-        }
-
-        state 'Response' {
-            id_bad = 6
-
-            if (flag_response==0){
-                tResponse0=now()
-                flag_response=1
-            }
-            if (flag_response==1){
-                targetWait=targetWait-(now()-tResponse0)/1000
-            }
-
-            start_timer (
-                timer = timer_response
-                duration = targetWait // 5000
-                duration_units = ms
-                )
-            goto (
-                target = 'post_response'
-                when = on_target
-                )
-            timer_expired (
-                target = 'Bad'
-                timer = timer_response
-                )
-        }
-        state 'post_response' {
-            id_bad = 7
-            tResponse= now()
-
-            start_timer (
-                timer = timer_post_response
-                duration = responseRegister // 100
-                duration_units = ms
-                )
-            goto (
-                target = 'Response' // 'Failure to fixate'
-                when = !on_target
-                )
-            timer_expired (
-                target = 'Reward'
-                timer = timer_post_response
-                )
-        }
-
-        state 'Reward' {
-            report ('Success!: CorrectTrials = $CorrectTrials')
-            tRew = now()
-
-            // MGS
-            index=0
-            while (index<number){
-                queue_stimulus(objects[index])
-                index=index+1
-            }
-
-            queue_stimulus(photodiode)
-            update_stimulus_display ()
-
-            labjack_target_on = 1
-
-            CorrectTrialsTarget[target_id+nTarget*cue_id] = CorrectTrialsTarget[target_id+nTarget*cue_id]+1
-            CorrectTrials = CorrectTrials+1
-
-            start_timer (
-                timer = GreenTime
-                duration = post_reward_delay // 200
-                duration_units = ms
-                )
-            timer_expired (
-                target = 'Post Reward'
-                timer = GreenTime
-                )
-        }
-
-        state 'Post Reward'{
-
-            dequeue_stimulus(photodiode)
-            dequeue_stimulus(objects[reward_count])
-            update_stimulus_display ()
-
-            reward_count=reward_count+1
-
-            pulse ( // micro seconds
-                variable = reward_line
-                duration = rewardDur*1000
-                )
-            start_timer (
-                timer = GreenTime
-                duration = rewardDur
-                duration_units = ms
-                )
-            timer_expired (
-                target = 'Inter Reward Delay'
-                timer = GreenTime
+                target = 'done'
+                timer = fixWait
                 )
 
         }
 
-        state 'Inter Reward Delay'{
-            queue_stimulus(photodiode)
-            update_stimulus_display ()
+        state 'done' {
 
-            start_timer (
-                timer = GreenTime
-                duration = inter_reward_delay // 100
-                duration_units = ms
-                )
-            goto (
-                target = 'End Trial'
-                when = reward_count >=number
-                )
-
-            timer_expired (
-                target = 'Post Reward'
-                timer = GreenTime
-                )
-        }
-
-
-        state 'End Trial' {
-            tEnd = now()
-
-            endTrial = endTrial+1
-
-            // reset stimulus
-            object_red=1 // target_red=1
-            object_green=0.5
-            object_blue=0 // target_blue=1
-            object_alpha = 1 // target_alpha = 1
-
-            elapsed_time = 0
-
-            fix_red_static = 1
-            fix_green_static = 1
-            fix_blue_static = 1
-
-            cue_alpha=1
-
-            reward_count=0
-
-            occluder_red=.5
-            occluder_green=.5
-            occluder_blue=.5
-
-            cue_red=.5 // purple [0.5 0 1]
-            cue_green=0
-            cue_blue=1
-            id_cue_first=0
-
-            dequeue_stimulus (target_window)
-            dequeue_stimulus (cue_window)
-            index=0
-            while (index<(nOccluder-1)){
-                dequeue_stimulus(occluder_targets[index])
-                index=index+1
-            }
-            index=0
-            while (index<(nOccluder)){
-                dequeue_stimulus(occluders[index])
-                index=index+1
-            }
-
-            dequeue_stimulus (object)
-            dequeue_stimulus (fixCircleStatic)
-            dequeue_stimulus(cue[0])
-            dequeue_stimulus(cue[1])
-            dequeue_stimulus(cue[2])
-            dequeue_stimulus (update_position_linear)
-            dequeue_stimulus (update_position_circular)
-            dequeue_stimulus (update_position_centerout)
-            dequeue_stimulus (object_disappear)
-            dequeue_stimulus(photodiode)
-
-            // MGS
-            index=0
-            while (index<number){
-                dequeue_stimulus(objects[index])
-                index=index+1
-            }
-
-            id_bad = 0
-
-            flag_response=0
-            targetWait=targetWait0
-
-            update_stimulus_display ()
-            labjack_target_on = 0
-            labjack_fix_off = 0
-            labjack_cue_on = 0
-
-            goto (
-                target = 'Exit System'
-                when = CorrectTrials >= trialNum
-                )
-            goto (
-                target = 'Exit System'
-                when = pstop
-                )
-            goto (ITI)
-        }
-        state ITI {
-
-            sample_MGS_trial () // duration and target locations
-
-            // override eye_x eye_y to reset trigger_flag
-            // eye_x=100
-
-            start_timer (
-                timer = fix_pur_ITI
-                duration = ITI // 500
-                duration_units = ms
-                )
-            timer_expired (
-                target = 'Fix On'
-                timer = fix_pur_ITI
-                )
-        }
-
-        state 'Failure to fixate' {
-            report ('Trial Failed: id_bad = $id_bad')
             tResponse= now()
 
             start_timer (
@@ -1095,59 +792,10 @@ protocol 'MemorySaccadeNumber' {
                 duration_units = ms
                 )
             timer_expired (
-                target = 'End Trial'
+                target = 'Exit System'
                 timer = NoFixWait
                 )
         }
-
-
-        state 'Bad' {
-            report ('Trial Failed: id_bad = $id_bad')
-            tResponse= now()
-
-            if (id_bad==2 || id_bad==3 || id_bad==4){ // target cue memory
-
-                // red fixation
-                fix_green_static = 0
-                fix_blue_static = 0
-                dequeue_stimulus (target_window)
-                dequeue_stimulus (cue_window)
-                dequeue_stimulus (object)
-                dequeue_stimulus(cue[0])
-                dequeue_stimulus(cue[1])
-                dequeue_stimulus(cue[2])
-                dequeue_stimulus (update_position_linear)
-                dequeue_stimulus (update_position_circular)
-                dequeue_stimulus (update_position_centerout)
-                dequeue_stimulus (object_disappear)
-                dequeue_stimulus(photodiode)
-                update_stimulus_display ()
-                labjack_target_on = 0
-                labjack_cue_on = 0
-            }
-            if (id_bad==5 || id_bad==6){ // response fixOff; not able to find target
-                // MGS
-                index=0
-                while (index<number){
-                    queue_stimulus(objects[index])
-                    index=index+1
-                }
-                update_stimulus_display ()
-                labjack_target_on = 1
-
-            }
-
-            start_timer (
-                timer = timer_timeout
-                duration = timeout // 2000
-                duration_units = ms
-                )
-            timer_expired (
-                target = 'End Trial'
-                timer = timer_timeout
-                )
-        }
-
 
         state 'Exit System' {
             report ('Leaving state system')
