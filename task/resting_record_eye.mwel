@@ -746,6 +746,7 @@ protocol 'rest' {
             update_stimulus_display ()
 
             labjack_target_on = 1
+            labjack_cue_on = 1
 
             tStart = now()
             startTrial = 1
@@ -755,10 +756,6 @@ protocol 'rest' {
                 timer = fixWait
                 duration = restDur // 10000
                 duration_units = ms
-                )
-            goto (
-                target = 'Static Fix'
-                when = on_fix_static
                 )
             goto (
                 target = 'sleep'
@@ -771,6 +768,8 @@ protocol 'rest' {
         }
 
         state 'sleep' {
+
+            labjack_cue_on = 0
             goto (
                 target = 'Rest'
                 when = eye_x > -30 || eye_y > -30
