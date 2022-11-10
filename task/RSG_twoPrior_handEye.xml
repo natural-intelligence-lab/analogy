@@ -5,7 +5,7 @@
         <iodevice tag="Eyelink 1000" type="eyelink" data_interval="1ms" tracker_ip="100.1.1.1" eye_rx="" eye_ry="" eye_lx="" eye_ly="" eye_x="" eye_y="" eye_z="" href_rx="" href_ry="" href_lx="" href_ly="" pupil_rx="" pupil_ry="" pupil_lx="eyeRX" pupil_ly="eyeRY" pupil_size_r="" pupil_size_l="pupil_size" eye_time="" tracking_dist="1024"></iodevice>
         <iodevice type="mouse_input" tag="Mouse Input Device" mouse_position_x="mouseX" mouse_position_y="mouseY" mouse_down="mouseDown" hide_cursor="YES"></iodevice>
         <calibrator type="linear_eye_calibrator" tag="Eye Cal" eyeh_raw="eyeRX" eyev_raw="eyeRY" eyeh_calibrated="eye_x" eyev_calibrated="eye_y"></calibrator>
-        <iodevice type="labjack_ljm" tag="labjack_ljm" name="labjack" update_interval="3ms" device_type="T7" connection_type="USB" autostart="YES">
+        <iodevice type="labjack_ljm" tag="labjack" update_interval="3ms" device_type="T7" connection_type="USB" autostart="YES">
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output" line="FIO0" value="reward_line"></iochannel>
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 2" line="FIO2" value="labjack_target_on"></iochannel>
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 3" line="FIO3" value="labjack_cue_on"></iochannel>
@@ -104,8 +104,14 @@
             <variable tag="dtSetHandTarget" groups="handTarget" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
             <variable tag="dtReadyHandTarget" groups="handTarget" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
         </folder>
+        <folder tag="labjack">
+            <variable tag="labjack_target_on" groups="labjack" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="labjack_cue_on" groups="labjack" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="t_labjack_cue_on" groups="labjack" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="labjack_fixation_on" groups="labjack" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+        </folder>        
         <folder tag="Reward">
-            <variable tag="rewardOut" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="reward_line" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
             <variable tag="rewardDur" groups="Reward" scope="global" logging="when_changed" default_value="70" type="any" persistant="0"></variable>
             <variable tag="bonusRewDur" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
             <variable tag="totalRewDur" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
@@ -228,9 +234,9 @@
             <variable tag="endTrial" groups="Global" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
         </folder>
         <folder tag="sync">
-            <variable tag="syncX" groups="Matlab" scope="global" logging="when_changed" default_value="-21" type="any" persistant="0"></variable>
-            <variable tag="syncY" groups="Matlab" scope="global" logging="when_changed" default_value="12" type="any" persistant="0"></variable>
-            <variable tag="syncSize" groups="Matlab" scope="global" logging="when_changed" default_value="3" type="any" persistant="0"></variable>
+            <variable tag="syncX" groups="Matlab" scope="global" logging="when_changed" default_value="-20" type="any" persistant="0"></variable>
+            <variable tag="syncY" groups="Matlab" scope="global" logging="when_changed" default_value="11.7" type="any" persistant="0"></variable>
+            <variable tag="syncSize" groups="Matlab" scope="global" logging="when_changed" default_value="2.5" type="any" persistant="0"></variable>
             <variable tag="stateAnalogOut" groups="STATE" scope="global" logging="when_changed" default_value="0" type="float" persistant="0"></variable>
             <variable tag="trialSync" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
         </folder>
@@ -378,7 +384,7 @@
     <experiment tag="New Experiment" full_name="" description="">
         <protocol tag="RSG_twoPrior_handEye_seqSwitch photosync" nsamples="1" sampling_method="cycles" selection="sequential" interruptible="YES">
             <action tag="Start Eyelink 2" type="start_device_IO" device="Eyelink 1000"></action>
-            <action tag="Start NIDaq Device 2" type="start_device_IO" device="NIDaq Device"></action>
+            <action tag="Start labjack_ljm" type="start_device_IO" device="labjack_ljm"></action>
             <action type="assignment" tag="Assign bonusRewDur 2" variable="bonusRewDur" value="0"></action>
             <action type="assignment" tag="Assign consecutiveCorrect 2" variable="consecutiveCorrect" value="-1"></action>
             <action type="assignment" tag="Assign pstop 3" variable="pstop" value="0"></action>
@@ -411,7 +417,7 @@
                             <action type="assignment" tag="Select interval_min" variable="interval_min" value="(idShortLong==0)*interval_minShort+(idShortLong==1)*interval_minLong"></action>
                             <action type="assignment" tag="Select interval_max" variable="interval_max" value="(idShortLong==0)*interval_maxShort+(idShortLong==1)*interval_maxLong"></action>
                         </action>
-                        <action type="if" tag="If randTmp==1 &amp;&amp; localTrials>0, change idHandEye" condition="randTmp==1 &amp;&amp; localTrials>0">
+                        <action type="if" tag="If randTmp==1 &amp;&amp; localTrials>0, change idShortLong" condition="randTmp==1 &amp;&amp; localTrials>0">
 							<action type="assignment" tag="Set idShortLong" variable="idShortLong" value="1-idShortLong"></action>
                             <action type="assignment" tag="Assign fixY 9" variable="fixY" value="-fixY"></action>
                             <action type="assignment" tag="Assign handFixY 9" variable="handFixY" value="fixY-(fix_sz+handFixSz)/2"></action>
@@ -509,6 +515,7 @@
                     </task_system_state>
                     <task_system_state tag="Fix Time" interruptible="YES">
                         <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign labjack_fixation_on" variable="labjack_fixation_on" value="1"></action>
                         <action type="assignment" tag="Determine time to target on" variable="fix_time_dur" value="-fix_dur_mean*logn(rand(0,1)) + fix_dur_min"></action>
                         <action type="start_timer" tag="Start fix_time" timer="fix_time" timebase="" duration="fix_time_dur" duration_units="ms"></action>
                         <action tag="Queue syncFlash 2" type="queue_stimulus" stimulus="syncFlash"></action>
@@ -520,6 +527,7 @@
                     </task_system_state>
                     <task_system_state tag="Target On" interruptible="YES">
                         <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign labjack_target_on" variable="labjack_target_on" value="1"></action>
                         <action tag="Live Queue target" type="live_queue_stimulus" stimulus="target"></action>
                         <action tag="reset syncFlash 2" type="stop_dynamic_stimulus" stimulus="syncFlash"></action>
                         <action tag="Queue syncFlash 3" type="queue_stimulus" stimulus="syncFlash"></action>
@@ -533,6 +541,7 @@
                     </task_system_state>
                     <task_system_state tag="Ready" interruptible="YES">
                         <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign labjack_cue_on" variable="labjack_cue_on" value="1"></action>
                         <action type="assignment" tag="Assign tStart" variable="tStart" value="nextFrameTime()"></action>
                         <action type="assignment" tag="Reset ready_ended" variable="ready_ended" value="0"></action>
                         <action tag="Queue ready cue" type="queue_stimulus" stimulus="ready_cue"></action>
@@ -554,6 +563,7 @@
                         <action_marker _unmoveable="1" tag="Actions"></action_marker>
                         <action tag="Dequeue ready cue" type="dequeue_stimulus" stimulus="ready_cue"></action>
                         <action type="assignment" tag="Reset set2_ended" variable="set2_ended" value="0"></action>
+                        <action type="assignment" tag="Assign labjack_cue_on" variable="labjack_cue_on" value="0"></action>
                         <action tag="Queue set2 cue" type="queue_stimulus" stimulus="set2_cue"></action>
                         <action tag="Live Queue Fix 10" type="live_queue_stimulus" stimulus="Fix2"></action>
                         <action tag="Live Queue Fix 4" type="live_queue_stimulus" stimulus="Fix"></action>
@@ -582,6 +592,7 @@
                     </task_system_state>
                     <task_system_state tag="Production" interruptible="YES">
                         <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign labjack_fixation_on" variable="labjack_fixation_on" value="0"></action>
                         <action type="start_timer" tag="Start saccadeTime" timer="saccadeTime" timebase="" duration="(idHandEye==0)*handTimeDur+(idHandEye==1)*saccadeTimeDur" duration_units="ms"></action>
                         <action type="assignment" tag="Assign stateAnalogOut 117" variable="stateAnalogOut" value="30/50*5"></action>
                         <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
@@ -655,6 +666,9 @@
                     </task_system_state>
                     <task_system_state tag="End Trial" interruptible="YES">
                         <action_marker _unmoveable="1" tag="Actions"></action_marker>
+                        <action type="assignment" tag="Assign labjack_target_on" variable="labjack_target_on" value="0"></action>
+                        <action type="assignment" tag="Assign labjack_cue_on" variable="labjack_cue_on" value="0"></action>
+                        <action type="assignment" tag="Assign labjack_fixation_on" variable="labjack_fixation_on" value="0"></action>
                         <action tag="Dequeue Fix" type="dequeue_stimulus" stimulus="Fix"></action>
                         <action tag="Dequeue Fix 11" type="dequeue_stimulus" stimulus="handFix"></action>
                         <action tag="Dequeue Fix 5" type="dequeue_stimulus" stimulus="Fix2"></action>
