@@ -96,7 +96,7 @@ var tmp=0
 var index=0
 var var_debug = 0
 
-var eye_threshold_sleep=20 // 30
+var eye_threshold_sleep=30 // 20 // 30
 
 group Reward {
     var reward_line = 0 (groups = Reward)
@@ -592,7 +592,7 @@ protocol 'rest' {
                 )
             goto (
                 target = 'sleep'
-                when = eye_x < -eye_threshold_sleep && eye_y < -eye_threshold_sleep
+                when = eye_x_calibrated < -eye_threshold_sleep && eye_y_calibrated < -eye_threshold_sleep
                 )
             timer_expired (
                 target = 'done'
@@ -605,7 +605,7 @@ protocol 'rest' {
             labjack_cue_on = 0 // 1 for awake 0 for sleep
             goto (
                 target = 'rest'
-                when = eye_x > -eye_threshold_sleep || eye_y > -eye_threshold_sleep
+                when = eye_x_calibrated > -eye_threshold_sleep || eye_y_calibrated > -eye_threshold_sleep
                 )
             timer_expired (
                 target = 'done'
