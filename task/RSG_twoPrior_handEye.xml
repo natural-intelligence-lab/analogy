@@ -2,9 +2,9 @@
 <monkeyml version="1.0">
     <io_devices tag="IO Devices">
         <iodevice type="stimulus_display" tag="Stimulus Display" background_color="0.5, 0.5, 0.5" announce_stimuli_on_implicit_updates="NO"></iodevice>
-        <iodevice tag="Eyelink 1000" type="eyelink" data_interval="1ms" tracker_ip="100.1.1.1" eye_rx="" eye_ry="" eye_lx="" eye_ly="" eye_x="" eye_y="" eye_z="" href_rx="" href_ry="" href_lx="" href_ly="" pupil_rx="" pupil_ry="" pupil_lx="eyeRX" pupil_ly="eyeRY" pupil_size_r="" pupil_size_l="pupil_size" eye_time="" tracking_dist="1024"></iodevice>
+        <iodevice tag="Eyelink 1000" type="eyelink" data_interval="1ms" tracker_ip="100.1.1.1" eye_rx="eye_rx" eye_ry="eye_ry" eye_lx="eye_lx" eye_ly="eye_ly" pupil_rx="pupil_rx" pupil_ry="pupil_ry" pupil_lx="pupil_lx" pupil_ly="pupil_ly" pupil_size_r="pupil_size_r" pupil_size_l="pupil_size_l" eye_time="" tracking_dist="1024"></iodevice>
         <iodevice type="mouse_input" tag="Mouse Input Device" mouse_position_x="mouseX" mouse_position_y="mouseY" mouse_down="mouseDown" hide_cursor="YES"></iodevice>
-        <calibrator type="linear_eye_calibrator" tag="Eye Cal" eyeh_raw="eyeRX" eyev_raw="eyeRY" eyeh_calibrated="eye_x" eyev_calibrated="eye_y"></calibrator>
+        <calibrator type="standard_eye_calibrator" tag="eye_calibrator" eyeh_raw="pupil_lx" eyev_raw="pupil_ly" eyeh_calibrated="eye_x" eyev_calibrated="eye_y"></calibrator>
         <iodevice type="labjack_ljm" tag="labjack_ljm" update_interval="3ms" device_type="T7" connection_type="USB" autostart="YES">
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output" line="FIO0" value="reward_line"></iochannel>
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 2" line="FIO2" value="labjack_target_on"></iochannel>
@@ -14,11 +14,18 @@
     </io_devices>
     <variables tag="Variables">
         <folder tag="Eye">
-            <variable tag="eyeRX" groups="Eye" scope="global" logging="never" default_value="0" type="any" persistant="0"></variable>
-            <variable tag="eyeRY" groups="Eye" scope="global" logging="never" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="eye_rx" groups="Eye" scope="global" logging="never" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="eye_ry" groups="Eye" scope="global" logging="never" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="eye_lx" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="eye_ly" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
             <variable tag="eye_x" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
             <variable tag="eye_y" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
-            <variable tag="pupil_size" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="pupil_rx" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="pupil_ry" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="pupil_lx" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="pupil_ly" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="pupil_size_r" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
+            <variable tag="pupil_size_l" groups="Eye" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
         </folder>
         <folder tag="eyeFix">
             <variable tag="fix_win" groups="eyeFix" scope="global" logging="when_changed" default_value="7" type="any" persistant="1"></variable>
