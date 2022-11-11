@@ -5,7 +5,7 @@
         <iodevice tag="Eyelink 1000" type="eyelink" data_interval="1ms" tracker_ip="100.1.1.1" eye_rx="" eye_ry="" eye_lx="" eye_ly="" eye_x="" eye_y="" eye_z="" href_rx="" href_ry="" href_lx="" href_ly="" pupil_rx="" pupil_ry="" pupil_lx="eyeRX" pupil_ly="eyeRY" pupil_size_r="" pupil_size_l="pupil_size" eye_time="" tracking_dist="1024"></iodevice>
         <iodevice type="mouse_input" tag="Mouse Input Device" mouse_position_x="mouseX" mouse_position_y="mouseY" mouse_down="mouseDown" hide_cursor="YES"></iodevice>
         <calibrator type="linear_eye_calibrator" tag="Eye Cal" eyeh_raw="eyeRX" eyev_raw="eyeRY" eyeh_calibrated="eye_x" eyev_calibrated="eye_y"></calibrator>
-        <iodevice type="labjack_ljm" tag="labjack" update_interval="3ms" device_type="T7" connection_type="USB" autostart="YES">
+        <iodevice type="labjack_ljm" tag="labjack_ljm" update_interval="3ms" device_type="T7" connection_type="USB" autostart="YES">
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output" line="FIO0" value="reward_line"></iochannel>
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 2" line="FIO2" value="labjack_target_on"></iochannel>
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 3" line="FIO3" value="labjack_cue_on"></iochannel>
@@ -641,7 +641,7 @@
                         <action type="assignment" tag="assign consecutiveIncorrect" variable="consecutiveIncorrect" value="0"></action>
                         <action type="assignment" tag="Assign bonusRewDur" variable="bonusRewDur" value="min(200, (min(4,consecutiveCorrect)-1)*dbonus)"></action>
                         <action type="assignment" tag="Assign win_fraction 2" variable="win_fraction" value="win_fraction-dwin"></action>
-                        <action type="pulse" tag="Pulse rewardOut" variable="rewardOut" duration="bonusRewDur*1000+rewardDur*1000*max(0.00001,1-abs(productionInterval - interval)/interval/win_fraction )"></action>
+                        <action type="pulse" tag="Pulse reward_line" variable="reward_line" duration="bonusRewDur*1000+rewardDur*1000*max(0.00001,1-abs(productionInterval - interval)/interval/win_fraction )"></action>
                         <action type="assignment" tag="Assign totalRewDur" variable="totalRewDur" value="bonusRewDur*1000+rewardDur*1000*max(0.00001,1-abs(productionInterval - interval)/interval/win_fraction )"></action>
                         <action type="assignment" tag="Increment MovingBall_correct" variable="MovingBall_correct" value="MovingBall_correct+1"></action>
                         <action type="assignment" tag="Increment N_correctShortHandLeft" variable="N_correctShortHandLeft" value="N_correctShortHandLeft +(idShortLong==0)*(idHandEye==0)*(theta>90)"></action>
