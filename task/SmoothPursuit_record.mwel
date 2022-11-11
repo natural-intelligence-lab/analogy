@@ -59,7 +59,7 @@ data_file ("$pwd/logs/$(date('%Y_%m_%d'))/mworks/$(date('%Y_%m_%d_%H_%M_%S'))")
 
 group Reward {
     var reward_line = 0 (groups = Reward)
-    var rewardDur = 20 (groups = Reward)
+    var rewardDur = 30 (groups = Reward) // 20 (groups = Reward)
     var bonusRewDur = 0  (groups = Reward)
 }
 group Fixation {
