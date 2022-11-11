@@ -10,7 +10,6 @@
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 2" line="FIO2" value="labjack_target_on"></iochannel>
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 3" line="FIO3" value="labjack_cue_on"></iochannel>
             <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 4" line="FIO1" value="labjack_fixation_on"></iochannel>
-            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 5" line="AIN1" value="photodiode_input"></iochannel>
         </iodevice>
     </io_devices>
     <variables tag="Variables">
