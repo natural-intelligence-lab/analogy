@@ -471,7 +471,6 @@
                         <action tag="Live Queue Fix" type="live_queue_stimulus" stimulus="Fix"></action>
                         <action tag="Live Queue Fix 13" type="live_queue_stimulus" stimulus="handFix"></action>
                         <action type="assignment" tag="Assign cursorAlpha 5" variable="cursorAlpha" value="1"></action>
-                        <action tag="Live Queue Stimulus 3" type="live_queue_stimulus" stimulus="cursor"></action>
                         <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
                         <action type="assignment" tag="Assign stateAnalogOut 111" variable="stateAnalogOut" value="5/50*5"></action>
                         <action type="pulse" tag="Pulse trialSync 2" variable="trialSync" duration="10*1000"></action>
@@ -561,7 +560,7 @@
                         <action type="assignment" tag="Assign stateAnalogOut 115" variable="stateAnalogOut" value="20/50*5"></action>
                         <action type="assignment" tag="Store ready cue onset time" variable="ready_cue_onset_time_us" value="now()"></action>
                         <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
-                        <transition type="conditional" tag="!fixOn, Transition to After Ready 2" condition="!fixOn " target="After Ready"></transition>
+                        <transition type="conditional" tag="!fixOn, Transition to After Ready 2" condition="!fixOn" target="After Ready"></transition>
                         <transition type="conditional" tag="When Interval1_ending, go to Set" condition="Interval1_ending" target="Set"></transition>
                     </task_system_state>
                     <task_system_state tag="Set" interruptible="YES">
@@ -579,7 +578,7 @@
                         <action type="assignment" tag="Assign stateAnalogOut 116" variable="stateAnalogOut" value="25/50*5"></action>
                         <action type="assignment" tag="Store set2 cue onset time" variable="set2_cue_onset_time_us" value="now()"></action>
                         <transition_marker _unmoveable="1" tag="Transitions"></transition_marker>
-                        <transition type="conditional" tag="!fixOn, Transition to After Set2" condition="!fixOn " target="After Set2"></transition>
+                        <transition type="conditional" tag="!fixOn, Transition to After Set2" condition="!fixOn" target="After Set2"></transition>
                         <transition type="conditional" tag="When set2 cue presentation completes, go to Production Interval" condition="set2_ended" target="Production Interval"></transition>
                     </task_system_state>
                     <task_system_state tag="Production Interval" interruptible="YES">
@@ -827,7 +826,6 @@
                     <task_system_state tag="No Fix" interruptible="YES">
                         <action_marker _unmoveable="1" tag="Actions"></action_marker>
                         <action tag="Dequeue Fix" type="dequeue_stimulus" stimulus="Fix"></action>
-                        <action tag="Dequeue Fix 115" type="dequeue_stimulus" stimulus="cursor"></action>
                         <action tag="Dequeue Fix 14" type="dequeue_stimulus" stimulus="handFix"></action>
                         <action tag="Dequeue Fix 2" type="dequeue_stimulus" stimulus="Fix2"></action>
                         <action tag="Update Stimulus Display" type="update_stimulus_display"></action>
