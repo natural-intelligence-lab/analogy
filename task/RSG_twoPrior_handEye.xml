@@ -118,7 +118,7 @@
         </folder>
         <folder tag="Reward">
             <variable tag="reward_line" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
-            <variable tag="rewardDur" groups="Reward" scope="global" logging="when_changed" default_value="70" type="any" persistant="0"></variable>
+            <variable tag="rewardDur" groups="Reward" scope="global" logging="when_changed" default_value="120" type="any" persistant="0"></variable>
             <variable tag="bonusRewDur" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
             <variable tag="totalRewDur" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
             <variable tag="dbonus" groups="Reward" scope="global" logging="when_changed" default_value="0" type="any" persistant="0"></variable>
