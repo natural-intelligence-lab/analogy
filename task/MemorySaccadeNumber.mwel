@@ -197,7 +197,7 @@ group target_window{ // just for target fixation window
     var target_red=1
     var target_green=1
     var target_blue=1
-    var target_win = 8 // 7 // 5 // 3 // 5
+    var target_win = 10 // 8 // 7 // 5 // 3 // 5
     var on_target=0
     var target_sz = 0.00001 // 0.5
     var target_radius= 3 // distance b/t target and cue
