@@ -757,6 +757,8 @@ protocol 'Analogy' {
 
             elapsed_time = 0
 
+            occluder_alpha=occluder_alpha_baseline
+
             fix_red_static = 1
             fix_green_static = 1
             fix_blue_static = 1
@@ -939,6 +941,7 @@ protocol 'Analogy' {
         state 'Incorrect_cue' {
 
             live_queue_stimulus(target_window)
+            occluder_alpha=occluder_alpha_feedback
             index=0
             while (index<(nOccluder-1)){
                 live_queue_stimulus(occluder_targets[index])
@@ -983,6 +986,7 @@ protocol 'Analogy' {
                 )
         }
         state 'Bad' {
+            occluder_alpha=occluder_alpha_feedback
             // remove all non-targets
             index=1
             while (index<(nOccluder)){
