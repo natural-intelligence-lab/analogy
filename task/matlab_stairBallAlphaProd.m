@@ -66,7 +66,7 @@ if ~isempty(values{1}) & ~isempty(values{2})
     if nargin==1
         figure(1); set(gcf,'position',[0 615 560 420],'color','w','resize','off'); % T vs t
          
-        figure(2); set(gcf,'position',[0 0 560 420],'color','w','resize','off'); % ballAlpha staircase
+        % figure(2); set(gcf,'position',[0 0 560 420],'color','w','resize','off'); % ballAlpha staircase
         
         figure(3); set(gcf,'position',[560 0 560 420],'color','w','resize','off'); % normalized bias time course   
         
@@ -121,18 +121,18 @@ if ~isempty(values{1}) & ~isempty(values{2})
     xlabel('trials'); ylabel('(t_p-t_s)/t_s');
     
     % ballAlpha staircase (3 for b/t ready and set; 7 for production)
-    figure(2);set(gcf,'position',[0 0 560 420],'color','w','resize','off');
-    if nback~=0
-        set(gca,'xlim',[max([1 length(values{7})-nback+1]) length(values{7})]);
-    else
-        axis tight;
-    end 
-    if ~isempty(values{7})
-        plot(length(values{7}),values{7}(end),'.','color',cmap,'markersize',11); hold all;
-    end
-    plot(length(values{3}),values{3}(end),'.','color',cmap2,'markersize',11); hold all;
-    legend('flash radius','ball alpha (measure)'); % ball alpha (produce)
-    xlabel('trials'); ylabel('ball alpha');
+  %  figure(2);set(gcf,'position',[0 0 560 420],'color','w','resize','off');
+  %  if nback~=0
+   %     set(gca,'xlim',[max([1 length(values{7})-nback+1]) length(values{7})]);
+  %  else
+   %     axis tight;
+   % end 
+   % if ~isempty(values{7})
+  %      plot(length(values{7}),values{7}(end),'.','color',cmap,'markersize',11); hold all;
+  %  end
+  %  plot(length(values{3}),values{3}(end),'.','color',cmap2,'markersize',11); hold all;
+  %  legend('flash radius','ball alpha (measure)'); % ball alpha (produce)
+  %  xlabel('trials'); ylabel('ball alpha');
     
     %%
 %     % check scalar property
