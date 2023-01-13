@@ -284,6 +284,46 @@ render_actions object_disappear (
 
 %end
 
+% define swap_initial_final ()
+// if id_vector_subtract==1, swap initial and final positions
+    tmp=cueX_final
+    cueX_final=cueX
+    cueX=tmp
+
+    tmp=cueY_final
+    cueY_final=cueY
+    cueY=tmp
+
+    tmp=targetX_final
+    targetX_final=targetX
+    targetX=tmp
+
+    tmp=targetY_final
+    targetY_final=targetY
+    targetY=tmp
+
+    tmp=objectX_final
+    objectX_final=objectX
+    objectX=tmp
+
+    tmp=objectY_final
+    objectY_final=objectY
+    objectY=tmp
+
+    // occluder
+    index=0
+    while (index<(nOccluder)){
+        occluderX[index]=cueX + cos((target_theta+360/nOccluder*index)*pi()/180)*target_radius
+        occluderY[index]=cueY + sin((target_theta+360/nOccluder*index)*pi()/180)*target_radius
+        if (index>0){
+            occluder_targetX[index-1]=occluderX[index]
+            occluder_targetY[index-1]=occluderY[index]
+            on_occluder_target[index-1] = false // does not work
+        }
+        index=index+1
+    }
+
+%end
 
 %define update_position ()
 
@@ -335,6 +375,10 @@ protocol 'Analogy' {
             }
 
             sample_trial () // durations & target location
+
+            if (id_vector_subtract==1){
+                swap_initial_final ()
+            }
 
             goto ('Fix On')
         }
@@ -664,7 +708,7 @@ protocol 'Analogy' {
                 )
             goto (
                 target = 'post_response_cue'
-                when = on_cue && id_cue_first==0
+                when = on_cue && id_cue_first==0 && id_vector_subtract==0
                 )
             goto (
                 target = 'post_response_incorrect'
@@ -821,6 +865,10 @@ protocol 'Analogy' {
         state ITI {
 
             sample_trial () // duration and target locations
+
+            if (id_vector_subtract==1){
+                swap_initial_final ()
+            }
 
             // override eye_x eye_y to reset trigger_flag
             // eye_x=100

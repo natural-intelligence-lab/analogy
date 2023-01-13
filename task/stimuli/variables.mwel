@@ -217,6 +217,8 @@ group Global {
     var CorrectTrialsCueFirstTarget = [0:(nTarget*cue_nTheta-1)] (groups = Trial)
 
     var id_bad = 0 (groups = Trial)
+
+    var id_vector_subtract=1 (groups = Trial)
 }
 
 group photodiode{
