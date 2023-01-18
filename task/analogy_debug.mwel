@@ -284,6 +284,22 @@ render_actions object_disappear (
 
 %end
 
+% define move_initial_periphery ()
+// if id_subtract_add==1, move cue+target from center to random location in periphery
+
+    tmp = disc_rand(0,cue_nTheta-1)*(360/cue_nTheta) // + 90 // with '+90' default is up
+
+    cueX = fixX + cos(tmp*pi()/180)*cue_radius
+    cueY = fixY+ sin(tmp*pi()/180)*cue_radius
+
+    targetX  = cueX + cos(target_theta*pi()/180)*target_radius
+    targetY  = cueY + sin(target_theta*pi()/180)*target_radius
+
+    objectX = targetX
+    objectY = targetY
+
+% end
+
 % define swap_initial_final ()
 // if id_vector_subtract==1, swap initial and final positions
     tmp=cueX_final
@@ -378,6 +394,9 @@ protocol 'Analogy' {
 
             if (id_vector_subtract==1){
                 swap_initial_final ()
+            }
+            if (id_subtract_add==1){
+                move_initial_periphery ()
             }
 
             goto ('Fix On')
@@ -868,6 +887,9 @@ protocol 'Analogy' {
 
             if (id_vector_subtract==1){
                 swap_initial_final ()
+            }
+            if (id_subtract_add==1){
+                move_initial_periphery ()
             }
 
             // override eye_x eye_y to reset trigger_flag
