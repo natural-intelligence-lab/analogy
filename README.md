@@ -1,19 +1,20 @@
-# Maze-Set-Go
+# MWorks codebase
 
-## Getting Started
+## 4 tasks: analogy, memory-guided saccade, ready-set-go, pursuit
 
-This directory only serves as an example of how to run MOOG from MWorks.
-
-To run this example, follow these steps:
-
-1. Install MWorks. Currently (as of 03/18/2021), you need the "bleeding edge"
+1. Install MWorks. Preferred version is the "bleeding edge"
    nightly build of MWorks, which you can install by downloading the "Nighly
    Build" on the [MWorks downloads page](https://mworks.github.io/downloads/). 
-2. Create a virtual environment with python version 3.8. If you are using conda,
-   this can be done with `conda create -n your_env_name python=3.8`
-3. Activate your newly created virtual environment and install MOOG with `pip install moog-games`.
-4. Navigate to where you want this code to live on your computer and clone this repo with `git clone https://github.mit.edu/jazlab/MazeSetGo.git`.
-5. Check that the python task runs by navigating to `task/python_demo` and running `$ python3 run_demo.py` --- you should be able to play this with your keyboard.
-6. Before running MWorks, edit the paths in `task/set_pwd.py` to refer to your current working directory and the python site packages for the virtual environment you created above.
-7. Also edit `task/configs/levels/get_stimuli_dir.py` similarly.
-8. Now you can launch mworks and run `tasks/moog.mwel`. You might want to edit the eye and controller interfaces at the top of that mwel file.
+
+2. Open the following mwel files for each task in MWorks client:
+   - analogy: analogy_debug.mwel
+   - memory-guided saccade: MemorySaccadeNumber_debug.mwel
+   - ready-set-go: RSG_twoPrior_handEye_debug.xml
+   - pursuit: SmoothPursuit_record.mwel
+Note that each mwel file has a corresponding version whose name does not have "_debug".
+That version was actually used in the experiment as it was set up with LabJack and eye trackers. 
+Note that ready-set-go task has an older version of stimulus code (xml) and pursuit task doesn't 
+have the "debug" version (i.e., you would get an error when loading the task).
+
+3. For RSG, you can do the online performance monitoring by loading matlab_stairBallAlphaProd.m
+in the matlab interface.
