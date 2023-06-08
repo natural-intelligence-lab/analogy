@@ -2,15 +2,8 @@
 <monkeyml version="1.0">
     <io_devices tag="IO Devices">
         <iodevice type="stimulus_display" tag="Stimulus Display" background_color="0.5, 0.5, 0.5" announce_stimuli_on_implicit_updates="NO"></iodevice>
-        <iodevice tag="Eyelink 1000" type="eyelink" data_interval="1ms" tracker_ip="100.1.1.1" eye_rx="eye_rx" eye_ry="eye_ry" eye_lx="eye_lx" eye_ly="eye_ly" pupil_rx="pupil_rx" pupil_ry="pupil_ry" pupil_lx="pupil_lx" pupil_ly="pupil_ly" pupil_size_r="pupil_size_r" pupil_size_l="pupil_size_l" eye_time="" tracking_dist="1024"></iodevice>
-        <iodevice type="mouse_input" tag="Mouse Input Device" mouse_position_x="mouseX" mouse_position_y="mouseY" mouse_down="mouseDown" hide_cursor="YES"></iodevice>
+        <iodevice type="mouse_input" tag="Mouse Input Device" mouse_position_x="eye_x" mouse_position_y="eye_y" mouse_down="mouseDown" hide_cursor="NO"></iodevice>
         <calibrator type="standard_eye_calibrator" tag="eye_calibrator" eyeh_raw="pupil_lx" eyev_raw="pupil_ly" eyeh_calibrated="eye_x" eyev_calibrated="eye_y"></calibrator>
-        <iodevice type="labjack_ljm" tag="labjack_ljm" update_interval="3ms" device_type="T7" connection_type="USB" autostart="YES">
-            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output" line="FIO0" value="reward_line"></iochannel>
-            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 2" line="FIO2" value="labjack_target_on"></iochannel>
-            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 3" line="FIO3" value="labjack_cue_on"></iochannel>
-            <iochannel type="labjack_ljm_digital_output" tag="labjack_ljm_digital_output 4" line="FIO1" value="labjack_fixation_on"></iochannel>
-        </iodevice>
     </io_devices>
     <variables tag="Variables">
         <folder tag="Eye">
@@ -389,8 +382,7 @@
     <optimizers tag="Optimizers"></optimizers>
     <experiment tag="New Experiment" full_name="" description="">
         <protocol tag="RSG_twoPrior_handEye_seqSwitch photosync" nsamples="1" sampling_method="cycles" selection="sequential" interruptible="YES">
-            <action tag="Start Eyelink 2" type="start_device_IO" device="Eyelink 1000"></action>
-            <action tag="Start labjack_ljm" type="start_device_IO" device="labjack_ljm"></action>
+            <action tag="Start Mouse 4" type="start_device_IO" device="Mouse Input Device"></action>
             <action type="assignment" tag="Assign bonusRewDur 2" variable="bonusRewDur" value="0"></action>
             <action type="assignment" tag="Assign consecutiveCorrect 2" variable="consecutiveCorrect" value="-1"></action>
             <action type="assignment" tag="Assign pstop 3" variable="pstop" value="0"></action>
