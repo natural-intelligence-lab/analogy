@@ -1,0 +1,81 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// Joystick interface for the monkey rig. This joystick is rotated 90 degrees
+// from the joystick in the psychophysics rig.
+//
+// Usage: Use the control left/right/up/down motion, and use the buttom as a
+// surrogate space bar.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+%define update_joystick ()
+
+    // threshold = 30 // 50 // 30 // originally 4
+    x_force = (
+        (rocker_x > 512 + 30) * (rocker_x - 512) / 512 +
+        (rocker_x < 512 - 30) * (rocker_x - 512) / 512
+    )
+    y_force = (
+        -(rocker_y < 512 - 30) * (512 - rocker_y) / 512 +
+        -(rocker_y > 512 + 30) * (512 - rocker_y) / 512
+    )
+    
+    /*
+    // The gamepad rocker's resting position is a little noisy. Even when not
+    // touched, it's values are not exactly 512. That is why we ignore small
+    // actions above. In the version below we do not ignore small actions, but
+    // this means that the agent never stops moving, even when you let go of the
+    // rocker.
+
+    x_force = rocker_x / 512 - 1
+    y_force = 1 - rocker_y / 512
+    */
+%end
+
+group 'Joystick variables' {
+    var x_force = 0
+    var y_force = 0
+    var space_pressed = 0
+
+    var rocker_x = 512 {
+        update_joystick ()
+    }
+    var rocker_y = 512 {
+        update_joystick ()
+    }
+}
+
+%define joystick_device ()
+    iodevice/usbhid_generic (
+        usage_page = 1
+        usage = 4
+        // preferred_location_id = 342884352 // logitec extreme 3D
+        // preferred_location_id = 52494336 // logi joystick 0
+        log_all_input_values = false  // true
+        )
+%end
+
+%define joystick_name_to_usage = {
+    'rocker_X_channel': 49, // 48,
+    'rocker_Y_channel': 48, // 49,
+    'button': 1
+}
+
+joystick_device hand {
+    iochannel/usbhid_generic_input_channel (
+        usage_page = 1
+        usage = joystick_name_to_usage['rocker_X_channel']
+        value = rocker_x
+        )
+    iochannel/usbhid_generic_input_channel (
+        usage_page = 1
+        usage = joystick_name_to_usage['rocker_Y_channel']
+        value = rocker_y
+        )
+    iochannel/usbhid_generic_input_channel (
+        usage_page = 9
+        usage = joystick_name_to_usage['button']
+        value = space_pressed
+        )
+}

@@ -1,0 +1,31 @@
+iodevice/labjack_ljm labjack (
+        update_interval = 3ms // 1ms // if 1ms, warning
+        device_type = T7
+        connection_type = USB // ETHERNET
+        // identifier = LJM_idANY // 192.168.1.207 // example
+        autostart = YES // NO
+    ) {
+        iochannel/labjack_ljm_digital_output(
+            line = FIO0 // example
+            value = reward_line
+            )
+        iochannel/labjack_ljm_digital_output( // target on
+            line = FIO2
+            value = labjack_target_on
+            )
+        iochannel/labjack_ljm_digital_output( // cue on
+            line = FIO3
+            value = labjack_cue_on
+            )
+        iochannel/labjack_ljm_digital_output( // fixation
+            line = FIO1
+            value = labjack_fixation_on
+            )
+            /*
+        iochannel/labjack_ljm_analog_input( // photodiode
+            line = AIN1
+            value = photodiode_input
+            )
+            */
+    }
+

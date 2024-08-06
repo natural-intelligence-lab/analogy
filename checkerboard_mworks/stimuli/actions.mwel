@@ -1,0 +1,65 @@
+
+render_actions bring_dots_to_target ( // 1-by-1 movie
+    elapsed_time = elapsed_time
+    ) {
+
+    p_time=(elapsed_time/1000/memoryTimeDur) // from 0 to 1
+
+    index=0
+    while (index<number){
+        start_time = index/number
+        end_time = (index+1)/number
+
+        tmp = (p_time-start_time)/(end_time-start_time) // 0 to 1
+
+        if (start_time < p_time && p_time < end_time ){
+            dotX[index] = dotX0[index] + tmp*(dotX_final[index]-dotX0[index])
+            dotY[index] = dotY0[index] + tmp*(dotY_final[index]-dotY0[index])
+            // report('id=$index, t0=$start_time, t1=$end_time, tmp=$tmp, p_time=$p_time')
+        }
+        index=index+1
+    }
+}
+
+render_actions bring_dots_to_target_together ( // move all dots together
+    elapsed_time = elapsed_time
+    ) {
+    p_time=(elapsed_time/1000/memoryTimeDur) // from 0 to 1
+
+    index=0
+    while (index<number){
+        dotX[index] = dotX0[index] + p_time*(dotX_final[index]-dotX0[index])
+        dotY[index] = dotY0[index] + p_time*(dotY_final[index]-dotY0[index])
+
+        index=index+1
+    }
+}
+
+render_actions bring_bananas_to_target ( // linear
+    elapsed_time = elapsed_time
+    ) {
+    p_time=(elapsed_time/1000/memoryTimeDur) // from 0 to 1
+
+    index=0
+    while (index<number){
+        objectsX[index] = objectsX0[index] + p_time*(objectX_final-objectsX0[index])
+        objectsY[index] = objectsY0[index] + p_time*(objectY_final-objectsY0[index])
+
+        index=index+1
+    }
+}
+
+render_actions green_disappear (
+    elapsed_time = elapsed_time2
+    ) {
+        if (rewardDur > 0 ){
+            dot_sz = dot_sz0*max(0,(1-elapsed_time2/1000/(rewardDur))) // ramp down from object_alpha0 to object_alpha_memory
+        }
+    }
+
+
+render_actions object_disappear (
+    elapsed_time = elapsed_time2
+    ) {
+    object_alpha=(object_alpha0-object_alpha_memory)*max(0,(1-elapsed_time2/1000/(p_memoryTimeDur*memoryTimeDur)))+object_alpha_memory // ramp down from object_alpha0 to object_alpha_memory
+}

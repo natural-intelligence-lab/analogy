@@ -1,0 +1,145 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// Keyboard interface for up/down/left/right arrow keys
+//
+///////////////////////////////////////////////////////////////////////////////
+
+var discrete_controller = false // set_stimuli.py
+
+%define update_joystick ()
+    
+    x_force = right_pressed - left_pressed
+    y_force = up_pressed - down_pressed
+
+%end
+
+group 'Keyboard variables' {
+    var x_force = 0
+    var y_force = 0
+
+    var right_pressed = 0 {
+        update_joystick ()
+    }
+    var left_pressed = 0 {
+        update_joystick ()
+    }
+    var up_pressed = 0 {
+        update_joystick ()
+    }
+    var down_pressed = 0 {
+        update_joystick ()
+    }
+
+    var space_pressed = 0
+    var enter_pressed = 0
+    var del_pressed = 0
+
+    var current_key_input = -1
+
+    var pressed_0 = 0 {
+        current_key_input = 0
+    }
+    var pressed_1 = 0 {
+        current_key_input = 1
+    }
+    var pressed_2 = 0 {
+        current_key_input = 2
+    }
+    var pressed_3 = 0 {
+        current_key_input = 3
+    }
+    var pressed_4 = 0 {
+        current_key_input = 4
+    }
+    var pressed_5 = 0 {
+        current_key_input = 5
+    }
+    var pressed_6 = 0 {
+        current_key_input = 6
+    }
+    var pressed_7 = 0 {
+        current_key_input = 7
+    }
+    var pressed_8 = 0 {
+        current_key_input = 8
+    }
+    var pressed_9 = 0 {
+        current_key_input = 9
+    }
+
+    var TTL = 0
+}
+
+// Note: Sometimes you need to restart the computer if you get a HID error
+
+%define keyboard_device ()
+    iodevice/usbhid_generic (
+        usage_page = 1
+        usage = 6
+
+        // preferred_location_id = 138412032 // 17825792 // keypad rig // keypad labtop
+
+        preferred_location_id = 1130496 // KeyWarrior8 Flex
+        // preferred_location_id = 161 // macbook built-in
+
+        // preferred_location_id = 2152726528  // macbook built-in
+
+        // preferred_location_id = 1807689598  // apple wireless keyboard
+        // preferred_location_id = 4245815296  // Psychophysics rig?
+        // preferred_location_id = 338690048 // external keyboard
+        log_all_input_values = true
+        )
+%end
+
+%define keyboard_name_to_usage = {
+    'right_arrow': 79,
+    'left_arrow': 80,
+    'down_arrow': 81,
+    'up_arrow': 82,
+    'space': 44,
+    '0': 39, // 98, // number pad
+    '1': 30, // 89,
+    '2': 31, //90,
+    '3': 32, //91,
+    '4': 33, //92,
+    '5': 34, //93,
+    '6': 35, //94,
+    '7': 36, //95,
+    '8': 37, //96,
+    '9': 38, //97,
+    'enter': 40, // 88
+    'delete': 42, // 99 // backspace for key board; . and DELETE for keypad
+    's': 22
+}
+
+%define keyboard_channel (key, value)
+    iochannel/usbhid_generic_input_channel (
+        usage_page = 7
+        usage = keyboard_name_to_usage[key]
+        value = value
+        )
+%end
+
+keyboard_device hand {
+    keyboard_channel (key = 'right_arrow'; value = right_pressed)
+    keyboard_channel (key = 'left_arrow'; value = left_pressed)
+    keyboard_channel (key = 'up_arrow'; value = up_pressed)
+    keyboard_channel (key = 'down_arrow'; value = down_pressed)
+    keyboard_channel (key = 'space'; value = space_pressed)
+
+    keyboard_channel (key = 'enter'; value = enter_pressed)
+    keyboard_channel (key = 'delete'; value = del_pressed)
+
+    keyboard_channel (key = '0'; value = pressed_0)
+    keyboard_channel (key = '1'; value = pressed_1)
+    keyboard_channel (key = '2'; value = pressed_2)
+    keyboard_channel (key = '3'; value = pressed_3)
+    keyboard_channel (key = '4'; value = pressed_4)
+    keyboard_channel (key = '5'; value = pressed_5)
+    keyboard_channel (key = '6'; value = pressed_6)
+    keyboard_channel (key = '7'; value = pressed_7)
+    keyboard_channel (key = '8'; value = pressed_8)
+    keyboard_channel (key = '9'; value = pressed_9)
+
+    keyboard_channel (key = 's'; value = TTL)
+}

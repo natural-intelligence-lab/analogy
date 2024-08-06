@@ -1,0 +1,239 @@
+
+///////////////////////////////////////////////////////////////////////////////
+// I/O Devices
+///////////////////////////////////////////////////////////////////////////////
+%include 'hand_interfaces/keyboard'
+
+///////////////////////////////////////////////////////////////////////////////
+// Variables
+///////////////////////////////////////////////////////////////////////////////
+
+ // %include 'stimuli/variables'
+
+var innermask_size = 4
+var checkerboard_size = 25 // 15
+var deg_per_sec = 90
+
+var on_duration = 30
+var off_duration = 30
+var n_cycle = 5
+var i_trial = 0
+
+var tmp = 0
+
+var wedge_duration = 5
+var wedge_sizex = 60 // (float)(30)
+var wedge_sizey = 60 // (float)(30)
+var wedge_rotation = 0 // updated by 15 deg per 5sec
+var step_wedge_rotation = 15 // deg
+var background_color =0.22
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Sounds
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Stimuli
+///////////////////////////////////////////////////////////////////////////////
+
+blank_screen blank_screen(
+    color = background_color,background_color,background_color
+    )
+
+image_file wedge_hm (
+    path = '/stimuli/hm.png'
+    x_size = wedge_sizex
+    y_size = wedge_sizey
+    rotation = wedge_rotation
+    deferred = NO
+    )
+
+
+fixation_point fixation_point (
+    color = 1,1,1
+    trigger_width = 0.5
+    trigger_watch_x = 0.0
+    trigger_watch_y = 0.0
+    trigger_flag = true
+    x_size = 0.3
+    y_size = 0.3
+    )
+circle inner_mask (
+    color = 0.5,0.5,0.5
+    x_size = innermask_size
+    y_size = innermask_size
+    rotation = 0
+    )
+frame_list frame_list (
+    stimulus_group = frames
+    loop = YES
+    autoplay = YES
+    )
+stimulus_group frames {
+    image_file checkerboard (
+        path = '/stimuli/checkerboard.png' // was checkerboard2 for partial_wedge
+        x_size = checkerboard_size
+        y_size = checkerboard_size
+        rotation = (now() / 1e6) * deg_per_sec
+        deferred = NO
+        )
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Filters
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Optimizers
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Protocols
+///////////////////////////////////////////////////////////////////////////////
+
+protocol 'full_checkerboard_block' {
+    task 'full_checkerboard' {
+        state 'wait_for_TTL'{
+            i_trial = 1
+            start_device_io (hand)
+            goto (
+                target = 'on'
+                when = TTL
+                )
+        }
+        state 'on' {
+            live_queue_stimulus (frame_list)
+            queue_stimulus (inner_mask)
+            queue_stimulus (fixation_point)
+            update_stimulus_display ()
+
+            start_timer(
+                timer = on_timer
+                duration = on_duration // 30s
+                duration_units = s
+                )
+            timer_expired (
+                target = 'off'
+                timer = on_timer
+                )
+        }
+
+        state 'off' {
+            dequeue_stimulus (frame_list)
+            update_stimulus_display ()
+
+            start_timer(
+                timer = off_timer
+                duration = off_duration // 30s
+                duration_units = s
+                )
+            timer_expired (
+                target = 'end_trial'
+                timer = off_timer
+                )
+        }
+
+        state 'end_trial'{
+            i_trial = i_trial + 1
+            goto (
+                target = 'on'
+                when = i_trial <= n_cycle
+                )
+            goto (
+                target = 'Exit'
+                when = i_trial > n_cycle
+                )
+        }
+
+        state 'Exit' {
+            update_stimulus_display ()
+            yield ()
+        }
+    }
+}
+
+
+protocol rotating_wedge_block {
+    task 'rotating_wedge' {
+        state 'wait_for_TTL'{
+            i_trial = 1
+            queue_stimulus(blank_screen)
+            start_device_io (hand)
+            goto (
+                target = 'on'
+                when = TTL
+                )
+
+        }
+
+        state 'on' {
+            live_queue_stimulus (frame_list)
+            live_queue_stimulus (wedge_hm)
+            queue_stimulus (fixation_point)
+            update_stimulus_display ()
+            start_timer (
+                timer = on_timer
+                duration = on_duration
+                duration_units = s
+                )
+            goto (
+                target = 'update_wedge'
+                )
+        }
+
+        state 'update_wedge'{
+            wedge_rotation = wedge_rotation + step_wedge_rotation
+            start_timer(
+                timer = wedge_timer
+                duration = wedge_duration // 5s
+                duration_units = s
+                )
+            timer_expired (
+                target = 'update_wedge'
+                timer = wedge_timer
+                )
+            timer_expired (
+                target = 'off'
+                timer = on_timer
+                )
+        }
+
+        state 'off' {
+            dequeue_stimulus (frame_list)
+            dequeue_stimulus (wedge_hm)
+            update_stimulus_display ()
+
+            start_timer(
+                timer = off_timer
+                duration = off_duration // 30s
+                duration_units = s
+                )
+            timer_expired (
+                target = 'end_trial'
+                timer = off_timer
+                )
+        }
+
+        state 'end_trial'{
+            i_trial = i_trial + 1
+            goto (
+                target = 'on'
+                when = i_trial <= n_cycle
+                )
+            goto (
+                target = 'Exit'
+                when = i_trial > n_cycle
+                )
+        }
+
+        state 'Exit' {
+            update_stimulus_display ()
+            yield ()
+        }
+
+    }
+}

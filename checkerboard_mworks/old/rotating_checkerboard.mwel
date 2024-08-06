@@ -1,0 +1,70 @@
+
+//
+// I/O Devices
+//
+
+
+//
+// Variables
+//
+
+var size = 10.0
+var deg_per_sec = 30.0
+var done = 0
+
+//
+// Sounds
+//
+
+
+//
+// Stimuli
+//
+
+frame_list frame_list (
+    stimulus_group = frames
+    loop = YES
+    autoplay = YES
+    )
+stimulus_group frames {
+    image_file checkerboard (
+        path = 'checkerboard.png'
+        x_size = size
+        y_size = size
+        rotation = (now() / 1e6) * deg_per_sec
+        deferred = NO
+        )
+}
+
+//
+// Filters
+//
+
+
+//
+// Optimizers
+//
+
+
+//
+// Protocols
+//
+
+protocol 'New Protocol' {
+    task 'New Task System' {
+        state 'Begin State System' {
+            done = false
+            live_queue_stimulus (frame_list)
+            update_stimulus_display ()
+            goto (
+                target = 'Exit State System'
+                when = done
+                )
+        }
+        state 'Exit State System' {
+            dequeue_stimulus (frame_list)
+            update_stimulus_display ()
+            yield ()
+        }
+    }
+}

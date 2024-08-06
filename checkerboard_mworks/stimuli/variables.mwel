@@ -1,0 +1,367 @@
+var data_file = ""
+
+var var_debug = 0
+
+group Number {
+    var number=1
+    var chosen_number = 0
+    var number_id=0
+
+    var number_set_sampled= 0
+
+    %ifdef monkey
+        var number_set=[2, 6]
+
+        var n_number_set = size(number_set) // should be bigger than 5 (see set_stimuli.py)
+        var number_min = number_set[0]
+        var number_max = number_set[n_number_set-1]
+
+        var number_range=[0, 12] // for number line
+    %end
+
+    %ifdef human
+        var number_min = 2
+        var number_max = 32
+        var n_number_level = number_max - number_min+1
+        var number_set=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,18,20,22,24,27,29,32]
+        // np.round(2 ** np.linspace(np.log2(2), np.log2(32), 31))
+        var n_number_set = size(number_set)
+
+        // TBD: action/run_python_string("setvar('number_set',np.round(2 ** np.linspace(np.log2(getvar('number_min')), np.log2(getvar('number_max')), getvar('n_number_set'))))")
+        // var number_set=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,19,20,22,24,27,29,32]//[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32] // [2,3,6,11,18,32] // [1, 2, 4, 8, 16]
+
+        // var n_number_set = size(number_set)
+        // var number_min = number_set[0]
+        // var number_max = number_set[n_number_set-1]
+
+        var number_range=[number_min, number_max] // for number line
+    %end
+
+    var rdlim = [12, 48] // [6,24] // [4,16] // [6,24] # [12, 48] # [9, 36] # [6, 24] # [6, 12]
+    var rflim = [160,640] // [120,480] # [100, 400] # [80, 320] # [120, 480] # [120, 240]
+
+    var relative_target_x = 0
+}
+
+group number_keypad{
+    // defined in keyboard.mwel
+
+    var id_digit=1 // *10 if 1, *1 if 2
+    var number_key_input = [-1,-1] // assume two digits
+
+    var number_font_size=64
+    var number_font_size0=64
+
+    var number_key_sz = 3
+    var number_key_sz0 = 3
+    var number_key_xoffset = 0.5
+    var number_key_yoffset = 2
+
+    var inter_key_delay = 0 // 100
+
+    var keypad_red = 1
+    var keypad_green = 1
+    var keypad_blue = 1
+}
+
+group Number_line{
+    var line_x = 0 // center position
+    var line_y = 8 // center position
+
+    var line_size = 16
+    var line_theta = 0
+
+    var line_x_left = line_x-line_size/2*cos(line_theta)
+    var line_x_right = line_x+line_size/2*cos(line_theta)
+
+    var line_y_up = line_y+line_size/2*sin(line_theta)
+    var line_y_down = line_y-line_size/2*sin(line_theta)
+
+    var responseX = 0 // eye position after responseRegister
+    var responseY = 0
+
+    var unit_size = line_size/(number_range[1]-number_range[0])
+}
+
+group Target_window{ // just for target fixation window
+    var target_red=1
+    var target_green=1
+    var target_blue=1
+    var target_win = 2 // 4 // 6 // 10 // not used
+    var on_target=0
+    var target_sz = 0.00001 // 0.5
+    var target_alpha=0 //1
+    var target_alpha_memory=0.01
+
+    var targetX = 0
+    var targetY = 0
+    var delta_alpha=0
+}
+
+group error_line_window{
+    var error_lineX = 0
+    var error_lineY = 0
+
+    var error_line_szX = 0
+    var error_line_szY = 0.1
+
+    var error_line_red=1
+    var error_line_green=1
+    var error_line_blue=1
+
+}
+
+group Dots{
+    var dot_sz = 0
+    var dot_sz0 = 0
+
+    var field_sz = 0
+
+    var dot_red=[1:number_set[n_number_set-1]]
+    var dot_green=[1:number_set[n_number_set-1]]
+    var dot_blue=[1:number_set[n_number_set-1]]
+
+    var dotX=[1:number_set[n_number_set-1]]
+    var dotY=[1:number_set[n_number_set-1]]
+
+    var dotX0=[1:number_set[n_number_set-1]]
+    var dotY0=[1:number_set[n_number_set-1]]
+
+    var dotX_final = [1:number_set[n_number_set-1]] // 0
+    var dotY_final = [1:number_set[n_number_set-1]] // 0
+
+    var dot_alpha=1
+    var dot_alpha0=1
+    var dot_alpha_memory=0 // 0.01
+
+    var dot_convexhull_radius = 10
+    var dot_overlap_threshold = 0.5
+
+}
+
+group Object{ // banana
+
+    var object_red=1 // oragne [1 .5 0]
+    var object_green=.5
+    var object_blue=0
+
+    var object_sz = 3
+    var object_theta=-45
+
+    var objectX = 0
+    var objectY = 0
+
+    var objectsX0=[1:number_set[n_number_set-1]]
+    var objectsY0=[1:number_set[n_number_set-1]]
+
+    var objectX_final = 0
+    var objectY_final = 0
+
+    var object_offsetY = 0.5
+    var object_alpha=1
+    var object_alpha0=1
+    var object_alpha_memory=0 // 0.01
+    var elapsed_time2 = 0
+
+    var object_convexhull_radius = 10
+    var object_overlap_threshold = 0.5
+
+    // temporary
+    var sample_theta = 0
+    var sample_radius = 0
+    var sampleX = 0
+    var sampleY = 0
+
+    var p_memoryTimeDur=0.0001 // 1 // staircase for ramp-down duration
+    var delta_memoryTimeDur=0
+    var p_memoryTimeDurMin=0.0001
+    var p_memoryTimeDurMax=1
+}
+
+group Reward {
+    var reward_line = 0 (groups = Reward)
+    var rewardDur = -1 // 100 // 25 // 15 // 70 (groups = Reward)
+    var rewardDurMax = 200 // 100
+    var bonusRewDur = 25 // 15  (groups = Reward)
+
+    var reward_threshold_error = 4
+    var reward_count=0
+}
+
+group Fixation {
+    var id_skip_fixation = 0 (groups = Fixation)
+    var id_eye_fix = 1
+
+    var fixY = 0 (groups = Fixation)
+    var fixX = 0 (groups = Fixation)
+    var fixY_offset=0 // 0.8 // to minimize overlap with cue objects
+
+    var fix_win = 6 (
+        groups = Fixation
+        persistant = 1
+        )
+    var fix_sz = 0.3 (groups = Fixation)
+
+    var fixWaitDur = 10000 (groups = Fixation)
+    var fixOn = 0 (groups = Fixation)
+
+    var fix_red = 1 (groups = Fixation)
+    var fix_green = 1 (groups = Fixation)
+    var fix_blue = 1 (groups = Fixation)
+
+    %ifdef monkey
+        var fix_red_static = 1  (groups = Fixation)
+        var fix_green_static = 1 (groups = Fixation)
+        var fix_blue_static = 1 (groups = Fixation)
+    %end
+    %ifdef human
+        var fix_red_static = 1  (groups = Fixation)
+        var fix_green_static = 1 (groups = Fixation)
+        var fix_blue_static = 0 (groups = Fixation)
+    %end
+
+    var pursuitTheta = -90 (groups = Fixation) // down; if 0, horizontal
+    var nRep = 1 (groups = Fixation) // 3
+    var trialNum = 300  (groups = Fixation) // 1e6 after this # trials, stop experiment
+    var blockTrialNum = 50 (groups = Fixation) // 50 100  (groups = Fixation)
+    var blockTrialNumberTimeDur = 50 (groups = Fixation) // 1  (groups = Fixation)
+    var on_fix_dyn = 0 (groups = Fixation)
+    var on_fix_static = 0 (groups = Fixation)
+}
+
+group Matlab {
+    var sync = 0 (groups = Matlab)
+    var Nback = 100 (
+        groups = Matlab
+        persistant = 1
+        )
+}
+
+group Time {
+    //time stamps for eye movement analysis
+    var tStart = 0
+    var tFix = 0
+
+    var tNumberOn = 0
+    var tNumberOff = 0
+
+    var tTargetOn = 0
+    var tTargetOff = 0
+    var tFixOff = 0
+    var tResponse = 0
+    var tKeyPress = []
+    var tRew = 0
+    var tEnd = 0
+    var flag_response=0 // to count down timer after off from fixation
+    var tResponse0=0
+    var response_time = 0
+
+    var end_task=0
+}
+
+group Duration {
+    var fixTimeDur = 0
+    var bonusFixTimeDur = 1000
+    var id_block_start = 0
+    var fixTimeDurMean = 250
+    var fixTimeDurMin = 250
+
+    %ifdef monkey
+        var numberTimeDur = 0
+        var numberTimeDurMean = 500
+        var numberTimeDurMin = 1500 // 250
+        var numberTimeDurList = 0
+
+        var targetTimeDur = 0
+        var targetTimeDurMean = 250
+        var targetTimeDurMin = 250 // 500 // 250
+
+    %end
+
+    %ifdef human
+        var numberTimeDur = 0
+        var numberTimeDurMean = 0
+        var numberTimeDurMin = 1500 // 250
+        var numberTimeDurList = [333, 1000, 3000] // [100, 333, 1000, 3000]
+        var iNumberTimeDur = 1
+
+        var targetTimeDur = 0
+        var targetTimeDurMean = 0
+        var targetTimeDurMin = 0 // 500 // 250
+
+    %end
+
+    var memoryTimeDur = 0.0001 // to prevent division by zero
+    var memoryTimeDurMean = 250
+    var memoryTimeDurMin = 250
+
+    var fixAfterDur = 0
+    var fixAfterDurMean = 100
+    var fixAfterDurMin = 100
+
+    var targetWait = 5000//20000// 5000//10000
+    var targetWait0 = 5000//20000 // 5000//10000
+
+    var responseRegister = 100
+
+    var post_reward_delay=500
+    var inter_reward_delay=300
+
+    var incorrectDur = 5000
+    var NoFixWaitDur = 2000
+    var ITI = 500
+    var timeout = 2000
+    var break = 10000
+
+    var id_ramp_opacity= 0 // 1 // if (id_ramp_opacity==0), object_alpha=object_alpha_memory
+}
+
+group Global {
+    var pstop = 0 (groups = Trial)
+    var startTrial = 0 (groups = Trial)
+    var endTrial = 0 (groups = Trial)
+    var localTrials = 0 (groups = Trial)
+    var CorrectTrials = 0 (groups = Trial)
+    var CorrectTrialsTarget = [0:(n_number_set-1)] (groups = Trial)
+    var IncorrectTrials = 0 (groups = Trial)
+    var IncorrectTrialsTarget = [0:(n_number_set-1)] (groups = Trial)
+
+    var id_bad = 0 (groups = Trial)
+}
+
+group Photodiode{
+    var photodiode_red = 1//.5
+    var photodiode_green = 1//.5
+    var photodiode_blue = 1//.5
+    var photodiode_size = 2.5
+    var photodiodeX = -20 // -21.88 // top left
+    var photodiodeY = 11.7 // 12.8
+
+    var photodiode_input = 0
+}
+
+group Labjack{
+    var labjack_target_on = 0
+    var labjack_cue_on = 0 // now tied to labjack_fix_off
+    var labjack_fix_off=0
+    var labjack_fixation_on=0
+    var t_labjack_cue_on=0
+}
+
+group Motion {
+    var id_cue_motion = 0 // 1 // if 0, no cue motion
+    var id_linear_circular = 2 // if 0, linear; if 1, circular(radial); if 2, self-motion
+
+    var motion_direction = 0 // -1 for CW 1 for CCW, if circular; angle [0 90 180 270] if linear
+    var angle_rotation=0
+    var angle_rotation0=0
+    var elapsed_time = 0
+    var p_time = 0
+
+    var start_time = 0
+    var end_time = 0
+    var tmp=0
+    var index=0
+
+    var nAngle0=4 // initial angle from final location 120/nAngle0
+}

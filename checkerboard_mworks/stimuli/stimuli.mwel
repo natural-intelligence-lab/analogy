@@ -1,0 +1,307 @@
+// stimulus/image_file
+// path=/path/to/image.png
+
+resource ('image')
+
+group 'number_keypad'{
+    stimulus/text number_keypad1 (
+        text=(string) number_key_input[0]
+        font_name="Helvetica Neue"
+        font_size=number_font_size
+
+        color = keypad_red, keypad_green, keypad_blue
+        text_alignment = center
+        x_size = number_key_sz
+        y_size = number_key_sz
+        max_size_x = number_key_sz*10
+        max_size_y = number_key_sz*10
+        rotation = 0
+        x_position = -number_key_xoffset
+        y_position = number_key_yoffset
+        alpha_multiplier = 1
+    )
+    stimulus/text number_keypad2 (
+        text=(string) number_key_input[1]
+        font_name="Helvetica Neue"
+        font_size=number_font_size
+
+        color = keypad_red, keypad_green, keypad_blue
+        text_alignment = center
+        x_size = number_key_sz
+        y_size = number_key_sz
+        max_size_x = number_key_sz*10
+        max_size_y = number_key_sz*10
+
+        rotation = 0
+        x_position = number_key_xoffset
+        y_position = number_key_yoffset
+        alpha_multiplier = 1
+    )
+}
+
+stimulus/white_noise_background white_noise(
+    randomize_on_draw=YES
+)
+
+frame_list dynamic_noise (
+    loop = true
+    autoplay = true
+    ) {
+    white_noise_background (
+        randomize_on_draw = true
+        )
+}
+
+group 'banana'{
+    stimulus/text banana ( // alternative: ellipse rectangle
+            text=')'
+            font_name="Capitals"
+            font_size=64
+
+            color = object_red,object_green,object_blue
+            text_alignment = center
+            x_size = object_sz
+            y_size = object_sz
+            rotation = object_theta
+            x_position = objectX
+            y_position = objectY-object_offsetY
+            alpha_multiplier = object_alpha
+    )
+}
+
+var local_index = 0 (scope = local)
+
+var objectsX=[1:number_set[n_number_set-1]]
+var objectsY=[1:number_set[n_number_set-1]]
+
+stimulus_group objects { // indexable by objects[index]
+    range_replicator (
+        variable = local_index
+        from = 0
+        to = number_set[n_number_set-1]-1
+        step = 1
+        ) {
+
+        stimulus/text object${local_index}(
+            text=')'
+            font_name="Capitals"
+            font_size=64
+            color = object_red,object_green,object_blue
+            text_alignment = center
+            x_size = object_sz
+            y_size = object_sz
+            rotation = object_theta
+            x_position = objectsX[${local_index}]
+            y_position = objectsY[${local_index}]-object_offsetY
+            alpha_multiplier = object_alpha
+            )
+    }
+}
+
+stimulus_group dots {
+    range_replicator (
+        variable = local_index
+        from = 0
+        to = number_set[n_number_set-1]-1
+        step = 1
+        ) {
+
+        stimulus/circle dot${local_index}(
+            color = dot_red[${local_index}],dot_green[${local_index}],dot_blue[${local_index}]
+            x_size = dot_sz
+            y_size = dot_sz
+            x_position = dotX[${local_index}]
+            y_position = dotY[${local_index}]
+            alpha_multiplier = dot_alpha
+            )
+    }
+}
+
+group 'dot'{
+    stimulus/circle dot (
+            color = dot_red,dot_green,dot_blue
+            x_size = dot_sz
+            y_size = dot_sz
+            x_position = dotX[${local_index}]
+            y_position = dotY[${local_index}]
+            alpha_multiplier = dot_alpha
+    )
+}
+
+group 'number_line'{
+    stimulus/image_file number_line (
+        path='image/number_line.png'
+        // '/Users/hansem/Desktop/number_line.png'
+        // '/Users/hansem/Dropbox (MIT)/number/codes/NumberEstimation/task/stimuli/number_line.png'
+        // './stimuli/number_line.png' // 'stimuli/number_line.png'
+        x_size = line_size // 16 degree (orignal image:800 x 20 pix)
+        x_position = line_x
+        y_position = line_y
+        rotation =  line_theta
+    )
+}
+
+group 'target_window'{
+    stimulus/fixation_point target_window ( // circular_fixation_point
+            color = target_red,target_green,target_blue
+            trigger_width = line_size+(20/800)*line_size*2 // line_size+1.6
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_target
+            x_size = target_sz
+            y_size = target_sz
+            x_position = line_x
+            y_position = line_y+line_size/2
+            rotation = line_theta
+            alpha_multiplier = target_alpha
+    )
+}
+
+group 'error_line'{
+    stimulus/rectangle error_line(
+        color = error_line_red,error_line_green,error_line_blue
+        x_position = error_lineX
+        y_position = error_lineY
+        x_size = error_line_szX
+        y_size = error_line_szY
+        rotation = line_theta
+    )
+}
+
+/* to be debugged
+group 'chosen_target'{
+    stimulus/layer chosen_target {
+        stimulus/rectangle {
+            color = 1,0,0
+            fullscreen = YES
+        }
+    /*
+        stimulus/image_file chosen_target_number_line (
+            path='image/number_line.png'
+            x_size = line_size // 15 degree (orignal image:800 x 20 pix)
+            y_size = 30
+            x_position = line_x
+            y_position = 0 // line_y
+            rotation =  line_theta
+            fullscreen = YES
+        )
+
+    */
+        mask (
+            mask = rectangle // ellipse // gaussian // std_dev
+            // inverted = YES // false // true
+            x_size = 1
+            x_position = responseX
+            y_position = 0 // line_y
+        )
+    }
+}
+*/
+
+group 'Fixation' {
+    stimulus/fixation_point fixCircleStatic ( // fixation_point
+            color = fix_red_static,fix_green_static,fix_blue_static
+            trigger_width = fix_win
+            trigger_watch_x = eye_x
+            trigger_watch_y = eye_y
+            trigger_flag = on_fix_static
+            x_size = fix_sz
+            y_size = fix_sz
+            x_position = fixX
+            y_position = fixY-fixY_offset
+            rotation = 0
+            alpha_multiplier = 1
+    )
+}
+
+stimulus/text numberTimeDurCue (
+    text=(string) numberTimeDur
+    font_name="Helvetica Neue"
+    font_size=18
+
+    color = 1, 1, 1
+    text_alignment = center
+    x_size = 10
+    y_size = 3
+    rotation = 0
+    x_position = 0
+    y_position = -1.7
+    alpha_multiplier = 1
+)
+
+stimulus/text eyeFixCue (
+    text='FIX EYE'
+    font_name="Helvetica Neue"
+    font_size=18
+
+    color = 1, 1, 1
+    text_alignment = center
+    x_size = 10
+    y_size = 3
+    rotation = 0
+    x_position = 0
+    y_position = 2
+    alpha_multiplier = 1
+)
+
+stimulus/text eyeFreeCue (
+    text='EYE FREE'
+    font_name="Helvetica Neue"
+    font_size=18
+
+    color = 1, 1, 1
+    text_alignment = center
+    x_size = 10
+    y_size = 3
+    rotation = 0
+    x_position = 0
+    y_position = 2
+    alpha_multiplier = 1
+)
+
+group 'Photodiode'{
+        stimulus/ellipse photodiode(
+        color = photodiode_red,photodiode_green,photodiode_blue
+        x_size = photodiode_size
+        y_size = photodiode_size
+        x_position = photodiodeX
+        y_position = photodiodeY
+        rotation = 0
+        alpha_multiplier = 1
+    )
+}
+
+group 'rest'{
+    stimulus/text rest (
+            text='REST'
+            font_name="Capitals"
+            font_size=64
+
+            color = 1,1,1
+            text_alignment = center
+            x_size = 5
+            y_size = 5
+            rotation = 0
+            x_position = 0
+            y_position = 0
+            alpha_multiplier = 1
+    )
+    stimulus/text rest2 (
+            text='PRESS ENTER IF READY'
+            font_name="Capitals"
+            font_size=24
+
+            color = 1,1,1
+            text_alignment = center
+            x_size = 20
+            y_size = 10
+            rotation = 0
+            x_position = 0
+            y_position = 0
+            alpha_multiplier = 1
+    )
+}
+
+iodevice/stimulus_display( // % distance 66, width 53, height 30 cm -> atand(height/2/distance)*2; % 25.6 deg
+    background_color = 0,0,0
+    )

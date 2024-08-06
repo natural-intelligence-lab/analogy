@@ -1,0 +1,12 @@
+nidaq nidaq (
+    name = Dev1
+    update_interval = 3ms
+    analog_input_data_interval = 1ms
+    analog_output_data_interval = 1ms
+    ) {
+   nidaq_digital_output (
+        port_number = 1
+        num_lines_in_port = 8
+        line0 = reward_line
+        )
+}
